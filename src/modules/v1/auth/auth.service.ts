@@ -1,0 +1,163 @@
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
+import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+
+import { MessageResponse } from '@/interfaces/general.interface';
+
+
+import { User } from '../users/entities/user.entity';
+
+import { ResetPasswordWithTokenDto } from './dto/reset-password.dto';
+import { RegisterDto } from './dto/register.dto';
+
+import { UsersService } from '../users/users.service';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    private readonly mailerService: MailerService,
+    private readonly userService: UsersService,
+  ) { }
+
+
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<MessageResponse> {
+    return await this.userService.create(registerDto);
+  }
+
+
+  async validateUser(email: string, clientPassword: string) {
+    const user = await this.userService.findOne(
+      { email },
+      {
+        select: ['id', 'email', 'password'],
+        relations: ['profile']
+      });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isMatch = await bcrypt.compare(clientPassword, user.password);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const token = this.jwtService.sign({
+      id: user.id
+    });
+
+    const { password, ...userDetail } = user;
+
+    return { user: userDetail, token };
+  }
+
+  async sendResetLink(email: string): Promise<{ message: string }> {
+    const user = await this.userService.findOne({ email }, { select: ['id', 'email'], relations: ['profile'] });
+
+    if (user) {
+
+      const token = this.jwtService.sign(
+        {
+          sub: user.id,
+          purpose: 'password_reset',
+        },
+        {
+          expiresIn: '15m',
+          secret: this.configService.get('JWT_RESET_SECRET'), // Separate secret for reset tokens
+        },
+      );
+
+      const appConfig = this.configService.get('app');
+
+      const appUrl = appConfig.frontendURL;
+      const appName = appConfig.name;
+      const resetPasswordPath = appConfig.frontendPasswordResetPath
+      const resetUrl = `${appUrl}/${resetPasswordPath}?token=${token}`;
+
+      const emailContent = `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">Password Reset Request</h2>
+        
+        <p>Dear ${user.profile.firstName || 'User'},</p>
+        
+        <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
+        
+        <p style="text-align: center; margin: 25px 0;">
+          <a href="${resetUrl}" 
+             style="background-color: #3498db; color: white; padding: 12px 24px; 
+                    text-decoration: none; border-radius: 4px; font-weight: bold;
+                    display: inline-block;">
+            Reset Your Password
+          </a>
+        </p>
+        
+        <p style="font-size: 0.9em; color: #7f8c8d;">
+          This link will expire in 15 minutes. If you didn't request this, 
+          please ignore this email or contact support if you have concerns.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 20px 0;">
+        
+        <p style="font-size: 0.8em; color: #7f8c8d;">
+          Can't click the button? Copy this link to your browser:<br>
+          <a href="${resetUrl}" style="word-break: break-all;">${resetUrl}</a>
+        </p>
+      </div>
+    `;
+
+          const mailerConfig = this.configService.get('mailer');
+
+
+      try {
+        await this.mailerService.sendMail({
+          to: user.email,
+          from: mailerConfig.from,
+          subject: appName + ' - Your Password Reset Instructions',
+          html: emailContent,
+
+          text: `Please use the following link to reset your password:\n\n${resetUrl}\n\nThis link expires in 15 minutes.`,
+        });
+
+      } catch (error) {
+        throw new HttpException(
+          'Failed to send reset email. Please try again later.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
+
+    return {
+      message:
+        'If an account with this email exists, a reset link has been sent',
+    };
+  }
+
+  async resetPassword(
+    resetDta: ResetPasswordWithTokenDto,
+  ): Promise<{ message: string }> {
+    const { token, newPassword } = resetDta;
+
+    try {
+      const payload = this.jwtService.verify(token);
+      return await this.userService.resetPassword(payload.sub, { newPassword });
+    } catch (e) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+  }
+}
