@@ -1,16 +1,25 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const logger = new Logger('Bootstrap');
 
+  // Security middleware
+  app.use(helmet());
+  app.use(cookieParser());
+  app.use(compression());
+
+  // API documentation
   const config = new DocumentBuilder()
     .setTitle('Trainer App Web API')
     .setDescription('Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.')
@@ -24,63 +33,55 @@ async function bootstrap() {
       },
       'access-token',
     )
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Sessions', 'Training session management')
+    .addTag('Payments', 'Payment processing and history')
+    .addTag('Invoices', 'Invoice management')
+    .addTag('Settings', 'Application settings')
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory, {
     customSiteTitle: 'Trainer App Web API',
     swaggerOptions: {
+      persistAuthorization: true,
       withCredentials: true,
-      requestInterceptor: (req) => {
-      req.headers['Authorization'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzQ5OTA4OTc0LCJleHAiOjE3NDk5OTUzNzR9.8GGN8WPagLppCVGRXcnEdYaLCjuJ8yjAlS4p8CikncU';
-      return req;
-    },
     },
   });
 
+
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
+      validationError: { target: false },
     }),
   );
 
+  
+
+  // CORS configuration
+  const corsOrigins = configService.get<string>('app.corsOrigins', 'http://localhost:5173').split(',');
   app.enableCors({
-    origin: ['http://localhost:5173'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Accept',
-    ],
+    origin: corsOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Disposition'],
     credentials: true,
+    maxAge: 3600,
   });
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:'],
-        },
-      },
-    }),
-  );
-
-  app.use(cookieParser());
-
   app.setGlobalPrefix('api');
-
-
-  const port = process.env.PORT || 3000;
+  
+  const port = configService.get<number>('app.port', 3000);
   await app.listen(port);
 
-  const logger = new Logger('Bootstrap');
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`API documentation available at: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

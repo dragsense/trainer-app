@@ -9,7 +9,7 @@ export interface IPaginatedResponse<T> {
   hasNextPage: boolean;
   hasPrevPage: boolean;
 }
-
-export type ApiResponse<T> =
-  | { status: "success"; data: T }
-  | { status: "error"; error: string };
+export interface IMessageResponse {
+  message: string;
+  [key: string]: any;
+}

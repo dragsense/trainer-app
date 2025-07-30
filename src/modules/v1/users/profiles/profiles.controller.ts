@@ -1,9 +1,6 @@
 import { Controller, Get, Body, Patch, Param, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '@/decorators/user.decorator';
-
-
 import { JwtAuthGuard } from '../../auth/gaurds/jwt-auth.gaurd';
 
 import { ProfilesService } from './profiles.service';
@@ -20,13 +17,13 @@ export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) { }
 
 
-  @Get()
+  @Get(':id')
   @ApiOperation({ summary: 'Get profile by user ID' })
   @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  findOne(@AuthUser() user: any) {
-    return this.profilesService.findOneByUser(user);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.profilesService.findOneByUser({ id });
   }
 
   @Patch(':id')

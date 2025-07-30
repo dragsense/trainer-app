@@ -9,45 +9,72 @@ import { ColumnDef, Table as TanstackTable } from "@tanstack/react-table";
 import { useTable } from "@/hooks/use-table";
 
 // UI Components
-import { AppTable, TableBaseProps } from "../layout/app-table";
+import { AppTable } from "@/components/layout-ui/app-table";
+
+// 
+import { IListStoreApi } from "@/@types/handler-types";
+
 
 // Utils
 import { cn } from "@/lib/utils";
+import { useStore } from "zustand";
 
 
-interface SimpleTableProps<T> {
+interface ISimpleTableProps<TData> {
+
   MainClassName?: string;
   error?: string | null;
   loading?: boolean;
-  renderToolbar?: (table: TanstackTable<T>) => React.ReactNode;
-  columns: ColumnDef<T>[];
-  data: T[];
-  defaultPageSize?: number;
+  renderToolbar?: (table: TanstackTable<TData>) => React.ReactNode;
+  columns: ColumnDef<TData>[];
+  listStore: IListStoreApi<TData>;
+  onRowClick?: (row: TData) => void;
+  pageSizeOptions?: number[];
+  rowClassName?: (row: TData, index: number) => string;
+  colClassName?: string;
+  showPagination?: boolean;
+  renderFooter?: (table: TanstackTable<TData>) => React.ReactNode;
+  emptyMessage?: string;
+  className?: string;
+  showHeader?: boolean;
 }
 
 export function SimpleTable<TData>({
   columns,
-  data,
   MainClassName,
-  loading,
   renderToolbar,
-  showHeader,
-  defaultPageSize = 10,
-  showPagination,
-  error,
-  ...props
-}: SimpleTableProps<TData> & TableBaseProps<TData>) {
-  const { table } = useTable<TData>({
-    columns,
-    data,
-    defaultPageSize,
-  });
+  listStore,
+  onRowClick,
+  showPagination = true,
+  renderFooter,
+  emptyMessage = "No results found.",
+  className = "",
+  rowClassName,
+  colClassName = "",
+  showHeader = true,
+}: ISimpleTableProps<TData>) {
 
-  const [tableError, setTableError] = useState(error);
-
-  useEffect(() => {
-    setTableError(error);
-  }, [error]);
+  const {
+      response: data,
+      isLoading: loading,
+      error,
+      pagination,
+      setPagination } = useStore(listStore);
+  
+    const onPageChange = (page: number) => {
+      setPagination({ page });
+    };
+    const onLimitChange = (limit: number) => {
+      setPagination({ limit });
+    };
+  
+  
+    const { table } = useTable<TData>({
+      columns,
+      data: data || [],
+      defaultPageSize: pagination.limit || 10,
+    });
+  
 
   return (
     <div className={cn("relative flex flex-col gap-3", MainClassName)}>
@@ -58,25 +85,26 @@ export function SimpleTable<TData>({
       )}
 
       {renderToolbar && renderToolbar(table)}
-     
+
       <AppTable
-        onRowClick={props.onRowClick}
-        emptyMessage={props.emptyMessage || "No results found."}
-        pagination={props.pagination}
-        onPageChange={props.onPageChange}
-        onLimitChange={props.onLimitChange}
-        rowClassName={props.rowClassName}
-        colClassName={props.colClassName}
+        onRowClick={onRowClick}
+        emptyMessage={emptyMessage || "No results found."}
+        pagination={pagination}
+        onPageChange={onPageChange}
+        onLimitChange={onLimitChange}
+        rowClassName={rowClassName}
+        colClassName={colClassName}
+        className={className}
         showHeader={showHeader}
         showPagination={showPagination}
         columns={columns}
         table={table}
         renderFooter={(table) => (
           <>
-            {props.renderFooter && props.renderFooter(table)}
-            {tableError && (
+            {renderFooter && renderFooter(table)}
+            {error && (
               <p className="text-sm font-medium text-red-500 my-2">
-                {tableError}
+                {error.message}
               </p>
             )}
           </>

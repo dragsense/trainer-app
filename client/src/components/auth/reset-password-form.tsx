@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 // Types
-import { TResetPasswordData, IResetPasswordResponse } from '@/@types/auth.type';
+import { TResetPasswordData } from '@/@types/auth.type';
 
 // External Libraries
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -17,7 +17,8 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { useTypedFormStore } from '@/stores/form/form-store-registry';
+import { TFormHandlerStore, useRegisteredStore } from '@/stores';
+import { IMessageResponse } from '@/@types/api/response.type';
 
 interface IResetPasswordFormProps {
   storeKey: string
@@ -27,10 +28,12 @@ export default function ResetPasswordForm({
   storeKey
 }: IResetPasswordFormProps) {
 
-  const resetPasswordStore = useTypedFormStore<TResetPasswordData, IResetPasswordResponse>(storeKey);
+  const formStoreKey = storeKey + "-form";
+
+  const resetPasswordStore = useRegisteredStore<TFormHandlerStore<TResetPasswordData, IMessageResponse>>(formStoreKey);
 
   if (!resetPasswordStore) {
-    return (`Form store "${storeKey}" not found. Did you forget to register it?`);
+    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
   }
 
   const isSubmitting = useStore(resetPasswordStore, state => state.isSubmitting);
@@ -41,8 +44,8 @@ export default function ResetPasswordForm({
   const { inputs } = useInput({
     fields: [
       {
-        id: 'password',
-        name: 'password',
+        id: 'newPassword',
+        name: 'newPassword',
         label: 'New Password',
         type: showPassword ? 'text' : 'password',
         placeholder: 'Enter your new password',
@@ -79,7 +82,7 @@ export default function ResetPasswordForm({
   });
 
   return (
-    <CardForm<TResetPasswordData, IResetPasswordResponse>
+    <CardForm<TResetPasswordData, IMessageResponse>
       title="Reset Password"
       description="Enter your new password to reset your account"
       formStore={resetPasswordStore}

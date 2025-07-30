@@ -1,5 +1,5 @@
-import { EORDER_CLASSES } from "@/@types/enums/general.enum";
 import { ReactNode } from "react";
+import { EORDER_CLASSES } from "@/enums/general.enum";
 
 export type FieldType =
   | "text"
@@ -14,7 +14,13 @@ export type FieldType =
   | "time"
   | "switch"
   | "checked"
-  | "radio";
+  | "radio"
+  | "file"
+  | "checkbox"
+  | "multiSelect"
+  | "url"
+  | "rating"
+  | "slider";
 
 export type FieldConfig = {
   id: string;
@@ -22,22 +28,34 @@ export type FieldConfig = {
   name: string;
   type: FieldType;
   disabled?: boolean;
-  layout?: "horizental" | "vertical";
+  layout?: "horizontal" | "vertical";
   lableOrder?: EORDER_CLASSES;
   placeholder?: string;
   options?: { label: string; value: string }[];
-  defaultValue?: string;
+  defaultValue?: any;
+  min?: number;
+  max?: number;
+  step?: number;
   required: boolean;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   bottomAdornment?: ReactNode;
   className?: string;
   listeners?: any;
-  Component?: React.ComponentType<CustomInputWrapper>;
+  Component?: React.ComponentType<TCustomInputWrapper>;
 };
 
-export type CustomInputWrapper = {
+export type TCustomInputWrapper = {
   value: any;
   onChange: (value: any) => void;
   disabled?: boolean;
+};
+
+
+export type TDefaultValue<T> = {
+  [K in keyof T]: {
+    notIncluded?: boolean;
+    notInput?: boolean;
+    value: T[K];
+  };
 };

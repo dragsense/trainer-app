@@ -23,6 +23,7 @@ import { ResetPasswordWithTokenDto } from './dto/reset-password.dto';
 import { RegisterDto } from './dto/register.dto';
 
 import { UsersService } from '../users/users.service';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
 @Injectable()
 export class AuthService {
@@ -37,15 +38,18 @@ export class AuthService {
   async register(
     registerDto: RegisterDto,
   ): Promise<MessageResponse> {
-    return await this.userService.create(registerDto);
+    return await this.userService.create({
+      ...registerDto, level: UserLevels[UserRole.ADMIN],
+    });
   }
 
 
   async validateUser(email: string, clientPassword: string) {
+
     const user = await this.userService.findOne(
       { email },
       {
-        select: ['id', 'email', 'password'],
+        select: ['id', 'email', 'level', 'password'],
         relations: ['profile']
       });
 
@@ -59,7 +63,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     const token = this.jwtService.sign({
-      id: user.id
+      id: user.id,
+      level: user.level,
     });
 
     const { password, ...userDetail } = user;
@@ -72,6 +77,9 @@ export class AuthService {
 
     if (user) {
 
+      const appConfig = this.configService.get('app');
+      const jwtConfig = this.configService.get('jwt');
+
       const token = this.jwtService.sign(
         {
           sub: user.id,
@@ -79,22 +87,20 @@ export class AuthService {
         },
         {
           expiresIn: '15m',
-          secret: this.configService.get('JWT_RESET_SECRET'), // Separate secret for reset tokens
+          secret: jwtConfig.secret,
         },
       );
 
-      const appConfig = this.configService.get('app');
-
-      const appUrl = appConfig.frontendURL;
+      const appUrl = appConfig.appUrl;
       const appName = appConfig.name;
-      const resetPasswordPath = appConfig.frontendPasswordResetPath
+      const resetPasswordPath = appConfig.passwordResetPath;
       const resetUrl = `${appUrl}/${resetPasswordPath}?token=${token}`;
 
       const emailContent = `
       <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2c3e50;">Password Reset Request</h2>
         
-        <p>Dear ${user.profile.firstName || 'User'},</p>
+        <p>Dear ${user.profile?.firstName || 'User'},</p>
         
         <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
         
@@ -121,7 +127,7 @@ export class AuthService {
       </div>
     `;
 
-          const mailerConfig = this.configService.get('mailer');
+      const mailerConfig = this.configService.get('mailer');
 
 
       try {
@@ -135,6 +141,7 @@ export class AuthService {
         });
 
       } catch (error) {
+        console.error('Error sending reset email:', error);
         throw new HttpException(
           'Failed to send reset email. Please try again later.',
           HttpStatus.INTERNAL_SERVER_ERROR,
@@ -153,11 +160,14 @@ export class AuthService {
   ): Promise<{ message: string }> {
     const { token, newPassword } = resetDta;
 
+    let payload;
     try {
-      const payload = this.jwtService.verify(token);
-      return await this.userService.resetPassword(payload.sub, { newPassword });
+      payload = this.jwtService.verify(token);
     } catch (e) {
       throw new BadRequestException('Invalid or expired token');
     }
+
+    return await this.userService.resetPassword(payload.sub, { newPassword });
+
   }
 }

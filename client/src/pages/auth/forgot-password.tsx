@@ -1,34 +1,39 @@
 // Types
 import { z } from "zod";
+import { toast } from "sonner";
 
-// Custom Hooks
-import { useAuth } from "@/hooks/use-auth";
-import { EVALIDATION_MODES } from "@/@types/enums/form.enums";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
+// Types
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { TDefaultValue } from "@/@types/form/field.type";
+import { TForgotPasswordData } from "@/@types/auth.type";
+import { IMessageResponse } from "@/@types/api/response.type";
+
 // Custom UI Components
 import { ForgotPasswordForm } from "@/components/auth";
-import { toast } from "sonner";
+
+// Services
+import { forgotPassword } from "@/services/auth.api";
+
 
 // Schema
 const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address")
 });
 
-// Extract the TypeScript type
-export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
-
-// Get default values from schema
-export const FORGOT_PASSWORD_INITIAL_VALUES: ForgotPasswordFormValues = {
-  email: ""
-};
 
 export default function ForgotPassword() {
-  const { forgotPassword } = useAuth();
+
+    const FORGOT_PASSWORD_INITIAL_VALUES: TDefaultValue<TForgotPasswordData> = {
+      email: { value: "" }
+    };
+  
+
   return (
-    <FormHandler<ForgotPasswordFormValues, void>
+    <FormHandler<TForgotPasswordData, IMessageResponse>
       mutationFn={forgotPassword}
       FormComponent={ForgotPasswordForm}
       initialValues={FORGOT_PASSWORD_INITIAL_VALUES}
@@ -36,7 +41,7 @@ export default function ForgotPassword() {
       validationSchema={forgotPasswordSchema}
       onSuccess={() => toast.success('Password reset instructions sent to your email')}
       onError={(error) => toast.error('Failed to send reset instructions: ' + error?.message)}
-      storeKey="forgotPasswordForm"
+      storeKey="forgotPassword"
     />
   );
 }

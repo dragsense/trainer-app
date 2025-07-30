@@ -1,17 +1,15 @@
 import { registerAs } from '@nestjs/config';
-
 import { ConfigService } from '@nestjs/config';
 import { MailerOptions } from '@nestjs-modules/mailer';
 
 export default registerAs('mailer', () => ({
   from: process.env.MAIL_FROM,
+  adminEmail: process.env.MAIL_ADMIN_EMAIL,
   host: process.env.MAIL_HOST,
   port: parseInt(process.env.MAIL_PORT || '587', 10),
   user: process.env.MAIL_USER,
   pass: process.env.MAIL_PASS,
 }));
-
-
 
 export const getMailerConfig = async (
   configService: ConfigService,

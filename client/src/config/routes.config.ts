@@ -4,11 +4,15 @@ export const PUBLIC_ROUTES = {
   LOGIN: "/login",
   SIGNUP: "/signup",
   FORGOT_PASSWORD: "/forgot-password",
-  RESET_PASSWORD: "/reset-password/:token"
+  RESET_PASSWORD: "/reset-password"
 } as const;
 export type PublicRoute = keyof typeof PUBLIC_ROUTES;
 export const ADMIN_ROUTES = {
-  DASHBOARD: "/dashboard"
+  DASHBOARD: "/dashboard",
+  TRAINERS: "/trainers",
+  CLIENTS: "/clients",
+  SESSIONS: "/sessions",
+  REMINDERS: "/reminders",
 } as const;
 
 export type AdminRoute = keyof typeof ADMIN_ROUTES;

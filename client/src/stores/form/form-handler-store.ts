@@ -23,8 +23,8 @@ export const useFormHandlerStore = <TFormData, TResponse>(initalValues: TFormDat
         setError: (error) => set({ error }),
         setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
         setValues: (values) => set({ values }),
+        setOnSubmit: (submitFn) => set({ onSubmit: submitFn }),
         syncWithMutation: ({ isSubmitting, error, isSuccess, response }) => {
-          console.log({ isSubmitting, error, isSuccess, response });
           set({
             isSubmitting,
             error,
@@ -38,8 +38,8 @@ export const useFormHandlerStore = <TFormData, TResponse>(initalValues: TFormDat
           response: null,
           isSuccess: false
         })
-      }), 
-      { 
+      }),
+      {
         name: 'form-handler-store',
         enabled: config.environment === 'development'
       }

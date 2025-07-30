@@ -8,10 +8,8 @@ import {
   Delete,
   UseGuards,
   Query,
-  Req,
   ParseIntPipe,
 } from '@nestjs/common';
-
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -21,102 +19,137 @@ import {
 
 import { AuthUser } from '@/decorators/user.decorator';
 import { SessionsService } from './sessions.service';
-import { CreateSessionDto } from './dtos/create-session.dto';
-import { UpdateSessionDto } from './dtos/update-session.dto';
+import { CreateSessionDto } from './dto/create-session.dto';
+import { UpdateSessionDto } from './dto/update-session.dto';
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
 import { RoleLevelGuard } from '@/guards/level.guard';
-import { UserRole } from '@/common/enums/role.enum';
 import { MinRoleLevel } from '@/decorators/level.decorator';
-import { UserLevels } from '../users/enums/user.enum';
-import { SessionListDto } from './dtos/session-list.dto';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { SessionListDto } from './dto/session-list.dto';
 import { MessageResponseDto } from '@/shared-dto/general.dto';
 import { MessageResponse } from '@/interfaces/general.interface';
-import { SessionPaginatedDto } from './dtos/session-response.dto';
+import { SessionListResponseDto } from './dto/session-response.dto';
 import { Session } from './entities/session.entity';
+import { User } from '../users/entities/user.entity';
+import { PaginationResponse } from '@/interfaces/pagination-response.interface';
+import { SessionStatus } from './enums/session.enum';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Sessions')
 @Controller('sessions')
 export class SessionsController {
-  constructor(private readonly sessionsService: SessionsService) { }
+  constructor(private readonly sessionsService: SessionsService) {}
 
+  @Post()
+  @MinRoleLevel(UserLevels[UserRole.ADMIN])
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
     status: 201,
-    description: 'The session has been successfully created.',
-    type: MessageResponseDto,
+    description: 'Session created successfully',
+    type: Session
   })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Trainer role required' })
-  @Post()
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
   async create(
-    @Body() createSessionDto: CreateSessionDto,
-    @AuthUser() user: any,
-  ): Promise<MessageResponse> {
+    @AuthUser() user: User,
+    @Body() createSessionDto: CreateSessionDto
+  ): Promise<Session> {
     return this.sessionsService.create(user, createSessionDto);
   }
 
-  @ApiOperation({ summary: 'Get all sessions' })
+  @Get()
+  @MinRoleLevel(UserLevels[UserRole.USER])
+  @ApiOperation({ summary: 'Get all sessions with pagination and filters' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully retrieved sessions.',
-    type: SessionPaginatedDto,
+    description: 'List of sessions',
+    type: SessionListResponseDto
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
-  @Get()
-  @MinRoleLevel(UserLevels[UserRole.ADMIN])
-  async findAll(@Query() query: SessionListDto) {
-    return this.sessionsService.findAll(query);
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
+  async findAll(
+    @Query() queryDto: SessionListDto,
+    @AuthUser() user: User
+  ): Promise<PaginationResponse<Session>> {
+    return this.sessionsService.findAll(queryDto, user);
   }
 
-  @ApiOperation({ summary: 'Get a session by ID' })
+  @Get(':id')
+  @MinRoleLevel(UserLevels[UserRole.USER])
+  @ApiOperation({ summary: 'Get a specific session' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully retrieved session.',
-    type: Session,
+    description: 'Session details',
+    type: Session
   })
-  @ApiResponse({ status: 404, description: 'Session not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @Get(':id')
-  @MinRoleLevel(UserLevels[UserRole.CLIENT])
-  async findOne(@Param('id', ParseIntPipe) id: number, @AuthUser() user: any) {
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: User
+  ): Promise<Session> {
     return this.sessionsService.findOne(id, user);
   }
 
+  @Patch(':id')
+  @MinRoleLevel(UserLevels[UserRole.ADMIN])
   @ApiOperation({ summary: 'Update a session' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully updated session.',
-    type: MessageResponseDto,
+    description: 'Session updated successfully',
+    type: Session
   })
-  @ApiResponse({ status: 404, description: 'Session not found' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Trainer role required' })
-  @Patch(':id')
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateSessionDto: UpdateSessionDto,
-    @AuthUser() user: any,
-  ) {
+    @AuthUser() user: User
+  ): Promise<Session> {
     return this.sessionsService.update(id, updateSessionDto, user);
   }
 
-  @ApiOperation({ summary: 'Delete a session' })
+  @Patch(':id/status')
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @ApiOperation({ summary: 'Update session status' })
   @ApiResponse({
     status: 200,
-    description: 'Successfully deleted session.',
+    description: 'Session status updated successfully',
+    type: Session
   })
-  @ApiResponse({ status: 404, description: 'Session not found' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  async updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: SessionStatus,
+    @AuthUser() user: User
+  ): Promise<Session> {
+    return this.sessionsService.updateStatus(id, status, user);
+  }
+
   @Delete(':id')
   @MinRoleLevel(UserLevels[UserRole.ADMIN])
-  async remove(@Param('id', ParseIntPipe) id: number, @AuthUser() user: any) {
+  @ApiOperation({ summary: 'Cancel/delete a session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Session cancelled successfully',
+    type: MessageResponseDto
+  })
+  @ApiResponse({ status: 400, description: 'Cannot cancel this session' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
+  @ApiResponse({ status: 404, description: 'Session not found' })
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: User
+  ): Promise<MessageResponse> {
     return this.sessionsService.remove(id, user);
   }
 }

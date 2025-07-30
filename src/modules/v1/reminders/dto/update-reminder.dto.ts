@@ -1,9 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { CreateReminderDto } from './create-reminder.dto';
 import { IsOptional, IsEnum, IsDate, IsNumber, IsString, IsArray, ArrayNotEmpty, IsPositive, IsBoolean } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { ReminderType } from '../enums/reminder-type.enum';
-import { ReminderStatus } from '../enums/reminder-status.enum';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ReminderType, ReminderStatus } from '../enums/reminder.enum';
 
 export class UpdateReminderDto extends PartialType(CreateReminderDto) {
   @ApiProperty({

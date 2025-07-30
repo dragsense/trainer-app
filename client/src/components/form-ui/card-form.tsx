@@ -33,30 +33,33 @@ export function CardForm<TFormData, TResponse>({
   formStore
 }: ICardFormProps<TFormData, TResponse>) {
 
-  const { isSubmitting, error } = useStore(formStore);
+  const { isSubmitting, error, onSubmit } = useStore(formStore);
 
   return (
-    <div className={cn('relative', className)}>
-      <AppCard
-        header={
-          <>
-            <h2 className="text-2xl font-semibold">{title}</h2>
-            {description && <p className="text-sm text-muted-foreground">{description}</p>}
-          </>
-        }
-        footer={footerContent}
-      >
-        {isSubmitting && (
-          <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        )}
-        {children}
-        {error && (
-          <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
-        )}
-      </AppCard>
+    <form onSubmit={onSubmit}>
+      <div className={cn('relative', className)}>
 
-    </div>
+        <AppCard
+          header={
+            <>
+              <h2 className="text-2xl font-semibold">{title}</h2>
+              {description && <p className="text-sm text-muted-foreground">{description}</p>}
+            </>
+          }
+          footer={footerContent}
+        >
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+          {children}
+          {error && (
+            <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
+          )}
+        </AppCard>
+
+      </div>
+    </form>
   );
 }

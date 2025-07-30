@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Local
 import appRouter from "./AppRoutes";
-import { AuthProvider } from "./hooks/use-auth";
+import { AuthUserProvider } from "./hooks/use-auth-user";
 
 // Styles
 import "./App.css";
@@ -26,9 +26,9 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <AuthUserProvider>
         <RouterProvider router={appRouter} />
-      </AuthProvider>
+      </AuthUserProvider>
     </QueryClientProvider>
   );
 }

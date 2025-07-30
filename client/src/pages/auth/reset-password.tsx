@@ -1,39 +1,53 @@
-// Types
+// Exteral Libraries
+import { Navigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
+import { toast } from "sonner";
 
-// Custom Hooks
-import { useAuth } from "@/hooks/use-auth";
-import { EVALIDATION_MODES } from "@/@types/enums/form.enums";
+// Types
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { TResetPasswordData } from "@/@types/auth.type";
+import { TDefaultValue } from "@/@types/form/field.type";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Custom UI Components
 import { ResetPasswordForm } from "@/components/auth";
-import { toast } from "sonner";
+
+// Config
+import { ROOT_ROUTE } from "@/config/routes.config";
+
+// Services
+import { resetPassword } from "@/services/auth.api";
 
 // Schema
 const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters")
-}).refine((data) => data.password === data.confirmPassword, {
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters"),
+  token: z.string().min(1, 'Token is required'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
 });
 
-// Extract the TypeScript type
-export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-// Get default values from schema
-export const RESET_PASSWORD_INITIAL_VALUES: ResetPasswordFormValues = {
-  password: "",
-  confirmPassword: ""
-};
+
 
 export default function ResetPassword() {
-  const { resetPassword } = useAuth();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") || undefined;
+
+  if (!token)
+    return <Navigate to={ROOT_ROUTE} replace />
+
+  const RESET_PASSWORD_INITIAL_VALUES: TDefaultValue<TResetPasswordData> = {
+    newPassword: { value: "" },
+    confirmPassword: { notIncluded: true, value: "" },
+    token: { value: token },
+  };
+
   return (
-    <FormHandler<ResetPasswordFormValues, void>
+    <FormHandler<TResetPasswordData, void>
       mutationFn={resetPassword}
       FormComponent={ResetPasswordForm}
       initialValues={RESET_PASSWORD_INITIAL_VALUES}
@@ -41,7 +55,7 @@ export default function ResetPassword() {
       validationSchema={resetPasswordSchema}
       onSuccess={() => toast.success('Password reset successful')}
       onError={(error) => toast.error('Failed to reset password: ' + error?.message)}
-      storeKey="resetPasswordForm"
+      storeKey="resetPassword"
     />
   );
 }

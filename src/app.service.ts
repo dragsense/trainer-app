@@ -1,15 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,  Logger } from '@nestjs/common';
+
+
+import { UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Injectable()
+@UseInterceptors(CacheInterceptor)
 export class AppService {
-  getAppInfo(): any {
+  private readonly logger = new Logger(AppService.name);
+
+  constructor() {}
+
+  getAppInfo() {
     return {
-      message: 'DragSense CRM Web App',
-      description:
-        'Designed to be **modular, extensible, and blueprint-driven**, DragSense empowers users to define data, logic, roles, UI, and behavior dynamically.',
+      name: 'Trainer App Web Platform',
+      description: 'A comprehensive solution to manage fitness trainers, their clients, sessions, and payments',
       version: '1.0.0',
       documentation: '/api/docs',
-      developer: 'DragSense',
     };
   }
+
 }

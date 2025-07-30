@@ -1,6 +1,6 @@
 // Types
 import type { StoreApi } from "zustand";
-import { IMessageResponse } from "../general.type";
+import { IMessageResponse } from "../api/response.type";
 
 export type MutationFn<TFormData, TResponse> = (data: TFormData) => Promise<TResponse | IMessageResponse | void>;
 
@@ -18,6 +18,8 @@ export interface IFormHandlerState<TFormData, TResponse> extends IFormHandlerBas
   values: TFormData;
   setIsSubmitting: (isSubmitting: boolean) => void;
   setError: (error: Error | null) => void;
+  onSubmit: (e: React.BaseSyntheticEvent | undefined) => void;
+  setOnSubmit: (submitFn: (e: React.BaseSyntheticEvent | undefined) => void) => void;
   setValues: (values: TFormData) => void;
   syncWithMutation: (state: IFormHandlerBaseState<TResponse>) => void;
   reset: () => void;

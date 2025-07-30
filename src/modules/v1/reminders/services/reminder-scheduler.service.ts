@@ -2,10 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { Reminder } from '../entities/reminder.entity';
-import { ReminderStatus } from '../enums/reminder-status.enum';
-import { ReminderType } from '../enums/reminder-type.enum';
+import { ReminderType, ReminderStatus } from '../enums/reminder.enum';
 import { UsersService } from '@/modules/v1/users/users.service';
-import { User } from '@/modules/v1/users/entities/user.entity';
 
 @Injectable()
 export class ReminderSchedulerService {
@@ -33,6 +31,11 @@ export class ReminderSchedulerService {
 
   private async sendReminder(reminder: Reminder): Promise<void> {
     try {
+
+      if(!reminder.recipient) {
+        throw new NotFoundException('Recipient not found');  
+      }
+
       const recipient = await this.usersService.findOne({ id: reminder.recipient.id });
       if (!recipient) {
         throw new Error('Recipient not found');
@@ -74,6 +77,13 @@ export class ReminderSchedulerService {
     } catch (error) {
       reminder.status = ReminderStatus.FAILED;
       reminder.lastError = error.message;
+      reminder.retryCount += 1;
+      
+      // Set next retry time if under max attempts
+      if (reminder.retryCount < reminder.maxAttempts) {
+        reminder.nextRetryAt = new Date(Date.now() + reminder.retryInterval * 60000);
+      }
+      
       await this.reminderRepository.save(reminder);
       throw error;
     }
@@ -83,10 +93,10 @@ export class ReminderSchedulerService {
     let message = '';
     switch (reminder.type) {
       case ReminderType.PAYMENT:
-        message = `Payment reminder: Please make your payment for ${reminder.payment?.description || 'your session'}.`;
+        message = 'Payment reminder: You have a pending payment due.';
         break;
       case ReminderType.SESSION:
-        message = `Session reminder: You have a session scheduled for ${reminder.session?.dateTime.toLocaleString()}.`;
+        message = `Session reminder: You have a session scheduled.`;
         break;
       case ReminderType.CUSTOM:
         message = 'This is a custom reminder message.';
@@ -117,5 +127,59 @@ export class ReminderSchedulerService {
       },
       relations: ['creator', 'recipient', 'session', 'payment'],
     });
+  }
+
+  async processReminder(id: number): Promise<void> {
+    const reminder = await this.reminderRepository.findOne({
+      where: { id },
+      relations: ['creator', 'recipient', 'session', 'payment'],
+    });
+
+    if (!reminder) {
+      throw new NotFoundException('Reminder not found');
+    }
+
+    await this.sendReminder(reminder);
+  }
+
+  async processImmediateReminders(): Promise<void> {
+    const dueReminders = await this.getDueReminders();
+    
+    for (const reminder of dueReminders) {
+      try {
+        await this.sendReminder(reminder);
+      } catch (error) {
+        console.error(`Failed to process immediate reminder ${reminder.id}:`, error);
+      }
+    }
+  }
+
+  async retryFailedReminders(): Promise<void> {
+    const now = new Date();
+    const failedReminders = await this.reminderRepository.find({
+      where: [
+        { status: ReminderStatus.FAILED },
+        { status: ReminderStatus.RETRY }
+      ],
+      relations: ['creator', 'recipient', 'session', 'payment'],
+    });
+
+    for (const reminder of failedReminders) {
+      // Check if it's time to retry
+      if (reminder.nextRetryAt && reminder.nextRetryAt <= now) {
+        if (reminder.retryCount < reminder.maxAttempts) {
+          try {
+            reminder.status = ReminderStatus.RETRY;
+            reminder.retryCount += 1;
+            reminder.nextRetryAt = new Date(now.getTime() + reminder.retryInterval * 60000);
+            await this.reminderRepository.save(reminder);
+            
+            await this.sendReminder(reminder);
+          } catch (error) {
+            console.error(`Failed to retry reminder ${reminder.id}:`, error);
+          }
+        }
+      }
+    }
   }
 }

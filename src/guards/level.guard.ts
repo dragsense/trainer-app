@@ -12,7 +12,10 @@ export class RoleLevelGuard implements CanActivate {
       return true;
     }
 
+
     const { user } = context.switchToHttp().getRequest();
-    return user?.level >= minLevel;
+
+
+    return user?.level <= minLevel;
   }
 }

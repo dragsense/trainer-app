@@ -1,10 +1,21 @@
-// Types
-import { AuthUser } from "@/@types/auth.type";
+// External Libraries
+import { MoreHorizontal, User, Mail, LogOut, Loader2 } from "lucide-react";
 
 // UI Components
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MobileUserDropdown } from "@/components/nav/nav-user";
+
+// Hooks
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { useLogout } from "@/hooks/use-logout";
 
 // Assets
 import navLogo from "@/assets/logos/nav-logo.png";
@@ -12,12 +23,16 @@ import navLogo from "@/assets/logos/nav-logo.png";
 
 interface AppHeaderProps {
   title: string;
-  user: AuthUser;
 }
 
-export function AppHeader({ title, user }: AppHeaderProps) {
-  const userName = user?.name;
-  const email = user?.email;
+export function AppHeader({ title }: AppHeaderProps) {
+
+  const { user } = useAuthUser();
+  const { logout, isLoading } = useLogout();
+
+  const firstName = user?.profile?.firstName || "Unknown";
+  const fullName = user ? `${user?.profile?.firstName} ${user?.profile?.lastName}` : "Unknown";
+  const email = user?.email || "Unknown";
 
   return (
     <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-20 shrink-0 items-center gap-2 transition-[width,height] ease-linear">
@@ -28,17 +43,45 @@ export function AppHeader({ title, user }: AppHeaderProps) {
         </div>
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
           <Avatar className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg ">
-            <AvatarImage src={navLogo} alt={userName} />
+            <AvatarImage src={navLogo} alt={firstName} />
             <AvatarFallback className="rounded-xxl bg-blue/10">
-              {userName?.substring(0, 2).toLocaleUpperCase()}
+              {firstName?.substring(0, 2).toLocaleUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="hidden sm:grid flex-1 text-left text-sm leading-tight">
-            <span className=" font-semibold text-nowrap ">NASTP Member</span>
-            <span className="text-sm text-muted-foreground">Admin</span>
+            <span className=" font-semibold text-nowrap ">{fullName}</span>
+            <span className="text-sm text-muted-foreground">{email}</span>
           </div>
           <div className="sm:hidden flex items-center justify-between">
-            <MobileUserDropdown userName={userName} email={email} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>{fullName}</span>
+                </DropdownMenuItem>
+                {email && (
+                  <DropdownMenuItem>
+                    <Mail className="mr-2 h-4 w-4" />
+                    <span>{email}</span>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

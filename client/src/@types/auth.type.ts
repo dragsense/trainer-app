@@ -1,42 +1,25 @@
-import { User } from "./user.type";
+import { LoginDto, LoginResponseDto } from "#/modules/v1/auth/dto/login.dto";
+import { RegisterDto } from "#/modules/v1/auth/dto/register.dto";
+import { ForgotPasswordDto } from "#/modules/v1/auth/dto/forgot-password.dto";
+import { ResetPasswordWithTokenDto } from "#/modules/v1/auth/dto/reset-password.dto";
 
-export type AuthUser = Omit<User, "createdAt" | "updatedAt"> | null;
+import { IUser } from "./user.type";
 
-export type TLoginData = {
-  email: string;
-  password: string;
-};
+export type IAuthUser = IUser | null;
 
-export interface ILoginResponse {
-  user: User;
-  token: string;
-  message: string;
+export type TLoginData = {} & LoginDto;
+
+export interface ILoginResponse extends LoginResponseDto {
 }
 
 export type TSignupData = {
-  name: string;
-  email: string;
-  password: string;
   confirmPassword: string;
-};
+} & RegisterDto;
 
 export type TForgotPasswordData = {
-  email: string;
-};
+} & ForgotPasswordDto;
 
 export type TResetPasswordData = {
-  password: string;
   confirmPassword: string;
-};
-
-export interface IForgotPasswordResponse {
-  message: string;
-}
-
-export interface IResetPasswordResponse {
-  message: string;
-}
-
-export type TForgotPasswordFormValues = TForgotPasswordData;
-export type TResetPasswordFormValues = TResetPasswordData;
+} & ResetPasswordWithTokenDto;
 

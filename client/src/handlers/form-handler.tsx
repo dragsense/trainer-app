@@ -7,8 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 
 // Types
-import { IMessageResponse } from "@/@types/general.type";
-import { EVALIDATION_MODES } from "@/@types/enums/form.enums";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { z } from "zod";
 
 // Custom Hooks
@@ -24,17 +23,20 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 
 // Stores
-import { useFormHandlerStore } from "@/stores";
-import { deregisterFormStore, registerFormStore, useTypedFormStore } from "@/stores/form/form-store-registry";
-import { useStore } from "zustand";
+import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
+import { IMessageResponse } from "@/@types/api/response.type";
+import { TDefaultValue } from "@/@types/form/field.type";
 
-interface FormHandlerProps<TFormData, TResponse, TFormExtraProps> {
+
+export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
   mutationFn: (data: TFormData) => Promise<TResponse | IMessageResponse | void>;
-  FormComponent: React.ComponentType<{ storeKey: string } & TFormExtraProps>;
+  FormComponent: React.ComponentType<{
+    storeKey: string
+  } & TFormExtraProps>;
   formProps?: TFormExtraProps;
   onSuccess?: (response: TResponse | IMessageResponse | void) => void;
   onError?: (error: Error) => void;
-  initialValues: Readonly<TFormData>;
+  initialValues: Readonly<TDefaultValue<TFormData>>;
   validationMode?: EVALIDATION_MODES;
   validationSchema: z.ZodType<TFormData, any, TFormData>;
   storeKey: string;
@@ -51,17 +53,35 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
   storeKey,
-}: FormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
+}: IFormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
 
-  let store = useTypedFormStore<TFormData, TResponse>(storeKey);
+  const formStoreKey = storeKey + "-form";
+
+  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey);
   if (!store) {
-    store = useFormHandlerStore<TFormData, TResponse>(initialValues);
-    registerFormStore(storeKey, store);
+
+    const values = Object.keys(initialValues)
+      .filter((key) => !initialValues[key as keyof typeof initialValues].notInput)
+      .map((key) => ({
+        [key]: initialValues[key as keyof typeof initialValues].value
+      }))
+      .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as TFormData;
+
+    store = useFormHandlerStore<TFormData, TResponse>(values);
+    registerStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey, store);
   }
 
 
 
   const mutation = useApiMutation(mutationFn, {
+    onMutate: () => {
+      store.getState().syncWithMutation({
+        isSubmitting: true,
+        error: null,
+        isSuccess: false,
+        response: null,
+      });
+    },
     onSuccess: (response) => {
       store.getState().syncWithMutation({
         isSubmitting: false,
@@ -82,19 +102,18 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   });
 
   useEffect(() => {
+    registerStore(formStoreKey, store);
     return () => {
       mutation.reset();
-      deregisterFormStore(storeKey);
+      deregisterStore(formStoreKey);
       store.getState().reset();
     };
-  }, []);
+  }, [formStoreKey]);
 
   useEffect(() => {
     const unsubscribeStore = store.subscribe(
       (state) => {
         if (state.isSuccess && state.response && onSuccess) {
-          console.log(state);
-
           onSuccess(state.response);
         }
         if (state.error && onError) {
@@ -114,20 +133,33 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   });
 
 
-  const onSubmit: SubmitHandler<TFormData> = async (data) => {
-    try {
-      store.getState().syncWithMutation({ isSubmitting: true, error: null, isSuccess: false, response: null });
-      await mutation.mutateAsync(data);
-      store.getState().reset();
-    } finally {
-    }
-  };
+  useEffect(() => {
+    const submitHandler = form.handleSubmit(async (data) => {
+      const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
+        if (!config.notIncluded) {
+          acc[key as keyof TFormData] = config.notInput
+            ? config.value 
+            : data[key as keyof TFormData] || initialValues[key].value;
+        }
+        return acc;
+      }, {} as TFormData);
+
+
+      try {
+        await mutation.mutateAsync(submissionData);
+      } finally {
+        // any cleanup here
+      }
+    });
+
+    store.getState().setOnSubmit(submitHandler);
+  }, [form, initialValues, mutation]);
+
+
 
   const FormWrapper = ({ children }: { children: ReactNode }) => (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        {children}
-      </form>
+      {children}
     </Form>
   );
 

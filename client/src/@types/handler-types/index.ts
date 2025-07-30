@@ -1,8 +1,14 @@
-import { Id, ItemActionProps, IMessageResponse } from "../general.type";
+import { IMessageResponse } from "../api/response.type";
+
+export type TItemActionProps = {
+  itemName: string;
+  action: string;
+  extraAction?: string;
+  id: number;
+};
+
 
 export type ExtraComponentProps<T> = T & {
-  itemAction: ItemActionProps | null;
-  setItemAction: (itemAction: ItemActionProps | null) => void;
   handleInvalidateQuery: (res: unknown) => void;
 };
 
@@ -13,7 +19,7 @@ export interface IExtraComponent<TListExtraProps = any> {
 
 export interface MutationFns<TFormData, TResponse> {
   deleteFn?: (id: number) => Promise<void>;
-  updateFn?: (params: Id) => (item: TFormData) => Promise<IMessageResponse>;
+  updateFn?: (id: number) => (item: TFormData) => Promise<IMessageResponse>;
   createFn?: (
     item: Omit<TFormData, "id" | "createdAt" | "updatedAt">
   ) => Promise<TResponse>;

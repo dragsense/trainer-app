@@ -6,17 +6,22 @@ import {
   OneToOne,
   JoinColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { Profile } from '../profiles/entities/profile.entity';
 import { Session } from '../../sessions/entities/session.entity';
-import { UserRole } from '@/common/enums/role.enum';
-import { PaymentMethod } from '../../payment-methods/entities/payment-method.entity';
-import { Payment } from '../../payments/entities/payment.entity';
+
+import { UserLevels, UserRole } from '../enums/user.enum';
 import { Reminder } from '../../reminders/entities/reminder.entity';
+
+
+export type UserLevelType = typeof UserLevels[UserRole];
+export const UserLevelValues = Object.values(UserLevels);
+
 
 @Entity('users')
 export class User extends GeneralBaseEntity {
@@ -33,36 +38,52 @@ export class User extends GeneralBaseEntity {
   @Column({ type: 'varchar', length: 100, select: false })
   password: string;
 
-  @ApiProperty({ description: 'User role (ADMIN/TRAINER/CLIENT)' })
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
-  role: UserRole;
+  @ApiProperty({
+    example: UserLevels[UserRole.TRAINER],
+    enum: UserLevelValues,
+    description: 'User role',
+  })
+  @Column({ type: 'int', nullable: false })
+  level: UserLevelType;
 
-  @ApiProperty({ description: 'User profile information' })
-  @OneToOne(() => Profile, (profile) => profile.user)
+
+  @ApiPropertyOptional({ example: true, description: 'Trainer active status' })
+  @Column({ type: 'boolean', default: true })
+  isActive?: boolean;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'trainer_id' })
+  trainer?: User;
+
+  @ManyToOne(() => User, (user) => user.createdUsers, {
+    onDelete: 'RESTRICT',
+    nullable: true,
+  })
+  owner: User;
+
+
+  @OneToMany(() => User, (user) => user.owner)
+  createdUsers: User[];
+
+
+  // Other relationships
+  @OneToOne(() => Profile)
   @JoinColumn()
-  profile: Profile;
+  profile?: Profile;
 
-  @OneToMany(() => Session, (session: Session) => session.trainer)
-  @ApiProperty({ type: () => [Session], description: 'Sessions created by the trainer' })
-  createdSessions: Session[];
+  @OneToMany(() => Session, session => session.client)
+  clientSessions?: Session[];
 
-  @OneToMany(() => Session, (session: Session) => session.client)
-  @ApiProperty({ type: () => [Session], description: 'Sessions booked by the client' })
-  clientSessions: Session[];
+  @OneToMany(() => Session, session => session.trainer)
+  trainerSessions?: Session[];
 
-  @OneToMany(() => PaymentMethod, (paymentMethod: PaymentMethod) => paymentMethod.user)
-  @ApiProperty({ type: () => [PaymentMethod], description: 'Payment methods associated with the user' })
-  paymentMethods: PaymentMethod[];
 
-  @OneToMany(() => Payment, (payment: Payment) => payment.client)
-  @ApiProperty({ type: () => [Payment], description: 'Payments made by the user' })
-  payments: Payment[];
+  @OneToMany(() => Reminder, reminder => reminder.creator)
+  createdReminders?: Reminder[];
 
-  @OneToMany(() => Reminder, (reminder: Reminder) => reminder.creator)
-  @ApiProperty({ type: () => [Reminder], description: 'Reminders created by the user' })
-  createdReminders: Reminder[];
+  @OneToMany(() => Reminder, reminder => reminder.recipient)
+  receivedReminders?: Reminder[];
 
-  @OneToMany(() => Reminder, (reminder: Reminder) => reminder.recipient)
-  @ApiProperty({ type: () => [Reminder], description: 'Reminders received by the user' })
-  receivedReminders: Reminder[];
+  @OneToMany(() => Reminder, reminder => reminder.recipient)
+  reminders?: Reminder[];
 }

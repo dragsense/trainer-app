@@ -3,9 +3,10 @@ import { useState } from 'react';
 
 // Types
 import { TSignupData } from '@/@types/auth.type';
+import { IMessageResponse } from '@/@types/api/response.type';
 
 // External Libraries
-import { Eye, EyeOff, User, Mail, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Components
@@ -17,8 +18,7 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { useTypedFormStore } from '@/stores/form/form-store-registry';
-import { IMessageResponse } from '@/@types/general.type';
+import { TFormHandlerStore, useRegisteredStore } from '@/stores';
 
 interface ISignupFormProps {
   storeKey: string
@@ -28,10 +28,12 @@ export default function SignupForm({
   storeKey
 }: ISignupFormProps) {
 
-  const signupStore = useTypedFormStore<TSignupData, IMessageResponse>(storeKey);
+  const formStoreKey = storeKey + "-form";
+
+  const signupStore = useRegisteredStore<TFormHandlerStore<TSignupData, IMessageResponse>>(formStoreKey);
 
   if (!signupStore) {
-    return (`Form store "${storeKey}" not found. Did you forget to register it?`);
+    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
   }
 
   const isSubmitting = useStore(signupStore, state => state.isSubmitting);
@@ -42,14 +44,22 @@ export default function SignupForm({
   const { inputs } = useInput({
     fields: [
       {
-        id: 'name',
-        name: 'name',
-        label: 'Full Name',
-        type: 'text',
-        placeholder: 'John Doe',
-        startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
-        required: true
+        id: "firstName",
+        name: "firstName",
+        label: "First Name",
+        placeholder: "John",
+        type: "text",
+        required: true,
       },
+      {
+        id: "lastName",
+        name: "lastName",
+        label: "Last Name",
+        placeholder: "Doe",
+        type: "text",
+        required: true,
+      },
+
       {
         id: 'email',
         name: 'email',

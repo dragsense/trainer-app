@@ -5,14 +5,9 @@ import { useLocation } from "react-router-dom";
 // External Libraries
 import { Outlet } from "react-router-dom";
 
-// Types
-import { AuthUser } from "@/@types/auth.type";
-
 // Config
 import { ADMIN_ROUTES } from "@/config/routes.config";
 
-// Hooks
-import { useAuth } from "@/hooks/use-auth";
 
 // Layout Components
 import { AppSidebar } from "@/components/layout-ui/app-sidebar";
@@ -24,21 +19,21 @@ import { matchRoutePath } from "@/lib/utils";
 // UI Components
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-// Assets
-import logo from "@/assets/logos/logo.png";
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  user: AuthUser;
 }
 
 const ROUTE_TITLES: Record<string, string> = {
+  [ADMIN_ROUTES.DASHBOARD]: "Dashboard",
+  [ADMIN_ROUTES.TRAINERS]: "Trainers",
+  [ADMIN_ROUTES.CLIENTS]: "Clients",
+  [ADMIN_ROUTES.SESSIONS]: "Sessions",
+  [ADMIN_ROUTES.REMINDERS]: "Reminders",
 };
 
-export default function DashboardLayout({
-  children,
-  user,
-}: DashboardLayoutProps) {
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
 
 
@@ -53,7 +48,7 @@ export default function DashboardLayout({
       }
     }
 
-    return "Dashboard";
+    return "Unknown Page";
   };
 
   const title = getRouteTitle();
@@ -62,7 +57,6 @@ export default function DashboardLayout({
     <SidebarProvider>
       <AppSidebar
         variant="inset"
-        logoSrc={logo}
         className="p-0"
         themeClass="dark"
       />
@@ -73,22 +67,21 @@ export default function DashboardLayout({
           color: "var(--foreground)",
         }}
       >
-        <AppHeader title={title} user={user} />
-       
+        <AppHeader title={title} />
+        <div className="flex flex-1 flex-col p-4 lg:px-6">
+          <div className="@container/main flex flex-1 flex-col gap-2">
+            {children}
+          </div>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
 export function DashboardLayoutWrapper() {
-  const { user } = useAuth();
-
-  // if (!user) {
-  //   return <Navigate to="/login" replace />;
-  // }
 
   return (
-    <DashboardLayout user={user as AuthUser}>
+    <DashboardLayout>
       <Outlet />
     </DashboardLayout>
   );

@@ -4,50 +4,49 @@ import { ReactNode } from "react";
 // External Libraries
 import { Loader2 } from "lucide-react";
 
-// Layout Components
-import { AppForm } from "../layout-ui/app-form";
+//Types
+import { IFormStoreApi } from "@/@types/handler-types";
 
 // Utils
 import { cn } from "@/lib/utils";
 
+// Stores
+import { useStore } from "zustand";
 
-interface FormProps {
+
+interface ISimpleFormProps<TFormData, TResponse> {
   className?: string;
   isSubmitting?: boolean;
   error?: string | null;
   children: ReactNode;
   buttons?: ReactNode;
-  form: any;
+  formStore: IFormStoreApi<TFormData, TResponse>;
 }
 
-export function SimpleForm({
+export function SimpleForm<TFormData, TResponse>({
   className,
-  isSubmitting,
-  error,
   children,
-  buttons,
-  form,
-}: FormProps) {
+  formStore,
+}: ISimpleFormProps<TFormData, TResponse>) {
+
+  const { isSubmitting, error, onSubmit } = useStore(formStore);
 
   return (
-    <div className={cn("relative flex flex-col gap-6", className)}>
-      {isSubmitting && (
-        <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+    <form onSubmit={onSubmit}>
+      <div className={cn("relative flex flex-col gap-6", className)}>
 
-      <AppForm
-        isSubmitting={isSubmitting}
-        form={form}
-        buttons={buttons}
-      >
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        )}
+
         {children}
-      </AppForm>
 
-      {error && (
-        <p className="text-sm font-medium text-red-500 my-2">{error}</p>
-      )}
-    </div>
+        {error && (
+          <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
+        )}
+      </div>
+    </form>
   );
 }

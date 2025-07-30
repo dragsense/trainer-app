@@ -1,17 +1,24 @@
+// External Libraries
+import { z } from "zod";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
 // Types
 import { TLoginData } from "@/@types/auth.type";
-import { z } from "zod";
-
-// Custom Hooks
-import { useAuth } from "@/hooks/use-auth";
-import { EVALIDATION_MODES } from "@/@types/enums/form.enums";
+import { TDefaultValue } from "@/@types/form/field.type";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Custom UI Components
 import { LoginForm } from "@/components/auth";
-import { toast } from "sonner";
+
+// Services
+import { login } from "@/services/auth.api";
+
+// config
+import { ADMIN_ROUTES } from "@/config/routes.config";
 
 
 // Schema
@@ -20,18 +27,18 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters")
 });
 
-// Extract the TypeScript type
-export type LoginFormValues = z.infer<typeof loginSchema>;
-
-// Get default values from schema
-export const LOGIN_INITIAL_VALUES: LoginFormValues = {
-  email: "",
-  password: ""
-};
 
 
 export default function Login() {
-  const { login } = useAuth();
+
+  const navigate = useNavigate();
+
+  const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
+    email: { value: "" },
+    password: { value: "" },
+  };
+
+
   return (
     <FormHandler<TLoginData, void>
       mutationFn={login}
@@ -39,9 +46,13 @@ export default function Login() {
       initialValues={LOGIN_INITIAL_VALUES}
       validationMode={EVALIDATION_MODES.OnChange}
       validationSchema={loginSchema}
-      onSuccess={() => toast.success('Login successful')}
+      onSuccess={() => {
+        toast.success('Login successful')
+        navigate(ADMIN_ROUTES.DASHBOARD)
+      }
+      }
       onError={(error) => toast.error('Login failed: ' + error?.message)}
-      storeKey="loginForm"
+      storeKey="login"
     />
   );
 }

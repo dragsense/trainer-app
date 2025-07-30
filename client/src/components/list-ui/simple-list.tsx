@@ -1,34 +1,42 @@
 // React
-import { ReactNode } from "react";
+import { JSX, ReactNode } from "react";
 
 // External Libraries
 import { Loader2 } from "lucide-react";
 
-// Layout Components
-import AppList, { AppListProps } from "../layout/app-list";
-
 // Utils
 import { cn } from "@/lib/utils";
 
+// Types
+import { IListStoreApi } from "@/@types/handler-types";
+import { useStore } from "zustand";
 
-interface SimpleListProps {
+
+interface ISimpleListProps<TData> {
     className?: string;
-    loading?: boolean;
-    error?: string | null;
     limit?: number
-    children?: ReactNode
+    renderItem: (item: TData, index: number) => React.ReactNode;
+    emptyState?: JSX.Element
+    children?: ReactNode,
+    listStore: IListStoreApi<TData>;
+
 }
 
-export default function SimpleList<T>({
-    data,
-    loading,
-    error,
+export default function SimpleList<TData>({
     renderItem,
     className,
     children,
     emptyState,
+    listStore,
     limit = 3,
-}: SimpleListProps & AppListProps<T>) {
+}: ISimpleListProps<TData>) {
+
+
+    const { response: data, isLoading: loading, error } = useStore(listStore);
+
+    let list = limit ? data?.slice(0, limit) : data;
+    list = list || [];
+
     return (
         <div className={cn("relative flex flex-col gap-6", className)}>
             {loading && (
@@ -38,10 +46,21 @@ export default function SimpleList<T>({
             )}
 
             {children}
-            <AppList data={data} renderItem={renderItem} limit={limit} emptyState={emptyState} />
+            <div className="space-y-3">
+                {list.length > 0 ? list.map((item, index) => (
+                    <div key={index}>
+                        {renderItem(item, index)}
+                    </div>
+                )) : (
+                    emptyState ||
+                    <div className="text-sm text-muted-foreground">
+                        No data found
+                    </div>
+                )}
+            </div>
 
             {error && (
-                <p className="text-sm font-medium text-red-500 my-2">{error}</p>
+                <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
             )}
         </div>
     )

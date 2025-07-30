@@ -1,140 +1,94 @@
 // React & Hooks
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 
 // Types
-import  { IPaginatedResponse } from "@/@types/api/response.type";
+import { IPaginatedResponse } from "@/@types/api/response.type";
 import {
-  ListParamsWithId,
   IListParams,
 } from "@/@types/api/param.type";
+
 import {
-  ItemActionProps,
-  IMessageResponse,
-} from "@/@types/general.type";
-import {
+  TItemActionProps,
   IExtraComponent,
-  ExtraComponentProps,
-  IFormBaseProps,
-  IListBaseProps,
-  ISingleBaseProps,
-  MutationFns,
 } from "@/@types/handler-types";
 
 // Custom Hooks
 import { usePaginatedQuery } from "@/hooks/use-api-paginated-query";
 
+// Error Components
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from "@/components/shared-ui/error-fallback";
+
 // External Libraries
 import { useQueryClient } from "@tanstack/react-query";
 
 // Handlers
-import { SingleHandler } from "./single-handler";
+import { ISingleHandlerProps, SingleHandler } from "./single-handler";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore } from "@/stores";
 
-interface ExtraComponentRendererProps<TListExtraProps> {
-  extraComponents?: IExtraComponent<TListExtraProps>[];
-  itemAction: ItemActionProps | null;
-  setItemAction: React.Dispatch<React.SetStateAction<ItemActionProps | null>>;
-  listProps: TListExtraProps;
-  handleInvalidateQuery: (res: unknown) => void;
-}
 
-const useExtraComponentsMap = <TListExtraProps,>(
-  components: IExtraComponent<TListExtraProps>[] | undefined
-) => {
-  return React.useMemo(() => {
-    if (!components) return null;
-
-    return components.reduce((acc, extra) => {
-      acc[extra.trigerAction] = extra.comp;
-      return acc;
-    }, {} as Record<string, React.ComponentType<ExtraComponentProps<TListExtraProps>>>);
-  }, [components]);
-};
-
-const ExtraComponentHandler = <TListExtraProps,>({
-  extraComponents,
-  itemAction,
-  setItemAction,
-  listProps,
-  handleInvalidateQuery,
-}: ExtraComponentRendererProps<TListExtraProps>) => {
-  const extraComponentsMap = useExtraComponentsMap(extraComponents);
-  const currentAction = itemAction?.extraAction;
-
-  return React.useMemo(() => {
-    if (!currentAction || !extraComponentsMap) return null;
-
-    const ExtraComp = extraComponentsMap[currentAction];
-
-    if (!ExtraComp) return null;
-
-    return (
-      <ExtraComp
-        key={`extra-comp-${currentAction}`}
-        itemAction={itemAction}
-        setItemAction={setItemAction}
-        handleInvalidateQuery={handleInvalidateQuery}
-        {...listProps}
-      />
-    );
-  }, [currentAction, extraComponentsMap, itemAction, setItemAction, listProps]);
-};
-
-interface ListHandlerProps<
+interface IListHandlerProps<
   TData,
   TFormData,
   TResponse,
   TListExtraProps,
   TFormExtraProps,
   TSingleExtraProps
->  {
-  queryKey: string | any[];
-  queryFn: (params: IListParams) => Promise<IPaginatedResponse<TData>>;
-  ListComponent: React.ComponentType<IListBaseProps<TData> & TListExtraProps>;
-  FormComponent?: React.ComponentType<
-    IFormBaseProps<TFormData, TResponse> & TFormExtraProps
-  >;
-  SingleComponent?: React.ComponentType<
-    ISingleBaseProps<TData> & TSingleExtraProps
-  >;
+> extends ISingleHandlerProps<
+  TData,
+  TFormData,
+  TResponse,
+  TSingleExtraProps,
+  TFormExtraProps> {
+  name?: string;
+  queryListKey: string | any[];
+  queryListFn: (params: IListParams) => Promise<IPaginatedResponse<TData>>;
+  ListComponent: React.ComponentType<{ storeKey: string } & TListExtraProps>;
   extraComponents?: IExtraComponent<TListExtraProps>[];
-  queryKeySingle?: string | any[];
-  queryFnSingle?: (params: ListParamsWithId) => Promise<TData>;
-  mutationFns?: MutationFns<TFormData, TResponse>;
   listProps?: TListExtraProps;
-  formProps?: TFormExtraProps;
-  singleProps?: TSingleExtraProps;
+
+
   initialPage?: number;
   initialLimit?: number;
   initialSortOrder?: "ASC" | "DESC";
   initialSortBy?: string;
   initialFilters?: Record<string, any>;
+
+
 };
 
 export function ListHandler<
   TData,
-  TFormData = any,
+  TFormData extends Record<string, any> = any,
   TResponse = any,
-  TListExtraProps = any,
-  TFormExtraProps = any,
-  TSingleExtraProps = any
+  TListExtraProps extends Record<string, any> = Record<string, any>,
+  TFormExtraProps extends Record<string, any> = Record<string, any>,
+  TSingleExtraProps extends Record<string, any> = Record<string, any>
 >({
-  queryKey,
-  queryFnSingle,
-  queryFn,
-  mutationFns,
+  name = "Item",
+  queryListFn,
   ListComponent,
-  FormComponent,
-  SingleComponent,
   initialPage = 1,
   initialLimit = 10,
   initialSortOrder = "DESC",
   initialSortBy = "createdAt",
   initialFilters = {},
   listProps,
-  formProps,
-  singleProps,
   extraComponents,
-}: ListHandlerProps<
+  queryFn,
+  mutationFns,
+  storeKey,
+  SingleComponent,
+  singleProps,
+  formProps,
+  FormComponent,
+  onSuccess,
+  onError,
+  initialValues,
+  validationMode = EVALIDATION_MODES.OnChange,
+  validationSchema,
+}: IListHandlerProps<
   TData,
   TFormData,
   TResponse,
@@ -143,34 +97,93 @@ export function ListHandler<
   TSingleExtraProps
 >) {
   const queryClient = useQueryClient();
-  const [itemAction, setItemAction] = useState<ItemActionProps | null>(null);
 
-  const { data, isLoading, error, pagination, setPage, setLimit, setFilters } =
-    usePaginatedQuery<TData>(queryKey, queryFn, {
-      page: initialPage,
-      limit: initialLimit,
-      sortBy: initialSortBy,
-      sortOrder: initialSortOrder,
-      filters: initialFilters,
-    });
+  const listStoreKey = storeKey + "-list"
 
-  const handleInvalidateQuery = (res: unknown) => {
+  // Initialize store
+  let store = useRegisteredStore<TListHandlerStore<TData>>(listStoreKey);
+  if (!store) {
+    store = useListHandlerStore<TData>();
+    registerStore<TListHandlerStore<TData>>(listStoreKey, store);
+  }
+
+  useEffect(() => {
+    registerStore(listStoreKey, store);
+    return () => deregisterStore(listStoreKey);
+  }, [listStoreKey, store]);
+
+  const itemAction = store?.getState().itemAction;
+ 
+    const queryKey = [listStoreKey];
+
+
+  usePaginatedQuery<TData>(queryKey, async (params) => {
+    store.setState({ isLoading: true });
+    try {
+      const response = await queryListFn(params);
+      store.setState({
+        response: response.data,
+        pagination: {
+          page: response.page,
+          limit: response.limit,
+          total: response.total,
+          lastPage: response.lastPage,
+          hasNextPage: response.hasNextPage,
+          hasPrevPage: response.hasPrevPage
+        },
+        isLoading: false,
+        error: null,
+        isSuccess: true,
+        filters: params.filters || {},
+        sortBy: params.sortBy || 'createdAt',
+        sortOrder: params.sortOrder || 'DESC',
+        search: params.search || ''
+      });
+      return response;
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      store.setState({
+        response: null,
+        pagination: {
+          page: 1,
+          limit: initialLimit,
+          total: 0,
+          lastPage: 1,
+          hasNextPage: false,
+          hasPrevPage: false
+        },
+        isLoading: false,
+        error: err,
+        isSuccess: false,
+        filters: {},
+        sortBy: 'createdAt',
+        sortOrder: 'DESC',
+        search: ''
+      });
+      throw err;
+    }
+  }, {
+    page: initialPage,
+    limit: initialLimit,
+    sortBy: initialSortBy,
+    sortOrder: initialSortOrder,
+    filters: initialFilters,
+  });
+
+  const handleInvalidateQuery = (_res: unknown) => {
     queryClient.invalidateQueries({
-      queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+      queryKey,
     });
+    
+    if (onSuccess) {
+      onSuccess(_res as TResponse);
+    }
   };
 
   return (
-    <>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ListComponent
-        data={data?.data || []}
-        loading={isLoading}
-        error={error?.message || null}
-        pagination={pagination}
-        onPageChange={setPage}
-        onLimitChange={setLimit}
-        onFilterChange={setFilters}
-        setItemAction={setItemAction}
+        storeKey={storeKey}
         {...(listProps as TListExtraProps)}
       />
 
@@ -179,45 +192,45 @@ export function ListHandler<
         TFormData,
         TResponse,
         TSingleExtraProps,
-        TFormExtraProps & any
+        TFormExtraProps
       >
-        params={{ id: itemAction?.id || 0 }}
-        queryKey={[(queryKey || "no") + "_item", itemAction?.id || 0]}
-        queryFn={
-          queryFnSingle && itemAction?.id
-            ? queryFnSingle
-            : () => Promise.reject("No query function available")
-        }
+      name={name}
+        storeKey={storeKey}
+        queryFn={queryFn}
         SingleComponent={SingleComponent}
         FormComponent={FormComponent}
         mutationFns={
           mutationFns
             ? {
-                ...mutationFns,
-                onSuccess: (action: string) => (res: unknown) => {
-                  handleInvalidateQuery(res);
-
-                  if (mutationFns.onSuccess) {
-                    mutationFns.onSuccess(action)(
-                      res as TResponse | IMessageResponse | void
-                    );
-                  }
-                },
-              }
-            : mutationFns
+              ...mutationFns,
+              onSuccess: (action: string) => (res: unknown) => {
+                handleInvalidateQuery(res);
+                if (mutationFns.onSuccess) {
+                  mutationFns.onSuccess(action)(res as TResponse);
+                }
+              },
+            }
+            : undefined
         }
-        itemAction={itemAction}
-        formProps={formProps as TFormExtraProps}
-        singleProps={singleProps as TSingleExtraProps}
+        formProps={formProps}
+        singleProps={singleProps}
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        validationMode={validationMode}
       />
 
-      <ExtraComponentHandler
-        extraComponents={extraComponents}
-        itemAction={itemAction}
-        setItemAction={setItemAction}
-        listProps={listProps}
-        handleInvalidateQuery={handleInvalidateQuery}
-      />
-    </>
+      {extraComponents?.map((extraComp, index) => {
+        const Component = extraComp.comp;
+        return (
+          <Component
+            key={index}
+            itemAction={itemAction}
+            setItemAction={(action: TItemActionProps | null) => store?.getState().setItemAction(action)}
+            {...(listProps as TListExtraProps)}
+            handleInvalidateQuery={handleInvalidateQuery}
+          />
+        );
+      })}
+    </ErrorBoundary>
   );
 }

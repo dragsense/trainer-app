@@ -1,50 +1,59 @@
 // React
-import { ReactNode } from "react";
+import { JSX, ReactNode } from "react";
 
 // External Libraries
 import { Loader2 } from "lucide-react";
 
 // UI Components
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
 } from "../ui/card";
 
-// Layout Components
-import AppList, { AppListProps } from "../layout/app-list";
+// Handlers
+import { IListStoreApi } from "@/@types/handler-types";
+
 
 // Utils
 import { cn } from "@/lib/utils";
 
+// Stores
+import { useStore } from "zustand";
 
-interface CardListProps {
+
+interface ICardListProps<TData> {
     className?: string;
-    loading?: boolean;
-    error?: string | null;
     title: string;
     description?: string;
     footerContent?: ReactNode;
     limit?: number
-    children?: ReactNode
+    children?: ReactNode,
+    renderItem: (item: TData, index: number) => React.ReactNode;
+    emptyState?: JSX.Element
+    listStore: IListStoreApi<TData>;
 }
 
-export default function CardList<T>({
-    data,
+export default function CardList<TData>({
     title,
-    loading,
-    error,
     description,
     footerContent,
     renderItem,
     className,
     children,
     emptyState,
+    listStore,
     limit = 3,
-}: CardListProps & AppListProps<T>) {
+}: ICardListProps<TData>) {
+
+    const { response: data, isLoading: loading, error } = useStore(listStore);
+
+    let list = limit ? data?.slice(0, limit) : data;
+    list = list || [];
+
     return (
         <div className={cn("relative flex flex-col gap-6", className)}>
             {loading && (
@@ -60,19 +69,27 @@ export default function CardList<T>({
 
                 <CardContent>
                     {children}
-                    <AppList data={data} renderItem={renderItem} limit={limit} emptyState={emptyState} />
+
+                    <div className="space-y-3">
+                        {list.length > 0 ? list.map((item, index) => (
+                            <div key={index}>
+                                {renderItem(item, index)}
+                            </div>
+                        )) : (
+                            emptyState ||
+                            <div className="text-sm text-muted-foreground">
+                                No data found
+                            </div>
+                        )}
+                    </div>
 
                     {error && (
-                        <p className="text-sm font-medium text-red-500 my-2">{error}</p>
+                        <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
                     )}
 
                 </CardContent>
                 <CardFooter className="gap-1">
-
                     {footerContent}
-
-
-
                 </CardFooter>
 
             </Card>

@@ -1,8 +1,6 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ReminderType } from '../enums/reminder-type.enum';
-import { ReminderStatus } from '../enums/reminder-status.enum';
-
+import { ReminderType, ReminderStatus, ReminderFrequency } from '../enums/reminder.enum';
 export class CreateReminderDto {
   @ApiProperty({
     description: 'Type of reminder (PAYMENT, SESSION, CUSTOM)',
@@ -46,12 +44,74 @@ export class CreateReminderDto {
   message?: string;
 
   @ApiProperty({
-    description: 'Scheduled time for sending the reminder',
-    example: '2025-07-01T06:49:35+05:00',
+    description: 'Frequency of the reminder',
+    enum: ReminderFrequency,
+    example: ReminderFrequency.DAILY,
+  })
+  @IsNotEmpty()
+  @IsEnum(ReminderFrequency)
+  frequency: ReminderFrequency;
+
+  
+  @ApiProperty({
+    description: 'Scheduled date and time for the reminder schedule',
+    example: '2025-07-08T09:00:00.000Z',
   })
   @IsNotEmpty()
   @IsDate()
   scheduledAt: Date;
+
+  @ApiProperty({
+    description: 'Start date and time for the reminder schedule',
+    example: '2025-07-08T09:00:00.000Z',
+  })
+  @IsNotEmpty()
+  @IsDate()
+  startAt: Date;
+
+  @ApiProperty({
+    description: 'Custom interval in minutes (required for MINUTELY/HOURLY frequency)',
+    example: 30,
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  intervalMinutes?: number;
+
+  @ApiProperty({
+    description: 'Selected weekdays for WEEKLY frequency (0 = Sunday, 6 = Saturday)',
+    example: [1, 3, 5],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  weekdays?: number[];
+
+  @ApiProperty({
+    description: 'Selected days of month for MONTHLY frequency',
+    example: [1, 15, 28],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  @Max(31, { each: true })
+  monthDays?: number[];
+
+  @ApiProperty({
+    description: 'Specific time of day for DAILY/WEEKLY/MONTHLY frequency (HH:mm)',
+    example: '09:00',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'Time of day must be in HH:mm format',
+  })
+  timeOfDay?: string;
 
   @ApiProperty({
     description: 'Maximum number of times to send this reminder',

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 // Custom Hooks
-import { useAuth } from "@/hooks/use-auth";
+import { useAuthUser } from "@/hooks/use-auth-user";
 
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
@@ -13,7 +13,7 @@ import { AppLoader } from "@/components/layout-ui/app-loader";
 
 
 export default function PrivateRoute() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useAuthUser();
   const location = useLocation();
 
   if (isLoading) return <AppLoader />;
