@@ -236,7 +236,7 @@ export function useInput({
                         selected={controllerField.value}
                         captionLayout="dropdown"
                         onSelect={(date) => {
-                            controllerField.onChange(date);
+                            controllerField.onChange(date?.toISOString());
                           setOpen(false)
                         }}
                       />

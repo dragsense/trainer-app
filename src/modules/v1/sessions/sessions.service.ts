@@ -82,7 +82,6 @@ export class SessionsService {
       .leftJoinAndSelect('session.trainer', 'trainer')
       .leftJoinAndSelect('session.client', 'client')
       .leftJoinAndSelect('session.createdBy', 'createdBy')
-      .leftJoinAndSelect('session.payments', 'payments');
 
     // Role-based filtering
     const userLevel = user.level;
@@ -153,7 +152,6 @@ export class SessionsService {
       .leftJoinAndSelect('session.trainer', 'trainer')
       .leftJoinAndSelect('session.client', 'client')
       .leftJoinAndSelect('session.createdBy', 'createdBy')
-      .leftJoinAndSelect('session.payments', 'payments')
       .leftJoinAndSelect('session.reminders', 'reminders')
       .where('session.id = :id', { id });
 

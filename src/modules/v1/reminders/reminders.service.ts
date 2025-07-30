@@ -103,7 +103,6 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.creator', 'creator')
       .leftJoinAndSelect('reminder.recipient', 'recipient')
       .leftJoinAndSelect('reminder.session', 'session')
-      .leftJoinAndSelect('reminder.payment', 'payment');
 
     if (user) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
@@ -165,7 +164,7 @@ export class RemindersService {
   async findOne(user: Pick<User, 'id'>, id: number): Promise<Reminder> {
     const reminder = await this.reminderRepository.findOne({
       where: { id, creator: { id: user.id } },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     if (!reminder) {
