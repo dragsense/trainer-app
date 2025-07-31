@@ -36,6 +36,8 @@ import { cn } from "@/lib/utils";
 import type { FieldConfig } from "@/@types/form/field.type";
 import { EORDER_CLASSES } from "@/enums/general.enum";
 import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/custom-ui/multi-select";
 
 
 interface UseInputProps {
@@ -50,6 +52,19 @@ export function useInput({
   layout = "vertical",
 }: UseInputProps) {
 
+
+  const convertValue = (value: any, type?: string) => {
+    if (type === "number") {
+      return value === "" ? undefined : Number(value);
+    } else if (type === "boolean") {
+      return value === "true" || value === true;
+    } else if (type === "date") {
+      return value === "" ? undefined : new Date(value);
+    } else {
+      return value;
+    }
+  };
+
   const inputs = fields.map((field) => {
     const fieldLayout = field.layout || layout;
     const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
@@ -61,6 +76,11 @@ export function useInput({
         key={field.id}
         name={field.name}
         render={({ field: controllerField }) => {
+
+
+          const onChangeHandler = (value: any) => controllerField.onChange(convertValue(value, field.valueType));
+            
+        
           const commonClass = cn(
             field.startAdornment && "pl-10",
             field.endAdornment && "pr-10",
@@ -73,6 +93,7 @@ export function useInput({
                 return (
                   <Textarea
                     {...controllerField}
+                    onChange={onChangeHandler}
                     placeholder={field.placeholder}
                     disabled={field.disabled}
                     className={commonClass}
@@ -83,8 +104,8 @@ export function useInput({
                 return (
                   <Select
                     disabled={field.disabled}
-                    onValueChange={controllerField.onChange}
-                    value={controllerField.value}
+                    onValueChange={onChangeHandler}
+                    value={controllerField.value?.toString() || ""} // Ensure value is a string for Select
                   >
                     <SelectTrigger className={commonClass}>
                       <SelectValue placeholder={field.placeholder || "Select..."} />
@@ -100,49 +121,12 @@ export function useInput({
                 );
               case "multiSelect":
                 return (
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      {(controllerField.value || []).map((val: string) => {
-                        const label = field.options?.find((o) => o.value === val)?.label || val;
-                        return (
-                          <div
-                            key={val}
-                            className="px-3 py-1 bg-accent text-sm rounded-full flex items-center gap-1"
-                          >
-                            {label}
-                            <X className="cursor-pointer" size={14} onClick={() => {
-                              controllerField.onChange(
-                                controllerField.value.filter((v: string) => v !== val)
-                              );
-                            }} />
-
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <Select
-                      onValueChange={(value) => {
-                        if (!controllerField.value?.includes(value)) {
-                          controllerField.onChange([...(controllerField.value || []), value]);
-                        }
-                      }}
-                      disabled={field.disabled}
-                    >
-                      <SelectTrigger className={commonClass}>
-                        <SelectValue placeholder={field.placeholder || "Select..."} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options
-                          ?.filter((opt) => !controllerField.value?.includes(opt.value))
-                          .map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <MultiSelect
+                  value={controllerField.value || []}
+                  onChange={controllerField.onChange}
+                  options={field.options || []}
+                  
+                  />
                 );
 
               case "switch":
@@ -161,6 +145,7 @@ export function useInput({
                         key={star}
                         type="button"
                         size="sm"
+                        variant="ghost"
                         onClick={() => controllerField.onChange(star)}
                         className="text-yellow-500 hover:scale-110 transition-transform"
                       >
@@ -177,7 +162,7 @@ export function useInput({
                       field.className
                     )}
                   >
-                    <input
+                    <Input
                       type="file"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -187,7 +172,7 @@ export function useInput({
                       className="hidden"
                       id={`file-input-${field.id}`}
                     />
-                    <label htmlFor={`file-input-${field.id}`} className="block cursor-pointer">
+                    <Label htmlFor={`file-input-${field.id}`} className="block cursor-pointer">
                       {controllerField.value ? (
                         <div className="text-sm">{controllerField.value.name}</div>
                       ) : (
@@ -195,7 +180,7 @@ export function useInput({
                           📂 Drop or click to upload
                         </div>
                       )}
-                    </label>
+                    </Label>
                   </div>
                 );
               case "slider":
@@ -236,13 +221,71 @@ export function useInput({
                         selected={controllerField.value}
                         captionLayout="dropdown"
                         onSelect={(date) => {
-                            controllerField.onChange(date?.toISOString());
+                          controllerField.onChange(date);
                           setOpen(false)
                         }}
                       />
                     </PopoverContent>
                   </Popover>
                 );
+              case "datetime":
+                return (
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-auto justify-between font-normal"
+                      >
+                        {controllerField.value
+                          ? new Date(controllerField.value).toLocaleString()
+                          : "Select date & time"}
+                        <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-auto p-4 space-y-2" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          controllerField.value ? new Date(controllerField.value) : undefined
+                        }
+                        onSelect={(date) => {
+                          if (date) {
+                            const current = new Date(controllerField.value || new Date());
+                            date.setHours(current.getHours());
+                            date.setMinutes(current.getMinutes());
+                            controllerField.onChange(date);
+                          }
+                        }}
+                      />
+
+                      <div className="flex items-center gap-2">
+                        <Label className="text-sm">Time:</Label>
+                        <Input
+                          type="time"
+                          className="border rounded px-2 py-1 text-sm"
+                          value={
+                            controllerField.value
+                              ? new Date(controllerField.value)
+                                .toTimeString()
+                                .slice(0, 5)
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const [hours, minutes] = e.target.value.split(":").map(Number);
+                            const date = controllerField.value
+                              ? new Date(controllerField.value)
+                              : new Date();
+                            date.setHours(hours);
+                            date.setMinutes(minutes);
+                            controllerField.onChange(date);
+                          }}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                );
+
               case "custom":
                 return field.Component ? (
                   <field.Component
@@ -257,28 +300,7 @@ export function useInput({
                   <Input
                     {...controllerField}
                     type={field.type}
-                    onChange={(e) => {
-                      const { value, type, checked } = e.target;
-
-                      let parsedValue;
-
-                      switch (field.type) {
-                        case 'number':
-                          parsedValue = value === '' ? undefined : Number(value);
-                          break;
-
-                        case 'checkbox':
-                          parsedValue = checked;
-                          break;
-
-                        default:
-                          parsedValue = value;
-                          break;
-                      }
-
-                      controllerField.onChange(parsedValue);
-
-                    }}
+                    onChange={onChangeHandler}
                     placeholder={field.placeholder}
                     disabled={field.disabled}
                     className={commonClass}

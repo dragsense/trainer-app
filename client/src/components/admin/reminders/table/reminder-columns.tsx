@@ -248,7 +248,7 @@ export const columns = ({
                   className="text-destructive"
                   onClick={() => handleDelete(reminder.id)}
                 >
-                  Cancel Reminder
+                  Delete Reminder
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

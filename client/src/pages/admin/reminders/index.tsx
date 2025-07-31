@@ -4,7 +4,7 @@ import { z } from "zod";
 // Types
 import { IReminder, TReminderData } from "@/@types/reminder.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { ReminderType, ReminderFrequency } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderType, ReminderFrequency, ReminderDeliveryMethods } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Handlers
 import { ListHandler } from "@/handlers";
@@ -27,11 +27,12 @@ import { PageInnerLayout } from "@/layouts";
 export const ReminderSchema = z.object({
     type: z.nativeEnum(ReminderType),
     message: z.string().min(5, "Message must be at least 5 characters"),
-    scheduledAt: z.date(),
+    scheduledAt: z.date().min(new Date(), "Scheduled date must be in the future"),
     frequency: z.nativeEnum(ReminderFrequency),
-    startAt: z.date(),
     endDate: z.date().optional(),
-    deliveryMethods: z.array(z.string()).min(1, "At least one delivery method is required"),
+    deliveryMethods: z
+        .array(z.nativeEnum(ReminderDeliveryMethods))
+        .min(1, "At least one delivery method is required"),
     priority: z.number().min(1).max(5).optional(),
     maxAttempts: z.number().min(1).max(10).optional(),
     retryInterval: z.number().min(1).optional(),
@@ -48,9 +49,8 @@ export default function RemindersPage() {
         message: { value: "" },
         scheduledAt: { value: new Date() },
         frequency: { value: ReminderFrequency.ONCE },
-        startAt: { value: new Date() },
         endDate: { value: undefined },
-        deliveryMethods: { value: ["EMAIL"] },
+        deliveryMethods: { value: [ReminderDeliveryMethods.EMAIL] },
         priority: { value: 2 },
         maxAttempts: { value: 3 },
         retryInterval: { value: 1440 },
@@ -58,6 +58,7 @@ export default function RemindersPage() {
         recurringInterval: { value: 7 },
         timeOfDay: { value: "09:00" },
         intervalMinutes: { value: 30 },
+        recipientId: { value: 4 },
     };
 
     return (

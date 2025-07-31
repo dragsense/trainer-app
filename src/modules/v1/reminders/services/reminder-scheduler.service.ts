@@ -2,8 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { Reminder } from '../entities/reminder.entity';
-import { ReminderType, ReminderStatus } from '../enums/reminder.enum';
+import { ReminderType, ReminderStatus, ReminderFrequency } from '../enums/reminder.enum';
 import { UsersService } from '@/modules/v1/users/users.service';
+import { ReminderEmailService } from './reminder-email.service';
 
 @Injectable()
 export class ReminderSchedulerService {
@@ -11,6 +12,7 @@ export class ReminderSchedulerService {
     @InjectRepository(Reminder)
     private readonly reminderRepository: Repository<Reminder>,
     private readonly usersService: UsersService,
+    private readonly reminderEmailService: ReminderEmailService,
   ) {}
 
   async scheduleReminders(): Promise<void> {
@@ -21,7 +23,7 @@ export class ReminderSchedulerService {
         status: ReminderStatus.SCHEDULED,
         scheduledAt: LessThan(now),
       },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     for (const reminder of pendingReminders) {
@@ -45,12 +47,11 @@ export class ReminderSchedulerService {
       let message = reminder.message || this.getDefaultMessage(reminder);
 
       // Send via configured delivery methods
-      for (const method of reminder.deliveryMethods) {
+      for (const method of reminder.actions) {
         switch (method.toLowerCase()) {
           case 'email':
-            // TODO: Implement actual delivery methods
-    // For now, just log the message
-    console.log(`Sending ${method} reminder to ${recipient.email}: ${message}`);
+           this.reminderEmailService.sendReminderEmail(reminder);
+             console.log(`Sending ${method} reminder to ${recipient.email}: ${message}`);
             break;
         }
       }
@@ -62,7 +63,7 @@ export class ReminderSchedulerService {
       await this.reminderRepository.save(reminder);
 
       // Schedule next attempt if needed
-      if (
+      if (reminder.frequency === ReminderFrequency.ONCE &&
         reminder.isRecurring &&
         (!reminder.endDate || reminder.endDate > new Date()) &&
         reminder.sentCount < reminder.maxAttempts
@@ -92,8 +93,8 @@ export class ReminderSchedulerService {
   private getDefaultMessage(reminder: Reminder): string {
     let message = '';
     switch (reminder.type) {
-      case ReminderType.PAYMENT:
-        message = 'Payment reminder: You have a pending payment due.';
+      case ReminderType.BILLING:
+        message = 'Billing reminder: You have a pending payment due.';
         break;
       case ReminderType.SESSION:
         message = `Session reminder: You have a session scheduled.`;
@@ -125,14 +126,14 @@ export class ReminderSchedulerService {
         status: ReminderStatus.SCHEDULED,
         scheduledAt: LessThan(now),
       },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
   }
 
   async processReminder(id: number): Promise<void> {
     const reminder = await this.reminderRepository.findOne({
       where: { id },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     if (!reminder) {
@@ -161,7 +162,7 @@ export class ReminderSchedulerService {
         { status: ReminderStatus.FAILED },
         { status: ReminderStatus.RETRY }
       ],
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     for (const reminder of failedReminders) {

@@ -8,7 +8,7 @@ import { useInput } from "@/hooks/use-input";
 import { FieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderType, ReminderFrequency } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderType, ReminderFrequency, ReminderDeliveryMethods } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,7 @@ export default function ReminderFormModal({
       id: "scheduledAt",
       name: "scheduledAt",
       label: "Scheduled Date & Time",
-      type: "date",
+      type: "datetime",
       required: true,
     },
     {
@@ -88,13 +88,6 @@ export default function ReminderFormModal({
       required: true,
     },
     {
-      id: "startAt",
-      name: "startAt",
-      label: "Start Date",
-      type: "date",
-      required: true,
-    },
-    {
       id: "endDate",
       name: "endDate",
       label: "End Date (Optional)",
@@ -107,9 +100,7 @@ export default function ReminderFormModal({
       label: "Delivery Methods",
       type: "multiSelect",
       options: [
-        { value: "EMAIL", label: "Email" },
-        { value: "SMS", label: "SMS" },
-        { value: "PUSH_NOTIFICATION", label: "Push Notification" },
+        { value: ReminderDeliveryMethods.EMAIL, label: "Email" }
       ],
       required: true,
     },
@@ -118,6 +109,7 @@ export default function ReminderFormModal({
       name: "priority",
       label: "Priority Level",
       type: "select",
+      valueType: "number",
       options: [
         { value: "1", label: "Low (1)" },
         { value: "2", label: "Normal (2)" },
@@ -166,7 +158,7 @@ export default function ReminderFormModal({
       id: "timeOfDay",
       name: "timeOfDay",
       label: "Time of Day (HH:mm)",
-      type: "text",
+      type: "time",
       placeholder: "09:00",
       required: false,
     },

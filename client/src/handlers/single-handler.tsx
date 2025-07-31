@@ -97,7 +97,7 @@ export function SingleHandler<
   }, [sinleStoreKey, store]);
 
 
-  const id = useStore(store, s => s.id);
+  const { id, isDeleting } = useStore(store);
 
   const queryKey = [sinleStoreKey, id];
   const { data, error, isError, isLoading, isSuccess } = useQuery<TData, Error>({
@@ -107,8 +107,8 @@ export function SingleHandler<
   });
 
   useEffect(() => {
-  console.log("🧠 Store ID changed:", isLoading);
-}, [isLoading]);
+    console.log("🧠 Store ID changed:", isLoading);
+  }, [isLoading]);
 
   useEffect(() => {
     store.getState().syncWithQuery({
@@ -175,6 +175,14 @@ export function SingleHandler<
       );
     }
   ), [confirm, deleteItem]);
+
+  useEffect(() => {
+
+    if (isDeleting) {
+      handleDeleteItem(name, id!);
+    }
+
+  }, [isDeleting]);
 
 
   return (

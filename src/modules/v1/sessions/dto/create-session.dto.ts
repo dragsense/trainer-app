@@ -2,14 +2,15 @@
 import { 
   IsNotEmpty, 
   IsString, 
-  IsDateString, 
   IsNumber, 
   IsEnum, 
   IsOptional, 
   IsBoolean, 
   IsPositive, 
   Min,
-  Matches
+  Matches,
+  IsDate,
+  IsDateString
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -33,14 +34,6 @@ export class CreateSessionDto {
   @IsEnum(SessionType)
   type: SessionType;
 
-  @ApiProperty({ 
-    description: 'Time of the session', 
-    example: '12:00 PM' 
-  })
-  @IsNotEmpty()
-  @IsString ()
-  startTime: string;
-
 
   @ApiProperty({ 
     description: 'Date and time of the session', 
@@ -48,7 +41,7 @@ export class CreateSessionDto {
   })
   @IsNotEmpty()
   @IsDateString()
-  startDate: string;
+  dateTime: Date;
 
   @ApiProperty({ 
     description: 'Duration of the session in minutes', 
@@ -68,7 +61,7 @@ export class CreateSessionDto {
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
-  @IsPositive()
+  @Min(0)
   price: number;
 
   @ApiProperty({ 
@@ -105,9 +98,9 @@ export class CreateSessionDto {
     minimum: 2
   })
   @IsOptional()
-  @IsNumber()
+  @IsNumber() 
   @Type(() => Number)
-  @Min(2)
+  @Min(1)
   maxParticipants?: number;
 
   @ApiProperty({ 

@@ -26,7 +26,7 @@ export class SessionsService {
   ) { }
 
   async create(user: User, createSessionDto: CreateSessionDto): Promise<Session> {
-    const { trainerId, clientId, startDate, startTime, ...data } = createSessionDto;
+    const { trainerId, clientId, dateTime, ...data } = createSessionDto;
 
     // Validate users exist and have correct roles
     const [trainer, client] = await Promise.all([
@@ -43,8 +43,6 @@ export class SessionsService {
       throw new BadRequestException('Invalid client ID');
     }
 
-    const datePart = startDate.split('T')[0];;
-    const dateTime = new Date(`${datePart}T${startTime}`);
     const conflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
     if (conflict) {
       throw new BadRequestException('Trainer has a scheduling conflict');
@@ -194,11 +192,10 @@ export class SessionsService {
       }
 
 
-      const dateTime = new Date(data.startDate + 'T' + data.startTime);
-      if (data.startTime || data.duration) {
+      if (data.dateTime || data.duration) {
         const conflict = await this.checkSchedulingConflict(
           trainerId,
-          dateTime || session.dateTime,
+          data.dateTime || session.dateTime,
           data.duration || session.duration,
           id // exclude current session
         );

@@ -68,17 +68,10 @@ export default function SessionFormModal({
       required: true,
     },
     {
-      id: "startDate",
-      name: "startDate",
+      id: "dateTime",
+      name: "dateTime",
       label: "Start Date",
-      type: "date",
-      required: true,
-    },
-    {
-      id: "startTime",
-      name: "startTime",
-      label: "Start Time",
-      type: "time",
+      type: "datetime",
       required: true,
     },
     {

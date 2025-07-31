@@ -116,4 +116,17 @@ export class EnvironmentVariables {
   SUPER_ADMIN_LAST_NAME: string;
 
   
+  // Stripe Configuration
+  @IsOptional()
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
+  
 }

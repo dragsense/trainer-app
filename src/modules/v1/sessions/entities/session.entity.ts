@@ -5,6 +5,8 @@ import {
   OneToMany,
   JoinColumn,
   Index,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -12,10 +14,11 @@ import { User } from '../../users/entities/user.entity';
 import { Reminder } from '../../reminders/entities/reminder.entity';
 import { SessionStatus, SessionType } from '../enums/session.enum';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
+import { Billing } from '../../billings/entities/billing.entity';
 
 @Entity('sessions')
-@Index(['dateTime', 'trainer']) 
-@Index(['dateTime ', 'client']) 
+@Index(['dateTime', 'trainer'])
+@Index(['dateTime ', 'client'])
 export class Session extends GeneralBaseEntity {
   @ApiProperty({ description: 'Title of the session' })
   @Column()
@@ -35,21 +38,21 @@ export class Session extends GeneralBaseEntity {
 
   @ApiProperty({ description: 'Price of the session' })
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  pricePerClient: number;
 
   @ApiProperty({ description: 'Currency for the session price', example: 'USD' })
   @Column({ default: 'USD' })
   currency: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Session status',
     enum: SessionStatus,
     example: SessionStatus.SCHEDULED,
   })
-  @Column({ 
-    type: 'enum', 
-    enum: SessionStatus, 
-    default: SessionStatus.SCHEDULED 
+  @Column({
+    type: 'enum',
+    enum: SessionStatus,
+    default: SessionStatus.SCHEDULED
   })
   status: SessionStatus;
 
@@ -75,46 +78,51 @@ export class Session extends GeneralBaseEntity {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by_id' })
-  @ApiProperty({ 
-    type: () => User, 
-    description: 'Admin who created the session' 
+  @ApiProperty({
+    type: () => User,
+    description: 'Admin who created the session'
   })
   createdBy: User;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'trainer_id' })
-  @ApiProperty({ 
-    type: () => User, 
-    description: 'Trainer assigned to the session' 
+  @ApiProperty({
+    type: () => User,
+    description: 'Trainer assigned to the session'
   })
   trainer: User;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'client_id' })
-  @ApiProperty({ 
-    type: () => User, 
-    description: 'Client for whom the session is scheduled' 
+
+  @ApiProperty({ type: () => [User], description: 'Clients assigned to the session' })
+  @ManyToMany(() => User, { eager: true })
+  @JoinTable({
+    name: 'sessions_clients',
+    joinColumn: { name: 'sessionId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'clientId', referencedColumnName: 'id' },
   })
-  client: User;
+  clients: User[];
 
 
   @OneToMany(() => Reminder, (reminder: Reminder) => reminder.session)
-  @ApiProperty({ 
-    type: () => [Reminder], 
-    description: 'Reminders set for this session' 
+  @ApiProperty({
+    type: () => [Reminder],
+    description: 'Reminders set for this session'
   })
   reminders: Reminder[];
 
+  @OneToMany(() => Billing, (billing) => billing.session)
+  billings: Billing[];
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'updated_by_id' })
-  @ApiProperty({ 
-    type: () => User, 
-    description: 'User who last updated the session' 
+  @ApiProperty({
+    type: () => User,
+    description: 'User who last updated the session'
   })
   updatedBy: User;
 
   // Virtual fields for easy access
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Whether the session is paid',
     readOnly: true
   })
@@ -123,7 +131,7 @@ export class Session extends GeneralBaseEntity {
   })
   isPaid?: boolean;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Whether the session can be cancelled without penalty',
     readOnly: true
   })

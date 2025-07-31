@@ -19,7 +19,14 @@ export enum ReminderStatus {
 
 
 export enum ReminderType {
-  PAYMENT = 'PAYMENT',
+  BILLING = 'BILLING',
   SESSION = 'SESSION',
   CUSTOM = 'CUSTOM',
+}
+
+
+export enum ReminderActions {
+  EMAIL = 'EMAIL',
+  BILLING = 'BILLING',
+  NOTIFICATION = 'NOTIFICATION',
 }

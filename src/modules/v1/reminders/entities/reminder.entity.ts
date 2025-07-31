@@ -10,14 +10,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Session } from '../../sessions/entities/session.entity';
-import { ReminderFrequency,ReminderType, ReminderStatus } from '../enums/reminder.enum';
+import { ReminderFrequency, ReminderType, ReminderStatus, ReminderActions } from '../enums/reminder.enum';
+import { Billing } from '../../billings/entities/billing.entity';
 
 @Entity('reminders')
 export class Reminder extends GeneralBaseEntity {
   @ApiProperty({
-    description: 'Type of reminder (PAYMENT, SESSION, CUSTOM)',
+    description: 'Type of reminder (BILLING, SESSION, CUSTOM)',
     enum: ReminderType,
-    example: ReminderType.PAYMENT,
+    example: ReminderType.BILLING,
   })
   @Column({ type: 'enum', enum: ReminderType })
   type: ReminderType;
@@ -53,28 +54,22 @@ export class Reminder extends GeneralBaseEntity {
 
   // Relationships
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'recipient_id' })
+  @JoinColumn()
   recipient?: User;
 
-  @Column({ nullable: true })
-  recipient_id?: string;
-
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'creator_id' })
+  @JoinColumn()
   creator?: User;
 
-  @Column({ nullable: true })
-  creator_id?: string;
 
   @ManyToOne(() => Session, { nullable: true })
-  @JoinColumn({ name: 'session_id' })
+  @JoinColumn()
   session?: Session;
 
-  @Column({ nullable: true })
-  session_id?: string;
 
-  @Column({ nullable: true })
-  payment_id?: string;
+  @ManyToOne(() => Billing, { nullable: true })
+  @JoinColumn()
+  billing?: Billing;
 
   @ApiProperty({
     description: 'Number of times the reminder has been sent',
@@ -123,11 +118,13 @@ export class Reminder extends GeneralBaseEntity {
   nextRetryAt?: Date;
 
   @ApiProperty({
-    description: 'Delivery method (EMAIL, SMS, PUSH_NOTIFICATION)',
-    example: 'EMAIL',
+    description: 'Actions to take for the reminder (EMAIL)',
+    example: [ReminderActions.EMAIL],
+    isArray: true,
+    enum: ReminderActions,
   })
-  @Column({ type: 'simple-array', default: ['EMAIL'] })
-  deliveryMethods: string[];
+  @Column({ array: true, type: 'enum', enum: ReminderActions, default: [ReminderActions.EMAIL] })
+  actions: ReminderActions[];
 
   @ApiProperty({
     description: 'Priority level of the reminder',
@@ -164,12 +161,6 @@ export class Reminder extends GeneralBaseEntity {
   @Column({ type: 'enum', enum: ReminderFrequency, default: ReminderFrequency.ONCE })
   frequency: ReminderFrequency;
 
-  @ApiProperty({
-    description: 'Start date and time for the reminder schedule',
-    example: '2025-07-08T09:00:00.000Z',
-  })
-  @Column({ type: 'timestamp' })
-  startAt: Date;
 
   @ApiProperty({
     description: 'Custom interval in minutes (for MINUTELY/HOURLY frequency)',

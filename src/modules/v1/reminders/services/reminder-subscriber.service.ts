@@ -18,15 +18,15 @@ export class ReminderSubscriber {
     private readonly reminderRepository: Repository<Reminder>,
     private readonly schedulerService: ReminderSchedulerService,
     private readonly schedulerRegistry: SchedulerRegistry,
-  ) {}
+  ) { }
 
   @OnEvent('reminder.created')
   async handleReminderCreatedEvent(event: ReminderCreatedEvent) {
     this.logger.log(`Handling reminder created event for reminder ${event.reminderId}`);
-    
+
     const reminder = await this.reminderRepository.findOne({
       where: { id: event.reminderId },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     if (!reminder) {
@@ -40,13 +40,13 @@ export class ReminderSubscriber {
   @OnEvent('reminder.updated')
   async handleReminderUpdatedEvent(event: ReminderUpdatedEvent) {
     this.logger.log(`Handling reminder updated event for reminder ${event.reminderId}`);
-    
+
     // Remove existing cron job if any
     this.removeReminderJob(event.reminderId);
 
     const reminder = await this.reminderRepository.findOne({
       where: { id: event.reminderId },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      relations: ['creator', 'recipient', 'session'],
     });
 
     if (!reminder) {
@@ -58,7 +58,7 @@ export class ReminderSubscriber {
 
     // Process immediately if scheduled for past time
     const now = new Date();
-    if (reminder.startAt <= now && (!event.oldStartAt || reminder.startAt !== event.oldStartAt)) {
+    if (reminder.scheduledAt <= now && (!event.oldStartAt || reminder.scheduledAt !== event.oldStartAt)) {
       await this.schedulerService.processImmediateReminders();
     }
   }
@@ -71,7 +71,7 @@ export class ReminderSubscriber {
 
   private async scheduleReminder(reminder: Reminder) {
     const jobName = `reminder_${reminder.id}`;
-    
+
     // Remove existing job if any
     this.removeReminderJob(reminder.id);
 
@@ -116,7 +116,7 @@ export class ReminderSubscriber {
   }
 
   private scheduleMinutelyJob(reminder: Reminder) {
-    const interval = reminder.intervalMinutes || 1;
+    const interval = reminder.intervalMinutes || 30;
     const cronExpression = `*/${interval} * * * *`;
     this.createCronJob(reminder, cronExpression);
   }
@@ -152,26 +152,42 @@ export class ReminderSubscriber {
     const job = new CronJob(
       cronExpression,
       () => {
-        this.processReminder(reminder).catch(error => {
-          this.logger.error(`Error in cron job ${jobName}:`, error);
-        });
+        if (new Date() >= reminder.scheduledAt) {
+          this.processReminder(reminder).catch(error => {
+            this.logger.error(`Error in cron job ${jobName}:`, error);
+          });
+        }
       },
       null, // onComplete
-      true, // start
+      false, // start
       undefined, // timezone
       undefined, // context
       false, // runOnInit
     );
-    
+
     try {
       // Remove any existing job first
       this.removeReminderJob(reminder.id);
-      
+
       // Add the new job
       this.schedulerRegistry.addCronJob(jobName, job as any); // Type cast to avoid version mismatch
-      job.start();
-      
-      this.logger.log(`Scheduled recurring job ${jobName} with cron: ${cronExpression}`);
+      const now = new Date();
+
+      if (reminder.scheduledAt > now) {
+        const starterJobName = `${jobName}_starter`;
+        const starterJob = new CronJob(reminder.scheduledAt, () => {
+          job.start();
+          this.logger.log(`Started recurring job ${jobName} at ${new Date().toISOString()}`);
+          this.schedulerRegistry.deleteCronJob(starterJobName);
+        });
+        starterJob.start();
+
+        this.logger.log(`Scheduled recurring job ${jobName} to start at ${reminder.scheduledAt.toISOString()} with cron: ${cronExpression}`);
+      } else {
+        // Start immediately if scheduledAt is in the past
+        job.start();
+        this.logger.log(`Scheduled recurring job ${jobName} immediately with cron: ${cronExpression}`);
+      }
     } catch (error) {
       this.logger.error(`Failed to schedule job ${jobName}:`, error);
       throw error;
@@ -180,8 +196,17 @@ export class ReminderSubscriber {
 
   private scheduleOneTimeJob(reminder: Reminder) {
     const jobName = `reminder_${reminder.id}`;
+
+
+    let scheduledAt = new Date(reminder.scheduledAt);
+
+    if (reminder.timeOfDay) {
+      const [hours, minutes] = reminder.timeOfDay.split(':').map(Number);
+      scheduledAt.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    }
+
     const job = new CronJob(
-      reminder.startAt,
+      scheduledAt,
       () => {
         this.processReminder(reminder)
           .catch(error => {
@@ -198,16 +223,16 @@ export class ReminderSubscriber {
       undefined, // context
       false, // runOnInit
     );
-    
+
     try {
       // Remove any existing job first
       this.removeReminderJob(reminder.id);
-      
+
       // Add the new job
       this.schedulerRegistry.addCronJob(jobName, job as any); // Type cast to avoid version mismatch
       job.start();
-      
-      this.logger.log(`Scheduled one-time job ${jobName} for ${reminder.startAt}`);
+
+      this.logger.log(`Scheduled one-time job ${jobName} for ${reminder.scheduledAt}`);
     } catch (error) {
       this.logger.error(`Failed to schedule one-time job ${jobName}:`, error);
       throw error;
@@ -231,7 +256,7 @@ export class ReminderSubscriber {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupCompletedReminders() {
     this.logger.log('Cleaning up completed reminders...');
-    
+
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 

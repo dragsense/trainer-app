@@ -20,13 +20,15 @@ export type FieldType =
   | "multiSelect"
   | "url"
   | "rating"
-  | "slider";
+  | "slider"
+  | "datetime";
 
 export type FieldConfig = {
   id: string;
   label: string;
   name: string;
   type: FieldType;
+  valueType?: "string" | "number" | "boolean" | "date" | "object";
   disabled?: boolean;
   layout?: "horizontal" | "vertical";
   lableOrder?: EORDER_CLASSES;

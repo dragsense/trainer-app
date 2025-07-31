@@ -1,11 +1,11 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { ReminderType, ReminderStatus, ReminderFrequency } from '../enums/reminder.enum';
+import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max, IsDateString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ReminderType, ReminderStatus, ReminderFrequency, ReminderActions } from '../enums/reminder.enum';
 export class CreateReminderDto {
   @ApiProperty({
-    description: 'Type of reminder (PAYMENT, SESSION, CUSTOM)',
+    description: 'Type of reminder (BILLING, SESSION, CUSTOM)',
     enum: ReminderType,
-    example: ReminderType.PAYMENT,
+    example: ReminderType.BILLING,
   })
   @IsNotEmpty()
   @IsEnum(ReminderType)
@@ -28,12 +28,12 @@ export class CreateReminderDto {
   sessionId?: number;
 
   @ApiProperty({
-    description: 'Payment ID (required if type is PAYMENT)',
+    description: 'Billing ID (required if type is PAYMENT)',
     example: 1,
   })
   @IsOptional()
   @IsNumber()
-  paymentId?: number;
+  billingId?: number;
 
   @ApiProperty({
     description: 'Custom message for the reminder',
@@ -52,22 +52,15 @@ export class CreateReminderDto {
   @IsEnum(ReminderFrequency)
   frequency: ReminderFrequency;
 
-  
+
   @ApiProperty({
     description: 'Scheduled date and time for the reminder schedule',
     example: '2025-07-08T09:00:00.000Z',
   })
   @IsNotEmpty()
-  @IsDate()
+  @IsDateString()
   scheduledAt: Date;
 
-  @ApiProperty({
-    description: 'Start date and time for the reminder schedule',
-    example: '2025-07-08T09:00:00.000Z',
-  })
-  @IsNotEmpty()
-  @IsDate()
-  startAt: Date;
 
   @ApiProperty({
     description: 'Custom interval in minutes (required for MINUTELY/HOURLY frequency)',
@@ -139,13 +132,18 @@ export class CreateReminderDto {
   metadata?: Record<string, any>;
 
   @ApiProperty({
-    description: 'Delivery methods for the reminder (EMAIL, SMS, PUSH_NOTIFICATION)',
-    example: ['EMAIL', 'SMS'],
+    description: 'Actions for the reminder (EMAIL)',
+    example: [ReminderActions.EMAIL],
+    isArray: true,
+    enum: ReminderActions,
   })
   @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
-  deliveryMethods?: string[];
+  @IsEnum(ReminderActions, { each: true })
+  actions?: ReminderActions[];
+
+
 
   @ApiProperty({
     description: 'Priority level of the reminder',
@@ -178,6 +176,6 @@ export class CreateReminderDto {
     example: '2025-07-31T06:49:35+05:00',
   })
   @IsOptional()
-  @IsDate()
+  @IsDateString()
   endDate?: Date;
 }

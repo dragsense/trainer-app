@@ -31,7 +31,7 @@ export class ReminderEmailService {
   private getReminderSubject(reminder: Reminder): string {
     const subjectMap = {
       [ReminderType.SESSION]: 'Upcoming Session Reminder',
-      [ReminderType.PAYMENT]: 'Payment Due Reminder',
+      [ReminderType.BILLING]: 'Billing Due Reminder',
       [ReminderType.CUSTOM]: reminder.message?.split('\n')[0] || 'Custom Reminder',
     };
     return subjectMap[reminder.type];

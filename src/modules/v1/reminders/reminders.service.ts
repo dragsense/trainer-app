@@ -11,7 +11,6 @@ import { ReminderFrequency, ReminderStatus} from './enums/reminder.enum';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { MessageResponse } from '@/interfaces/general.interface';
-import { ReminderSchedulerService } from './services/reminder-scheduler.service';
 import { ReminderCreatedEvent, ReminderUpdatedEvent, ReminderDeletedEvent } from './events/reminder.events';
 
 @Injectable()
@@ -31,6 +30,7 @@ export class RemindersService {
       creator: { id: user.id },
       recipient: { id: createReminderDto.recipientId },
       session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
+      billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
       status: ReminderStatus.SCHEDULED,
       sentCount: 0,
       maxAttempts: createReminderDto.maxAttempts || 3,
@@ -45,7 +45,7 @@ export class RemindersService {
       new ReminderCreatedEvent(
         savedReminder.id,
         savedReminder.frequency,
-        savedReminder.startAt
+        savedReminder.scheduledAt
       )
     );
 
@@ -142,7 +142,7 @@ export class RemindersService {
     }
 
     query
-      .orderBy('reminder.startAt', 'ASC')
+      .orderBy('reminder.scheduledAt', 'ASC')
       .addOrderBy('reminder.priority', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -176,7 +176,7 @@ export class RemindersService {
 
   async update(user: Pick<User, 'id'>, id: number, updateReminderDto: UpdateReminderDto) {
     const reminder = await this.findOne(user, id);
-    const oldStartAt = reminder.startAt;
+    const oldStartAt = reminder.scheduledAt;
 
     // If frequency is being updated, validate the new frequency fields
     if (updateReminderDto.frequency) {
@@ -195,7 +195,7 @@ export class RemindersService {
       new ReminderUpdatedEvent(
         updatedReminder.id,
         updatedReminder.frequency,
-        updatedReminder.startAt,
+        updatedReminder.scheduledAt,
         oldStartAt
       )
     );
