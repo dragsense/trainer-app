@@ -42,7 +42,6 @@ interface IListHandlerProps<
   TSingleExtraProps,
   TFormExtraProps> {
   name?: string;
-  queryListKey: string | any[];
   queryListFn: (params: IListParams) => Promise<IPaginatedResponse<TData>>;
   ListComponent: React.ComponentType<{ storeKey: string } & TListExtraProps>;
   extraComponents?: IExtraComponent<TListExtraProps>[];

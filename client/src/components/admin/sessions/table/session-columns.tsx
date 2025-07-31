@@ -54,16 +54,6 @@ export const columns = ({
       },
     },
     {
-      accessorKey: "client",
-      header: "Client",
-      cell: ({ row }) => {
-        const client = row.original.client;
-        return client?.profile ? 
-          `${client.profile.firstName} ${client.profile.lastName}` : 
-          client?.email || '-';
-      },
-    },
-    {
       accessorKey: "dateTime",
       header: "Date & Time",
       cell: ({ row }) => {

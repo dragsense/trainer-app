@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { EORDER_CLASSES } from "@/enums/general.enum";
 
-export type FieldType =
+export type TFieldType =
   | "text"
   | "email"
   | "textarea"
@@ -23,11 +23,11 @@ export type FieldType =
   | "slider"
   | "datetime";
 
-export type FieldConfig = {
+export type TFieldConfig = {
   id: string;
   label: string;
   name: string;
-  type: FieldType;
+  type: TFieldType;
   valueType?: "string" | "number" | "boolean" | "date" | "object";
   disabled?: boolean;
   layout?: "horizontal" | "vertical";

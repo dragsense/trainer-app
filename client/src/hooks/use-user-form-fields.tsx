@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Types
 import { UserGender } from "#/modules/v1/users/enums/user.enum";
-import { FieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field.type";
 
 
 export const UserFormSchema = z.object({
@@ -66,7 +66,7 @@ export const useUserFormFields = (initialValues?: Partial<UserFormValues>) => {
     ...initialValues,
   };
 
-  const fields: FieldConfig[] = [
+  const fields: TFieldConfig[] = [
     {
       id: "firstName",
       name: "firstName",

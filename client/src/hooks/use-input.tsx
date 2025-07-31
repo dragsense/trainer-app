@@ -33,7 +33,7 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
 // Types
-import type { FieldConfig } from "@/@types/form/field.type";
+import type { TFieldConfig } from "@/@types/form/field.type";
 import { EORDER_CLASSES } from "@/enums/general.enum";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
@@ -41,7 +41,7 @@ import { MultiSelect } from "@/components/custom-ui/multi-select";
 
 
 interface UseInputProps {
-  fields: FieldConfig[];
+  fields: TFieldConfig[];
   showRequiredAsterisk?: boolean;
   layout?: "vertical" | "horizontal";
 }

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { FieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IUser, TUserData } from "@/@types/user.type";
 
@@ -48,7 +48,7 @@ export default function ClientFormModal({
   const [credentialModalOpen, setCredentialModalOpen] = useState(false);
 
 
-  const fields: FieldConfig[] = [
+  const fields: TFieldConfig[] = [
     // ─── Basic Info ──────────────
     {
       id: "firstName",

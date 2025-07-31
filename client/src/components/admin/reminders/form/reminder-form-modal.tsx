@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { FieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
 import { ReminderType, ReminderFrequency, ReminderActions } from "#/modules/v1/reminders/enums/reminder.enum";
@@ -43,7 +43,7 @@ export default function ReminderFormModal({
   const { isSubmitting } = useStore(formStore);
   const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
-  const fields: FieldConfig[] = [
+  const fields: TFieldConfig[] = [
     // ─── Reminder Basic Info ──────────────
     {
       id: "type",

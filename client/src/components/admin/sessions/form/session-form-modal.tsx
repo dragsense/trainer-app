@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { FieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { ISession, TSessionData } from "@/@types/session.type";
 
@@ -44,7 +44,7 @@ export default function SessionFormModal({
   const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
 
-  const fields: FieldConfig[] = [
+  const fields: TFieldConfig[] = [
     // ─── Session Basic Info ──────────────
     {
       id: "title",
