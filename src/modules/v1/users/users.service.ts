@@ -19,6 +19,8 @@ import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { ListQueryDto } from '@/shared-dto/list-query.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
+import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 
 @Injectable()
 export class UsersService {
@@ -28,6 +30,10 @@ export class UsersService {
     private readonly mailerService: MailerService,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    @InjectRepository(AppSetting)
+    private readonly appSettingRepo: Repository<AppSetting>,
+    @InjectRepository(NotificationSetting)
+    private readonly notificationSettingRepo: Repository<NotificationSetting>,
   ) { }
 
   async findOne(
@@ -268,6 +274,16 @@ export class UsersService {
         user.password = tempPassword;
       }
 
+      const appSetting = this.appSettingRepo.create({
+        user: { id: user.id },
+      });
+      await manager.save(this.appSettingRepo.target, appSetting);
+
+      const notificationSetting = this.notificationSettingRepo.create({
+        user: { id: user.id },
+      });
+      await manager.save(this.notificationSettingRepo.target, notificationSetting);
+
 
       return { message: 'User created successfully.', user };
     });
@@ -378,4 +394,5 @@ export class UsersService {
       lastName: superAdmin.lastName
     });
   }
+
 }

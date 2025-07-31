@@ -8,7 +8,7 @@ import { useInput } from "@/hooks/use-input";
 import { FieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderType, ReminderFrequency, ReminderDeliveryMethods } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderType, ReminderFrequency, ReminderActions } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -51,7 +51,7 @@ export default function ReminderFormModal({
       label: "Reminder Type",
       type: "select",
       options: [
-        { value: ReminderType.PAYMENT, label: "Payment Reminder" },
+        { value: ReminderType.BILLING, label: "BILLING Reminder" },
         { value: ReminderType.SESSION, label: "Session Reminder" },
         { value: ReminderType.CUSTOM, label: "Custom Reminder" },
       ],
@@ -100,7 +100,8 @@ export default function ReminderFormModal({
       label: "Delivery Methods",
       type: "multiSelect",
       options: [
-        { value: ReminderDeliveryMethods.EMAIL, label: "Email" }
+        { value: ReminderActions.EMAIL, label: "Email" },
+        { value: ReminderActions.BILLING, label: "BILLING" },
       ],
       required: true,
     },
