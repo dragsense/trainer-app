@@ -13,6 +13,7 @@ export const ADMIN_ROUTES = {
   CLIENTS: "/clients",
   SESSIONS: "/sessions",
   REMINDERS: "/reminders",
+  BILLINGS: "/billings",
 } as const;
 
 export type AdminRoute = keyof typeof ADMIN_ROUTES;

@@ -53,10 +53,7 @@ export const TrainerSchema = z.object({
   certifications: z.array(z.string()).min(1, {
     message: "At least one certification is required",
   }),
-  availableTimeSlots: z.array(z.string()).min(1, {
-    message: "At least one time slot is required",
-  }),
-  experience: z.number().min(0, {
+  experience: z.number().min(1, {
     message: "Experience must be a non-negative number",
   }),
   rating: z.number().min(0).max(5, {
@@ -82,11 +79,8 @@ export default function TrainersPage() {
     certifications: { value: [] },
     level: { value: UserLevels[UserRole.TRAINER], notInput: true },
     isActive: { value: true },
-    availabilityZones: { value: [] },
-    availableTimeSlots: { value: [] },
-    experience: { value: 0 },
-    rating: { value: 4 },
-    avatar: { value: "" },
+    experience: { value: 0},
+    rating: { value: 0},
   };
 
 
@@ -95,8 +89,6 @@ export default function TrainersPage() {
     <PageInnerLayout Header={<Header />}>
       <ListHandler<IUser, Partial<TUserData>, IUser | IMessageResponse>
         queryListFn={(params) => fetchUsers(params, UserLevels[UserRole.TRAINER])}
-
-        queryListKey={"trainersList"}
         ListComponent={TrainerTable}
         storeKey="trainersList"
         mutationFns={{

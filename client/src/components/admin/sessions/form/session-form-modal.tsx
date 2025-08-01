@@ -9,6 +9,7 @@ import { useInput } from "@/hooks/use-input";
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { ISession, TSessionData } from "@/@types/session.type";
+import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -45,8 +46,20 @@ export default function SessionFormModal({
   const { isSubmitting } = useStore(formStore);
   const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
-  const trainerInput = useUserListInput({ isSubmitting, multiple: false, level: UserLevels[UserRole.TRAINER], prefix: "trainer" });
-  const userInput = useUserListInput({ isSubmitting, multiple: true, level: UserLevels[UserRole.USER], prefix: "client" });
+  const trainerInput = useUserListInput({
+    isSubmitting,
+    multiple: false,
+    level: UserLevels[UserRole.TRAINER],
+    prefix: "trainer",
+    valueType: "number"
+  });
+  const userInput = useUserListInput({
+    isSubmitting,
+    multiple: true,
+    level: UserLevels[UserRole.USER],
+    prefix: "client",
+    valueType: "number"
+  });
 
   const fields: TFieldConfig[] = [
     // ─── Session Basic Info ──────────────
@@ -58,7 +71,7 @@ export default function SessionFormModal({
       type: "text",
       required: true,
     },
-        {
+    {
       id: "description",
       name: "description",
       label: "Description",
@@ -96,11 +109,12 @@ export default function SessionFormModal({
       required: true,
     },
     {
-      id: "price",
-      name: "price",
-      label: "Price",
+      id: "pricePerClient",
+      name: "pricePerClient",
+      label: "Price per client",
       type: "number",
       placeholder: "50.00",
+      valueType: "number",
       min: 0,
       required: true,
     },
@@ -109,11 +123,7 @@ export default function SessionFormModal({
       name: "currency",
       label: "Currency",
       type: "select",
-      options: [
-        { value: "USD", label: "USD" },
-        { value: "EUR", label: "EUR" },
-        { value: "GBP", label: "GBP" },
-      ],
+      options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
       required: false,
     },
     ...trainerInput,
@@ -131,6 +141,7 @@ export default function SessionFormModal({
       name: "maxParticipants",
       label: "Max Participants",
       type: "number",
+      valueType: "number",
       placeholder: "1",
       min: 1,
       required: false,
@@ -147,6 +158,7 @@ export default function SessionFormModal({
       name: "cancellationDeadline",
       label: "Cancellation Deadline (hours)",
       type: "number",
+      valueType: "number",
       placeholder: "24",
       min: 1,
       required: false,
@@ -192,6 +204,7 @@ export default function SessionFormModal({
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}
+      width="3xl"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {inputs}

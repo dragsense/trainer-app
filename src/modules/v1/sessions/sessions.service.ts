@@ -73,22 +73,21 @@ export class SessionsService {
       type,
       status,
       trainerId,
-      clientId,
       ...filters
     } = queryDto;
 
     const skip = (page - 1) * limit;
     const query = this.sessionsRepository.createQueryBuilder('session')
       .leftJoinAndSelect('session.trainer', 'trainer')
-      .leftJoinAndSelect('session.client', 'client')
       .leftJoinAndSelect('session.createdBy', 'createdBy')
+      .loadRelationCountAndMap('session.clientCount', 'session.clients');
+
+
 
     // Role-based filtering
     const userLevel = user.level;
     if (userLevel === UserLevels[UserRole.TRAINER]) {
       query.where('session.trainer.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.USER]) {
-      query.where('session.client.id = :userId', { userId: user.id });
     } else if (userLevel === UserLevels[UserRole.ADMIN]) {
       // Admins can see all sessions
     } else {
@@ -119,10 +118,6 @@ export class SessionsService {
 
     if (trainerId) {
       query.andWhere('trainer.id = :trainerId', { trainerId });
-    }
-
-    if (clientId) {
-      query.andWhere('client.id = :clientId', { clientId });
     }
 
     // Apply sorting

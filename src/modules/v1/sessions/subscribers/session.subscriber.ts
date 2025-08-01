@@ -10,7 +10,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from '../entities/session.entity';
 import { StripeBillingService } from '@/modules/v1/stripe/services/stripe-billing.service';
 import { StripeInvoiceService } from '@/modules/v1/stripe/services/stripe-invoice.service';
-import { SessionStatus, SessionType } from '../enums/session.enum';
 import { BillingsService } from '@/modules/v1/billings/billings.service';
 import { BillingCurrency, BillingStatus, BillingType } from '../../billings/enums/billing.enum';
 import { CreateBillingDto } from '../../billings/dto/create-billing.dto';
@@ -25,7 +24,6 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
   constructor(
     private readonly dataSource: DataSource,
     @InjectRepository(Session)
-    private readonly sessionRepository: Repository<Session>,
     private readonly stripeBillingService: StripeBillingService,
     private readonly stripeInvoiceService: StripeInvoiceService,
     private readonly billingsService: BillingsService,
@@ -193,7 +191,7 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
       status: BillingStatus.PENDING,
       invoiceAmount: session.pricePerClient || 0,
       currency: session.currency as BillingCurrency || BillingCurrency.USD,
-      issueDate: new Date().toISOString(),
+      issueDate: new Date(),
       dueDate,
       lineItems: [
         {

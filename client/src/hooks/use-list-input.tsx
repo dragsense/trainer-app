@@ -23,6 +23,7 @@ export interface UseListInputProps<T> {
     name?: string;
     label?: string;
     id?: string;
+    valueType?: "string" | "number";
     modal?: boolean;
     searchType?: "local" | "api";
 }
@@ -35,6 +36,7 @@ export function useListInput<T>({
     getLabel,
     storeKey,
     queryFn,
+    valueType,
     name,
     label,
     id,
@@ -48,6 +50,7 @@ export function useListInput<T>({
             label: label || placeholder,
             placeholder: placeholder || "Select...",
             type: "custom",
+            valueType,
             required: true,
             className: "w-full",
             Component: ({ value, onChange }) => (
@@ -64,6 +67,7 @@ export function useListInput<T>({
                     modal={modal}
                     searchType={searchType}
                 />
+            
             ),
         },
     ];
@@ -123,7 +127,7 @@ export const ListInputWrapper = <T,>({
 
     return (
         <AppComboBox<T>
-            value={multiple ? (value || []) : value}
+            value={multiple ? (value || []) : value?.toString() || ""}
             onChange={onChange}
             items={data}
             loading={isLoading}

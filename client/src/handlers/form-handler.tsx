@@ -138,7 +138,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
       const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
         if (!config.notIncluded) {
           acc[key as keyof TFormData] = config.notInput
-            ? config.value 
+            ? config.value
             : data[key as keyof TFormData] || initialValues[key].value;
         }
         return acc;
@@ -153,6 +153,10 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     });
 
     store.getState().setOnSubmit(submitHandler);
+
+
+
+
   }, [form, initialValues, mutation]);
 
 

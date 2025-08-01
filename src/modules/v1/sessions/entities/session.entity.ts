@@ -15,6 +15,7 @@ import { Reminder } from '../../reminders/entities/reminder.entity';
 import { SessionStatus, SessionType } from '../enums/session.enum';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { Billing } from '../../billings/entities/billing.entity';
+import { BillingCurrency } from '../../billings/enums/billing.enum';
 
 @Entity('sessions')
 export class Session extends GeneralBaseEntity {
@@ -38,9 +39,9 @@ export class Session extends GeneralBaseEntity {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   pricePerClient: number;
 
-  @ApiProperty({ description: 'Currency for the session price', example: 'USD' })
-  @Column({ default: 'USD' })
-  currency: string;
+  @ApiProperty({ example: 'usd', description: 'Currency of the session invoice' })
+  @Column({ type: 'enum', enum: BillingCurrency, default: BillingCurrency.USD })
+  currency: BillingCurrency;
 
   @ApiProperty({
     description: 'Session status',

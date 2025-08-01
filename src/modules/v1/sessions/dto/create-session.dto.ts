@@ -16,6 +16,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SessionType } from '../enums/session.enum';
+import { BillingCurrency } from '../../billings/enums/billing.enum';
 
 export class CreateSessionDto {
   @ApiProperty({
@@ -63,19 +64,12 @@ export class CreateSessionDto {
   @IsNumber()
   @Type(() => Number)
   @Min(0)
-  price: number;
+  pricePerClient: number;
 
-  @ApiProperty({
-    description: 'Currency for the session price',
-    example: 'USD',
-    default: 'USD'
-  })
+  @ApiProperty({ enum: BillingCurrency, example: BillingCurrency.USD })
   @IsOptional()
-  @IsString()
-  @Matches(/^[A-Z]{3}$/, {
-    message: 'Currency must be a 3-letter code (e.g., USD, EUR)'
-  })
-  currency?: string = 'USD';
+  @IsEnum(BillingCurrency)
+  currency?: BillingCurrency;
 
   @ApiPropertyOptional({
     description: 'Description or notes about the session',

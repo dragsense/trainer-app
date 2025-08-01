@@ -75,12 +75,12 @@ export class CreateBillingDto {
   @ApiProperty({ example: '2025-07-01', description: 'Invoice issue date' })
   @IsOptional()
   @IsDateString()
-  issueDate?: string;
+  issueDate?: Date;
 
   @ApiProperty({ example: '2025-07-15', description: 'Invoice due date' })
   @IsOptional()
   @IsDateString()
-  dueDate?: string;
+  dueDate?: Date;
 
   @ApiProperty({
     description: 'Line items for the invoice',

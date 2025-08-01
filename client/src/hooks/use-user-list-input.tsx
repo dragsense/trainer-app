@@ -13,9 +13,10 @@ export interface UseUserListInputProps {
   modal?: boolean;
   level: number;
   prefix?: string;
+  valueType?: "string" | "number";
 }
 
-export function useUserListInput({ level, isSubmitting, multiple = false, modal = false, prefix = "user" }: UseUserListInputProps) {
+export function useUserListInput({ level, isSubmitting, multiple = false, modal = false, prefix = "user", valueType }: UseUserListInputProps) {
   return useListInput<IUser>({
     isSubmitting,
     multiple,
@@ -28,6 +29,7 @@ export function useUserListInput({ level, isSubmitting, multiple = false, modal 
     label: multiple ? `Select ${prefix}s` : `Select ${prefix}`,
     id: multiple ? `${prefix}Ids` : `${prefix}Id`,
     modal,
+    valueType,
     searchType: "api",
   });
 }

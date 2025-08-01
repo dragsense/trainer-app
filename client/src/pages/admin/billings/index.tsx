@@ -5,7 +5,7 @@ import { z } from "zod";
 // Types
 import { IBilling, TBillingData } from "@/@types/billing.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { BillingType } from "#/modules/v1/billings/enums/billing.enum";
+import { BillingCurrency, BillingStatus, BillingType } from "#/modules/v1/billings/enums/billing.enum";
 
 // Handlers
 import { ListHandler } from "@/handlers";
@@ -57,23 +57,23 @@ export const BillingSchema = z.object({
 export default function BillingsPage() {
 
 
- const INITIAL_VALUES: TDefaultValue<TBillingData> = {
-  stripeInvoiceId: { value: "" },
-  type: { value: BillingType.ONE_ON_ONE },
-  status: { value: BillingStatus.PENDING },
-  invoiceAmount: { value: 0 },
-  currency: { value: BillingCurrency.USD },
-  userId: { value: 3 },
-  sessionId: { value: undefined },
-  issueDate: { value: new Date() },
-  dueDate: { value: new Date() },
-  lineItems: { value: [] },
-  totalTax: { value: 0 },
-  discount: { value: 0 },
-  totalAmount: { value: 0 },
-  notes: { value: "" },
-  terms: { value: "" },
-};
+  const INITIAL_VALUES: TDefaultValue<TBillingData> = {
+    stripeInvoiceId: { value: "" },
+    type: { value: BillingType.INDIVIDUAL },
+    status: { value: BillingStatus.PENDING },
+    invoiceAmount: { value: 0 },
+    currency: { value: BillingCurrency.USD },
+    userId: { value: 3 },
+    sessionId: { value: undefined },
+    issueDate: { value: new Date() },
+    dueDate: { value: new Date() },
+    lineItems: { value: [] },
+    totalTax: { value: 0 },
+    discount: { value: 0 },
+    totalAmount: { value: 0 },
+    notes: { value: "" },
+    terms: { value: "" },
+  };
 
 
 
@@ -81,7 +81,6 @@ export default function BillingsPage() {
     <PageInnerLayout Header={<Header />}>
       <ListHandler<IBilling, Partial<TBillingData>, IBilling | IMessageResponse>
         queryListFn={fetchBillings}
-        queryListKey={"billingsList"}
         ListComponent={BillingTable}
         storeKey="billingsList"
         mutationFns={{
@@ -92,7 +91,7 @@ export default function BillingsPage() {
         queryFn={fetchBilling}
         FormComponent={BillingFormModal}
         validationSchema={BillingSchema}
-        initialValues={TRAINER_INITIAL_VALUES}
+        initialValues={INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
       />
 

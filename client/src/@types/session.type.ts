@@ -3,7 +3,9 @@ import { GeneralBaseEntity } from "#/base-entity/base.entity";
 
 import { CreateSessionDto } from "#/modules/v1/sessions/dto/create-session.dto";
 
-export interface ISession extends Session, GeneralBaseEntity {}
+export interface ISession extends Session, GeneralBaseEntity {
+    clientCount: number;
+}
 
 
 export type TSessionData = CreateSessionDto;

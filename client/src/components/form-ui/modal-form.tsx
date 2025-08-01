@@ -14,6 +14,22 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 // Store
 import { useStore } from "zustand";
 
+// Utility Function
+import { cn } from "@/lib/utils";
+
+
+type TDialogWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+
+
+const widthMap: Record<string, string> = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+};
+
 interface IModalFormProps<TFormData, TResponse> {
   className?: string;
   open: boolean;
@@ -22,7 +38,7 @@ interface IModalFormProps<TFormData, TResponse> {
   description?: string;
   footerContent?: ReactNode;
   children: ReactNode;
-  width?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
+  width?: TDialogWidth;
   formStore: IFormStoreApi<TFormData, TResponse>;
 }
 
@@ -43,7 +59,7 @@ export function ModalForm<TFormData, TResponse>({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className={`sm:max-w-${width} max-h-[90vh] overflow-y-auto`}
+        className={cn(`max-h-[90vh] overflow-y-auto`, widthMap[width] || "sm:max-w-lg")}
       >
         <form onSubmit={onSubmit}>
           <AppDialog

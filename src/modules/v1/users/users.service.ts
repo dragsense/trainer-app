@@ -262,13 +262,10 @@ export class UsersService {
         specialties: createUserDto.specialties,
         certifications: createUserDto.certifications,
         avatar: createUserDto.avatar,
-        availabilityZones: createUserDto.availabilityZones,
-        availableTimeSlots: createUserDto.availableTimeSlots,
         experience: createUserDto.experience,
         rating: createUserDto.rating,
         fitnessGoals: createUserDto.fitnessGoals,
         preferredTrainerGender: createUserDto.preferredTrainerGender,
-        preferredWorkoutTimes: createUserDto.preferredWorkoutTimes,
         user: { id: user.id } as DeepPartial<User>,
       };
 

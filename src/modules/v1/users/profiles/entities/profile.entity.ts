@@ -71,19 +71,6 @@ export class Profile extends GeneralBaseEntity {
   @Column({ type: 'simple-array', nullable: true })
   certifications?: string[];
 
-  @ApiPropertyOptional({
-    example: ['Zone A', 'Zone B'],
-    description: 'Trainer working zones'
-  })
-  @Column({ type: 'simple-array', nullable: true })
-  availabilityZones?: string[];
-
-  @ApiPropertyOptional({
-    example: ['Mon 9-11', 'Wed 3-5'],
-    description: 'Trainer available time slots'
-  })
-  @Column({ type: 'simple-array', nullable: true })
-  availableTimeSlots?: string[];
 
   @ApiPropertyOptional({ example: 3, description: 'Years of experience as trainer' })
   @Column({ type: 'int', nullable: true })
@@ -110,12 +97,6 @@ export class Profile extends GeneralBaseEntity {
   @Column({ type: 'enum', enum: UserGender, nullable: true })
   preferredTrainerGender?: UserGender;
 
-  @ApiPropertyOptional({
-    example: ['Morning', 'Evening'],
-    description: 'Preferred workout times'
-  })
-  @Column({ type: 'simple-array', nullable: true })
-  preferredWorkoutTimes?: string[];
 
   @ApiProperty({ type: () => User, description: 'Associated user' })
   @OneToOne(() => User, user => user.profile, { onDelete: 'CASCADE' })

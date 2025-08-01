@@ -107,7 +107,7 @@ export default function ClientFormModal({
       id: "address",
       name: "address",
       label: "Address",
-      type: "text",
+      type: "textarea",
       placeholder: "123 Main St, City, Country",
       required: false,
     },

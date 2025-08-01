@@ -107,7 +107,7 @@ export default function TrainerFormModal({
       id: "address",
       name: "address",
       label: "Address",
-      type: "text",
+      type: "textarea",
       placeholder: "123 Main St, City, Country",
       required: false,
     },
@@ -148,22 +148,11 @@ export default function TrainerFormModal({
       required: false,
     },
     {
-      id: "availableTimeSlots",
-      name: "availableTimeSlots",
-      label: "Available Time Slots",
-      type: "multiSelect",
-      options: [
-        { value: "morning", label: "Morning (6 AM - 12 PM)" },
-        { value: "afternoon", label: "Afternoon (12 PM - 6 PM)" },
-        { value: "evening", label: "Evening (6 PM - 10 PM)" },
-      ],
-      required: false,
-    },
-    {
       id: "experience",
       name: "experience",
       label: "Experience (years)",
       type: "number",
+      valueType: "number",
       min: 0,
       required: false,
     },
@@ -222,6 +211,7 @@ export default function TrainerFormModal({
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}
+      width="3xl"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {inputs}

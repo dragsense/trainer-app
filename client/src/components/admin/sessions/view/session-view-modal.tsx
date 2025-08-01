@@ -169,12 +169,12 @@ export default function SessionViewModal({
 
             {/* Client */}
             <div className="space-y-2">
-              <p className="font-medium">Clients</p>
+              <p className="font-medium">Total Clients</p>
               <div className="flex items-center gap-3">
                 
                 <div>
                   <p className="text-sm font-medium">
-                    {session.clients?.length}
+                    {session.clientCount}
                   </p>
                 </div>
               </div>

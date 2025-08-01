@@ -18,6 +18,7 @@ import { Session } from '../../sessions/entities/session.entity';
 import { UserLevels, UserRole } from '../enums/user.enum';
 import { Reminder } from '../../reminders/entities/reminder.entity';
 import { Billing } from '../../billings/entities/billing.entity';
+import { UserAvailability } from './user-availability.entity';
 
 
 export type UserLevelType = typeof UserLevels[UserRole];
@@ -94,4 +95,17 @@ export class User extends GeneralBaseEntity {
 
   @Column({ type: 'varchar', nullable: true })
   stripeCustomerId: string;
+
+  @ApiProperty({
+    type: () => UserAvailability,
+    description: "Availability record of the staff",
+    required: false,
+  })
+  @OneToOne(() => UserAvailability, (availability) => availability.user, {
+    cascade: true,
+    eager: true,
+  })
+  @JoinColumn()
+  availability: UserAvailability;
+
 }

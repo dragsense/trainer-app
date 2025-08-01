@@ -2,17 +2,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
-  IsBoolean,
   IsNumber,
   IsOptional,
   IsArray,
   IsDate,
   IsEnum,
-  IsEmail,
   Min,
   Max
 } from 'class-validator';
 import { UserGender } from '../../enums/user.enum';
+import { Type } from 'class-transformer';
 
 export class CreateProfileDto {
 
@@ -71,18 +70,6 @@ export class CreateProfileDto {
   @IsString({ each: true })
   certifications?: string[];
 
-  @ApiProperty({ example: ['Zone A', 'Zone B'], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  availabilityZones?: string[];
-
-  @ApiProperty({ example: ['Mon 9-11', 'Wed 3-5'], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  availableTimeSlots?: string[];
-
   @ApiProperty({ example: 5, minimum: 0, maximum: 5, required: false })
   @IsOptional()
   @IsNumber()
@@ -93,7 +80,8 @@ export class CreateProfileDto {
   @ApiProperty({ example: 3, description: 'Years of experience', required: false })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @Type(() => Number)
+  @Min(1)
   experience?: number;
 
 
@@ -110,10 +98,4 @@ export class CreateProfileDto {
   @IsOptional()
   @IsEnum(UserGender)
   preferredTrainerGender?: UserGender;
-
-  @ApiProperty({ example: ['Morning', 'Evening'], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  preferredWorkoutTimes?: string[];
 }

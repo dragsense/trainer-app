@@ -23,6 +23,7 @@ import { TDefaultValue } from "@/@types/form/field.type";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
 
 
 
@@ -30,12 +31,12 @@ import { PageInnerLayout } from "@/layouts";
 export const SessionSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   type: z.nativeEnum(SessionType),
-/*   trainerId: z.number().min(1, "Trainer is required"),
-  clientId: z.number().min(1, "Client is required"), */
+  trainerId: z.number().min(1, "Trainer is required"),
+  clientIds: z.array(z.number()).min(1, "Client is required"),
   dateTime: z.date().min(new Date(), "Start date must be in the future"),
   duration: z.number().min(15, "Duration must be at least 15 minutes"),
-  price: z.number().min(0, "Price must be positive"),
-  currency: z.string().default('USD'),
+  pricePerClient: z.number().min(0, "Price must be positive"),
+  currency: z.nativeEnum(BillingCurrency).optional(),
   description: z.string().optional(),
   location: z.string().optional(),
   maxParticipants: z.number().optional(),
@@ -49,15 +50,15 @@ export const SessionSchema = z.object({
 export default function SessionsPage() {
 
 
-  const TRAINER_INITIAL_VALUES: TDefaultValue<TSessionData> = {
+  const INITIAL_VALUES: TDefaultValue<TSessionData> = {
     title: { value: "" },
     type: { value: SessionType.ONE_ON_ONE },
-    trainerId: { value: 3 },
-    clientId: { value: 4 },
+    trainerId: { value: 0 },
+    clientIds: { value: [] },
     dateTime: { value: new Date() },
     duration: { value: 60 },
-    price: { value: 0 },
-    currency: { value: "USD" },
+    pricePerClient: { value: 0 },
+    currency: { value: BillingCurrency.USD },
     description: { value: "" },
     location: { value: "" },
     maxParticipants: { value: 1 },
@@ -71,7 +72,6 @@ export default function SessionsPage() {
     <PageInnerLayout Header={<Header />}>
       <ListHandler<ISession, Partial<TSessionData>, ISession | IMessageResponse>
         queryListFn={fetchSessions}
-        queryListKey={"sessionsList"}
         ListComponent={SessionView}
         storeKey="sessionsList"
         mutationFns={{
@@ -82,7 +82,7 @@ export default function SessionsPage() {
         queryFn={fetchSession}
         FormComponent={SessionFormModal}
         validationSchema={SessionSchema}
-        initialValues={TRAINER_INITIAL_VALUES}
+        initialValues={INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
       />
 

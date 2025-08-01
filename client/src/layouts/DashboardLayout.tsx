@@ -31,6 +31,7 @@ const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.CLIENTS]: "Clients",
   [ADMIN_ROUTES.SESSIONS]: "Sessions",
   [ADMIN_ROUTES.REMINDERS]: "Reminders",
+  [ADMIN_ROUTES.BILLINGS]: "Billings",
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

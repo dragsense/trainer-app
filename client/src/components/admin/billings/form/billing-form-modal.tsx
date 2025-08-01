@@ -10,6 +10,7 @@ import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IBilling, TBillingData } from "@/@types/billing.type";
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { BillingCurrency, BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,6 @@ import { LineItemInput } from "./line-item-input";
 // Hooks
 import { useStore } from "zustand";
 import { useUserListInput } from "@/hooks/use-user-list-input";
-import { BillingCurrency, BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
 
 export interface IBillingFormModalProps {
   storeKey: string;
@@ -50,29 +50,7 @@ export default function BillingFormModal({
   const userInput = useUserListInput({ isSubmitting, multiple: false, level: UserLevels[UserRole.USER], prefix: "user" });
 
   const fields: TFieldConfig[] = [
-    {
-      id: "status",
-      name: "status",
-      label: "Status",
-      type: "select",
-      required: false,
-      options: Object.values(BillingStatus).map((value) => ({ label: value, value })),
-    },
-    {
-      id: "invoiceAmount",
-      name: "invoiceAmount",
-      label: "Invoice Amount (cents)",
-      type: "number",
-      required: false,
-    },
-    {
-      id: "currency",
-      name: "currency",
-      label: "Currency",
-      type: "select",
-      required: false,
-      options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
-    },
+
     ...userInput,
     {
       id: "issueDate",
@@ -97,6 +75,29 @@ export default function BillingFormModal({
       Component: LineItemInput,
     },
     {
+      id: "status",
+      name: "status",
+      label: "Status",
+      type: "select",
+      required: false,
+      options: Object.values(BillingStatus).map((value) => ({ label: value, value })),
+    },
+    {
+      id: "currency",
+      name: "currency",
+      label: "Currency",
+      type: "select",
+      required: false,
+      options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
+    },
+    {
+      id: "totalAmount",
+      name: "totalAmount",
+      label: "Total Amount (cents)",
+      type: "number",
+      required: false,
+    },
+    {
       id: "totalTax",
       name: "totalTax",
       label: "Total Tax (cents)",
@@ -110,20 +111,7 @@ export default function BillingFormModal({
       type: "number",
       required: false,
     },
-    {
-      id: "totalAmount",
-      name: "totalAmount",
-      label: "Total Amount (cents)",
-      type: "number",
-      required: false,
-    },
-    {
-      id: "stripeInvoiceId",
-      name: "stripeInvoiceId",
-      label: "Stripe Invoice ID",
-      type: "text",
-      required: false,
-    },
+
     {
       id: "notes",
       name: "notes",
@@ -180,6 +168,7 @@ export default function BillingFormModal({
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}
+      width="3xl"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {inputs}

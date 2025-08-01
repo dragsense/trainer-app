@@ -65,7 +65,6 @@ export default function ClientsPage() {
     gender: { value: UserGender.MALE },
     level: { value: UserLevels[UserRole.USER], notInput: true },
     isActive: { value: true },
-    avatar: { value: "" },
   };
 
 
@@ -74,7 +73,6 @@ export default function ClientsPage() {
     <PageInnerLayout Header={<Header />}>
       <ListHandler<IUser, Partial<TUserData>, IUser | IMessageResponse>
         queryListFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
-        queryListKey={"trainersList"}
         ListComponent={ClientTable}
         storeKey="trainersList"
         mutationFns={{

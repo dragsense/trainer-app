@@ -1,4 +1,4 @@
-import { Clock, LayoutDashboard, LucideIcon, User2, UserCheck } from "lucide-react";
+import { Banknote, Clock, LayoutDashboard, LucideIcon, User2, UserCheck } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 
@@ -30,10 +30,16 @@ export const navItems: {
             urls: [ADMIN_ROUTES.SESSIONS],
             icon: User2,
         },
+         {
+            title: "Billings",
+            urls: [ADMIN_ROUTES.BILLINGS],
+            icon: Banknote,
+        },
+
         {
             title: "Reminders",
             urls: [ADMIN_ROUTES.REMINDERS],
             icon: Clock,
         },
-
+       
     ];

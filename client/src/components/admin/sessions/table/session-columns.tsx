@@ -53,6 +53,15 @@ export const columns = ({
           trainer?.email || '-';
       },
     },
+{
+      accessorKey: "clientCount",
+      header: "Total Clients",
+      cell: ({ row }) => {
+        const clientCount = row.getValue<number>("clientCount");
+        return clientCount || 0;
+      },
+    },
+    
     {
       accessorKey: "dateTime",
       header: "Date & Time",
@@ -70,10 +79,10 @@ export const columns = ({
       },
     },
     {
-      accessorKey: "price",
-      header: "Price",
+      accessorKey: "pricePerClient",
+      header: "Price Per Client",
       cell: ({ row }) => {
-        const price = row.getValue<number>("price");
+        const price = row.getValue<number>("pricePerClient");
         const currency = row.original.currency;
         return `${currency || 'USD'} ${price}`;
       },

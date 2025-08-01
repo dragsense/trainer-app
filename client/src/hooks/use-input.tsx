@@ -1,5 +1,7 @@
+
+
+import { useState, type SyntheticEvent } from "react";
 import { ChevronDownIcon, Star, X } from "lucide-react";
-import { useState } from "react";
 
 
 // UI Components
@@ -53,17 +55,25 @@ export function useInput({
 }: UseInputProps) {
 
 
-  const convertValue = (value: any, type?: string) => {
-    if (type === "number") {
-      return value === "" ? undefined : Number(value);
-    } else if (type === "boolean") {
-      return value === "true" || value === true;
-    } else if (type === "date") {
-      return value === "" ? undefined : new Date(value);
-    } else {
-      return value;
-    }
+  const convertValue = (input: unknown, type?: string): any => {
+    const getValue = (val: any) => {
+      if (val === "") return undefined;
+      if (type === "number") return Number(val);
+      if (type === "boolean") return !!val;
+      if (type === "date") return new Date(val);
+      return val;
+    };
+
+    let rawValue: any =
+      input && typeof input === "object" && "target" in input
+        ? (input as any).target.value
+        : input;
+
+    return Array.isArray(rawValue)
+      ? rawValue.map(getValue)
+      : getValue(rawValue);
   };
+
 
   const inputs = fields.map((field) => {
     const fieldLayout = field.layout || layout;
@@ -76,11 +86,8 @@ export function useInput({
         key={field.id}
         name={field.name}
         render={({ field: controllerField }) => {
+          const onChangeHandler = (result: unknown) => controllerField.onChange(convertValue(result, field.valueType));
 
-
-          const onChangeHandler = (value: any) => controllerField.onChange(convertValue(value, field.valueType));
-            
-        
           const commonClass = cn(
             field.startAdornment && "pl-10",
             field.endAdornment && "pr-10",
@@ -122,10 +129,10 @@ export function useInput({
               case "multiSelect":
                 return (
                   <MultiSelect
-                  value={controllerField.value || []}
-                  onChange={controllerField.onChange}
-                  options={field.options || []}
-                  
+                    value={controllerField.value || []}
+                    onChange={controllerField.onChange}
+                    options={field.options || []}
+
                   />
                 );
 
@@ -290,7 +297,7 @@ export function useInput({
                 return field.Component ? (
                   <field.Component
                     value={controllerField.value}
-                    onChange={controllerField.onChange}
+                    onChange={onChangeHandler}
                     disabled={field.disabled}
                   />
                 ) : null;
@@ -299,6 +306,7 @@ export function useInput({
                 return (
                   <Input
                     {...controllerField}
+                    value={controllerField.value?.toString() || ""}
                     type={field.type}
                     onChange={onChangeHandler}
                     placeholder={field.placeholder}
