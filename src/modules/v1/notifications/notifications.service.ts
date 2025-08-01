@@ -13,7 +13,6 @@ import { NotificationGateway } from '@/gateways/notification.gateway';
 import { NotificationSubscriber } from './notification.subscriber';
 import { UserNotificationSubscriber } from './user-notification.subscriber';
 import { BillingNotificationSubscriber } from './billing-notification.subscriber';
-import { ChatNotificationSubscriber } from './chat-notification.subscriber';
 import { NotificationStatus, NotificationType } from './enums/notification.enum';
 
 @Injectable()
@@ -34,7 +33,6 @@ export class NotificationsService {
         NotificationSubscriber.setNotificationsService(this);
         UserNotificationSubscriber.setNotificationsService(this);
         BillingNotificationSubscriber.setNotificationsService(this);
-        ChatNotificationSubscriber.setNotificationsService(this);
     }
 
     async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {

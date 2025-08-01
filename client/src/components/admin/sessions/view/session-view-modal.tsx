@@ -140,7 +140,7 @@ export default function SessionViewModal({
             <div>
               <p className="font-medium">Price</p>
               <p className="text-sm text-gray-600">
-                {session.currency} {session.price}
+                {session.currency} {session.pricePerClient}
               </p>
             </div>
           </div>
@@ -169,20 +169,13 @@ export default function SessionViewModal({
 
             {/* Client */}
             <div className="space-y-2">
-              <p className="font-medium">Client</p>
+              <p className="font-medium">Clients</p>
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={session.client?.profile?.avatar} />
-                  <AvatarFallback>
-                    {session.client?.profile?.firstName?.[0]}
-                    {session.client?.profile?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+                
                 <div>
                   <p className="text-sm font-medium">
-                    {session.client?.profile?.firstName} {session.client?.profile?.lastName}
+                    {session.clients?.length}
                   </p>
-                  <p className="text-xs text-gray-500">{session.client?.email}</p>
                 </div>
               </div>
             </div>

@@ -17,8 +17,6 @@ import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { Billing } from '../../billings/entities/billing.entity';
 
 @Entity('sessions')
-@Index(['dateTime', 'trainer'])
-@Index(['dateTime ', 'client'])
 export class Session extends GeneralBaseEntity {
   @ApiProperty({ description: 'Title of the session' })
   @Column()

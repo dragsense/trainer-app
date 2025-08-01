@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsEnum, IsOptional, IsBoolean } from 'class-validator';
-import { SettingsCommonStatus } from '../../common-enums/settings-common.enum';
 import { PaymentMethodType } from '../enums/payment-method-type.enum';
 
 export class CreatePaymentMethodDto {
@@ -32,9 +31,4 @@ export class CreatePaymentMethodDto {
     })
     @IsOptional()
     config?: Record<string, any>;
-
-    @ApiProperty({ enum: SettingsCommonStatus, default: SettingsCommonStatus.ACTIVE })
-    @IsEnum(SettingsCommonStatus)
-    @IsOptional()
-    status?: SettingsCommonStatus;
 } 

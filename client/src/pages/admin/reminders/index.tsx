@@ -4,7 +4,7 @@ import { z } from "zod";
 // Types
 import { IReminder, TReminderData } from "@/@types/reminder.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { ReminderType, ReminderFrequency, ReminderDeliveryMethods } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderType, ReminderFrequency, ReminderActions } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Handlers
 import { ListHandler } from "@/handlers";
@@ -30,8 +30,8 @@ export const ReminderSchema = z.object({
     scheduledAt: z.date().min(new Date(), "Scheduled date must be in the future"),
     frequency: z.nativeEnum(ReminderFrequency),
     endDate: z.date().optional(),
-    deliveryMethods: z
-        .array(z.nativeEnum(ReminderDeliveryMethods))
+    actions: z
+        .array(z.nativeEnum(ReminderActions))
         .min(1, "At least one delivery method is required"),
     priority: z.number().min(1).max(5).optional(),
     maxAttempts: z.number().min(1).max(10).optional(),
@@ -50,22 +50,20 @@ export default function RemindersPage() {
         scheduledAt: { value: new Date() },
         frequency: { value: ReminderFrequency.ONCE },
         endDate: { value: undefined },
-        deliveryMethods: { value: [ReminderDeliveryMethods.EMAIL] },
+        actions: { value: [ReminderActions.EMAIL] },
         priority: { value: 2 },
         maxAttempts: { value: 3 },
         retryInterval: { value: 1440 },
         isRecurring: { value: false },
         recurringInterval: { value: 7 },
         timeOfDay: { value: "09:00" },
-        intervalMinutes: { value: 30 },
-        recipientId: { value: 4 },
+        intervalMinutes: { value: 30 }
     };
 
     return (
         <PageInnerLayout Header={<Header />}>
             <ListHandler<IReminder, Partial<TReminderData>, IReminder | IMessageResponse>
                 queryListFn={fetchReminders}
-                queryListKey={"remindersList"}
                 ListComponent={ReminderTable}
                 storeKey="remindersList"
                 mutationFns={{

@@ -6,7 +6,6 @@ import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { PaymentMethodListDto } from './dto/payment-method-list.dto';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { SettingsCommonStatus } from '../common-enums/settings-common.enum';
 import { PAYMENT_METHOD_CONFIGS, PaymentMethodType } from './enums/payment-method-type.enum';
 
 @Injectable()
@@ -144,14 +143,14 @@ export class PaymentMethodsService {
 
   async getActivePaymentMethods(): Promise<PaymentMethod[]> {
     return this.paymentMethodRepo.find({
-      where: { isEnabled: true, status: SettingsCommonStatus.ACTIVE },
+      where: { isEnabled: true },
       select: ['id', 'name', 'key']
     });
   }
 
   async findByKey(key: PaymentMethodType): Promise<PaymentMethod | null> {
     return this.paymentMethodRepo.findOne({
-      where: { key, isEnabled: true, status: SettingsCommonStatus.ACTIVE }
+      where: { key, isEnabled: true }
     });
   }
 

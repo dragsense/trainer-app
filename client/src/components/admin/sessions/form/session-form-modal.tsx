@@ -16,6 +16,8 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Hooks
 import { useStore } from "zustand";
+import { useUserListInput } from "@/hooks/use-user-list-input";
+import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
 
 export interface ISessionFormModalProps {
   storeKey: string;
@@ -43,6 +45,8 @@ export default function SessionFormModal({
   const { isSubmitting } = useStore(formStore);
   const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
+  const trainerInput = useUserListInput({ isSubmitting, multiple: false, level: UserLevels[UserRole.TRAINER], prefix: "trainer" });
+  const userInput = useUserListInput({ isSubmitting, multiple: true, level: UserLevels[UserRole.USER], prefix: "client" });
 
   const fields: TFieldConfig[] = [
     // ─── Session Basic Info ──────────────
@@ -53,6 +57,14 @@ export default function SessionFormModal({
       placeholder: "Personal Training Session",
       type: "text",
       required: true,
+    },
+        {
+      id: "description",
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Session description and notes...",
+      required: false,
     },
     {
       id: "type",
@@ -104,14 +116,8 @@ export default function SessionFormModal({
       ],
       required: false,
     },
-    {
-      id: "description",
-      name: "description",
-      label: "Description",
-      type: "textarea",
-      placeholder: "Session description and notes...",
-      required: false,
-    },
+    ...trainerInput,
+    ...userInput,
     {
       id: "location",
       name: "location",

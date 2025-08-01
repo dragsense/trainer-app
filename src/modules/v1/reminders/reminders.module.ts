@@ -11,10 +11,13 @@ import { Reminder } from './entities/reminder.entity';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { Profile } from '../users/profiles/entities/profile.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
+import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Reminder, User, Profile]),
+    TypeOrmModule.forFeature([Reminder, User, Profile, AppSetting, NotificationSetting]),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot({
       // Enable wildcard event listeners

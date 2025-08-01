@@ -12,9 +12,4 @@ export class PaymentMethodListDto extends ListQueryDto {
     @IsOptional()
     @IsString()
     name?: string;
-
-    @ApiProperty({ example: 'active', description: 'Filter by status', required: false })
-    @IsOptional()
-    @IsString()
-    status?: string;
 } 

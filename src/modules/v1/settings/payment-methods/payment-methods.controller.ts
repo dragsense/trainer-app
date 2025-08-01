@@ -17,7 +17,7 @@ import { PaymentMethodListDto } from './dto/payment-method-list.dto';
 import { PaymentMethod } from './entities/payment-method.entity';
 import { PaymentMethodPaginatedDto } from './dto/payment-method-responses.dto';
 import { PaymentMethodsSeeder } from './payment-methods.seeder';
-import { JwtAuthGuard } from '@/modules/auth/gaurds/jwt-auth.gaurd';
+import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 
 @UseGuards(JwtAuthGuard)  
 @ApiTags('Payment Methods')

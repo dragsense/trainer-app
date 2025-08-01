@@ -4,7 +4,7 @@ import { apiRequest } from "@/utils/fetcher";
 // Types
 import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
 import { IListParams } from "@/@types/api/param.type";
-import { ISession, ISessionBooking, IInvoice, TSessionData } from "@/@types/session.type";
+import { ISession, TSessionData } from "@/@types/session.type";
 
 // Constants
 const SESSIONS_API_PATH = "/sessions";
@@ -52,23 +52,3 @@ export const fetchSession = (id: number) =>
 
 export const deleteSession = (id: number) =>
     apiRequest<void>(`${SESSIONS_API_PATH}/${id}`, "DELETE");
-
-// Session Booking APIs
-export const bookSession = (sessionId: number, data?: { requirePayment?: boolean }) =>
-    apiRequest<ISessionBooking>(`${SESSIONS_API_PATH}/${sessionId}/book`, "POST", data);
-
-export const cancelBooking = (sessionId: number, bookingId: string) =>
-    apiRequest<IMessageResponse>(`${SESSIONS_API_PATH}/${sessionId}/bookings/${bookingId}/cancel`, "PATCH");
-
-export const fetchSessionBookings = (sessionId: number) =>
-    apiRequest<ISessionBooking[]>(`${SESSIONS_API_PATH}/${sessionId}/bookings`, "GET");
-
-export const fetchMyBookings = () =>
-    apiRequest<ISessionBooking[]>(`${SESSIONS_API_PATH}/my-bookings`, "GET");
-
-// Invoice APIs
-export const fetchSessionInvoices = (sessionId: number) =>
-    apiRequest<IInvoice[]>(`${SESSIONS_API_PATH}/${sessionId}/invoices`, "GET");
-
-export const fetchMyInvoices = () =>
-    apiRequest<IInvoice[]>(`${SESSIONS_API_PATH}/my-invoices`, "GET");

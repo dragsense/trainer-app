@@ -14,10 +14,12 @@ import { getJwtConfig } from '@/config/jwt.config';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { User } from '../users/entities/user.entity';
 import { Profile } from '../users/profiles/entities/profile.entity';
+import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
+import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profile]),
+    TypeOrmModule.forFeature([User, Profile,NotificationSetting, AppSetting]),
     PassportModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,

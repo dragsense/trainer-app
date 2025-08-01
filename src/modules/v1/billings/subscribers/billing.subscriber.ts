@@ -7,12 +7,10 @@ import {
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Billing } from '../entities/billing.entity';
-import { MembersService } from '@/modules/members/members.service';
-import { UsersService } from '@/modules/users/users.service';
-import { BillingStatus, BillingType } from '../enums/billing.enum';
-import { PaymentMethodType } from '@/modules/settings/payment-methods/enums/payment-method-type.enum';
-import { Profile } from '@/modules/users/entities/profile.entity';
-import { StripeInvoiceService } from '@/modules/stripe/services/stripe-invoice.service';
+import { UsersService } from '@/modules/v1/users/users.service';
+import {  BillingType } from '../enums/billing.enum';
+import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
+import { StripeInvoiceService } from '@/modules/v1/stripe/services/stripe-invoice.service';
 import Stripe from 'stripe';
 
 @EventSubscriber()
@@ -20,7 +18,6 @@ import Stripe from 'stripe';
 export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
   constructor(
     private readonly mailerService: MailerService,
-    private readonly memberService: MembersService,
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
     private readonly stripInvoiceServices: StripeInvoiceService
@@ -56,8 +53,6 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
 
   private async sendBillingEmail(billing: Billing): Promise<void> {
     const user = billing.user;
-    const member = await this.memberService.findOneByUserId(user.id);
-    const userName = user.profile?.firstName || 'Member';
     
     // Get admin contact information
     const adminContact = await this.getAdminContactInfo();
@@ -75,7 +70,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
     await this.mailerService.sendMail({
       to: user.email,
       subject: `Red Strength - Billing Details ${billing.stripeInvoiceId ? `(Invoice: ${billing.stripeInvoiceId})` : ''}`,
-      html: this.generateBillingEmailHTML(billing, user, member, adminContact, stripeInvoiceDetails),
+      html: this.generateBillingEmailHTML(billing, user, adminContact, stripeInvoiceDetails),
     });
 
     console.log(`Billing email sent to ${user.email} for billing #${billing.id}`);
@@ -84,7 +79,6 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
   private generateBillingEmailHTML(
     billing: Billing, 
     user: any, 
-    member: any, 
     adminContact: any, 
     stripeInvoice: any
   ): string {
@@ -177,40 +171,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
         ` : ''}
 
         <!-- Membership Details -->
-        ${billing.type === BillingType.MEMBERSHIP && member?.membership ? `
-        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #2d5a2d; margin-top: 0;">💪 Membership Plan</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Plan:</td>
-              <td style="padding: 8px 0;">${member.membership.name}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Description:</td>
-              <td style="padding: 8px 0;">${member.membership.description || 'Premium gym membership'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Monthly Fee:</td>
-              <td style="padding: 8px 0;">$${member.membership.price}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Signup Fee:</td>
-              <td style="padding: 8px 0;">$${member.membership.signupFee}</td>
-            </tr>
-            ${member.membership.annualFee ? `
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Annual Fee:</td>
-              <td style="padding: 8px 0;">$${member.membership.annualFee}</td>
-            </tr>
-            ` : ''}
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Auto Renewal:</td>
-              <td style="padding: 8px 0;">${member.membership.autoRenewal ? 'Yes' : 'No'}</td>
-            </tr>
-          </table>
-        </div>
-        ` : ''}
-
+    
         <!-- Session Details -->
         ${billing.type === BillingType.SESSION ? `
         <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -227,27 +188,6 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
             <tr>
               <td style="padding: 8px 0; font-weight: bold;">Trainer:</td>
               <td style="padding: 8px 0;">Will be assigned</td>
-            </tr>
-          </table>
-        </div>
-        ` : ''}
-
-        <!-- POS Details -->
-        ${billing.type === BillingType.POS ? `
-        <div style="background: #d1ecf1; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #0c5460; margin-top: 0;">🛍️ Purchase Details</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Items:</td>
-              <td style="padding: 8px 0;">Gym merchandise/supplements</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Location:</td>
-              <td style="padding: 8px 0;">Red Strength Pro Shop</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Receipt:</td>
-              <td style="padding: 8px 0;">Available at checkout</td>
             </tr>
           </table>
         </div>
@@ -316,19 +256,14 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
   private async getAdminContactInfo() {
     try {
       // Get admin user (level 0) with profile
-      const adminUsers = await this.usersService.findAll(
-        0,
-        { page: 1, limit: 1 },
-        0 // Admin level
-      );
+      const adminUser = await this.usersService.findOne({level: 0}, { relations: ['profile'] });
 
-      if (adminUsers.data && adminUsers.data.length > 0) {
-        const admin = adminUsers.data[0];
+      if (adminUser) {
         
         return {
-          email: admin.email,
-          phone: admin.profile?.contactPhone || '(555) 123-4567',
-          address: this.formatAddress(admin.profile),
+          email: adminUser.email,
+          phone: adminUser.profile?.phoneNumber || '(555) 123-4567',
+          address: this.formatAddress(adminUser.profile),
         };
       }
     } catch (error) {
@@ -350,9 +285,6 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
 
     const parts: string[] = [];
     if (profile.address) parts.push(profile.address);
-    if (profile.city) parts.push(profile.city);
-    if (profile.state) parts.push(profile.state);
-    if (profile.zip) parts.push(profile.zip);
 
     return parts.length > 0 ? parts.join(', ') : '123 Fitness Street, Gym City, GC 12345';
   }

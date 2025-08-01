@@ -6,7 +6,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { CacheModule } from '@nestjs/cache-manager';
 
-import { configOptions, appConfig, databaseConfig, jwtConfig, mailerConfig, getTypeOrmConfig, getMailerConfig } from './config';
+import { configOptions, appConfig, databaseConfig, jwtConfig, stripeConfig, mailerConfig, getTypeOrmConfig, getMailerConfig } from './config';
 import { SuperAdminSeeder } from './seeders/superadmin.seeder';
 
 import { AppController } from './app.controller';
@@ -22,6 +22,11 @@ import { RemindersModule } from './modules/v1/reminders/reminders.module';
 import { User } from './modules/v1/users/entities/user.entity';
 import { Session } from './modules/v1/sessions/entities/session.entity';
 import { Reminder } from './modules/v1/reminders/entities/reminder.entity';
+import { StripeModule } from './modules/v1/stripe/stripe.module';
+import { BillingsModule } from './modules/v1/billings/billings.module';
+import { NotificationsModule } from './modules/v1/notifications/notifications.module';
+import { FileUploadModule } from './modules/v1/file-upload/file-upload.module';
+import { SettingsModule } from './modules/v1/settings/settings.module';
 
 
 @Module({
@@ -29,12 +34,12 @@ import { Reminder } from './modules/v1/reminders/entities/reminder.entity';
     // Configuration
     ConfigModule.forRoot({
       ...configOptions,
-      load: [appConfig, databaseConfig, jwtConfig, mailerConfig],
+      load: [appConfig, databaseConfig, jwtConfig, mailerConfig, stripeConfig],
       isGlobal: true,
     }),
 
     // Cache
-    CacheModule.register({
+    CacheModule.register({ 
       ttl: 300, // 5 minutes
       max: 100, // maximum number of items in cache
       isGlobal: true,
@@ -68,6 +73,11 @@ import { Reminder } from './modules/v1/reminders/entities/reminder.entity';
     AuthModule,
     SessionsModule,
     RemindersModule,
+    SettingsModule,
+    StripeModule,
+    FileUploadModule,
+    BillingsModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [

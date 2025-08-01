@@ -11,10 +11,12 @@ import { BillingSubscriber } from './subscribers/billing.subscriber';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { StripeModule } from '../stripe/stripe.module';
 import { SettingsModule } from '../settings/settings.module';
+import { SessionsService } from '../sessions/sessions.service';
+import { Session } from '../sessions/entities/session.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Billing]),
+    TypeOrmModule.forFeature([Billing, Session]),
     UsersModule,
     MailerModule,
     SettingsModule,
@@ -28,6 +30,7 @@ import { SettingsModule } from '../settings/settings.module';
   providers: [
     BillingsService, 
     BillingSubscriber,
+    SessionsService
   ],
   exports: [BillingsService],
 })

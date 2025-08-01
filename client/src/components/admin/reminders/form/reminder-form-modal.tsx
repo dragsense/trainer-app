@@ -95,9 +95,9 @@ export default function ReminderFormModal({
       required: false,
     },
     {
-      id: "deliveryMethods",
-      name: "deliveryMethods",
-      label: "Delivery Methods",
+      id: "actions",
+      name: "actions",
+      label: "Actions",
       type: "multiSelect",
       options: [
         { value: ReminderActions.EMAIL, label: "Email" },

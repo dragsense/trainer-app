@@ -1,20 +1,16 @@
 // React & Hooks
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Types
 import { IPaginatedResponse } from "@/@types/api/response.type";
 import { TCustomInputWrapper, TFieldConfig } from "@/@types/form/field.type";
-
-
-// Handlers
-import { ListHandler } from "@/handlers";
-
-// Services
 import { IListParams } from "@/@types/api/param.type";
+
+// Components
 import { AppComboBox } from "@/components/layout-ui/app-combo-box";
-import { TListHandlerStore, useRegisteredStore } from "@/stores";
-import { useStore } from "zustand";
-import { z } from "zod";
+
+// Hooks
+import {  useApiQuery } from "@/hooks/use-api-query";
 
 export interface UseListInputProps<T> {
     isSubmitting: boolean;
@@ -98,50 +94,47 @@ export const ListInputWrapper = <T,>({
     searchType = "local",
 }: ListInputWrapperProps<T>) => {
     const [search, setSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Use API query to fetch data with search
+    const { data: response, isLoading, error } = useApiQuery({
+        queryKey: [storeKey, { search: debouncedSearch }],
+        queryFn: () => queryFn({
+            search: debouncedSearch,
+            page: 1,
+            limit: 50,
+        }),
+        options: {
+            enabled: true,
+        }
+    });
+
+    const data = response?.data || [];
+
+
     return (
-        <ListHandler<T>
-            storeKey={storeKey}
-            queryListFn={(params) => queryFn({ ...params, filters: { search } })}
-            ListComponent={({ storeKey }) => {
-
-                const listStoreKey = storeKey + "-list";
-
-                const listStore = useRegisteredStore<TListHandlerStore<T>>(listStoreKey);
-
-                if (!listStore) {
-                    return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
-                }
-
-
-                const {
-                    response: data,
-                    isLoading: loading,
-                    error } = useStore(listStore);
-
-                return <AppComboBox<T>
-                    value={multiple ? (value || []) : value}
-                    onChange={onChange}
-                    items={data || []}
-                    loading={loading}
-                    error={error?.message || null}
-                    getLabel={getLabel}
-                    getKey={getKey}
-                    onSearchChange={setSearch}
-                    placeholder={placeholder}
-                    multiple={multiple}
-                    modal={modal}
-                    searchType={searchType}
-
-                />
-            }
-            }
-            queryFn={() => new Promise(() => { })}
-            SingleComponent={() => null}
-            FormComponent={() => null}
-            initialValues={{}}
-            validationSchema={z.object({})}
-
-
+        <AppComboBox<T>
+            value={multiple ? (value || []) : value}
+            onChange={onChange}
+            items={data}
+            loading={isLoading}
+            error={error?.message || null}
+            getLabel={getLabel}
+            getKey={getKey}
+            onSearchChange={setSearch}
+            placeholder={placeholder}
+            multiple={multiple}
+            modal={modal}
+            searchType={searchType}
         />
     );
 };

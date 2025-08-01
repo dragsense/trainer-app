@@ -18,8 +18,6 @@ import { Session } from '../../sessions/entities/session.entity';
 import { UserLevels, UserRole } from '../enums/user.enum';
 import { Reminder } from '../../reminders/entities/reminder.entity';
 import { Billing } from '../../billings/entities/billing.entity';
-import { ChatUsers } from '../../chat/entities/chat-users.entity';
-import { Message } from '../../chat/messages/entities/message.entity';
 
 
 export type UserLevelType = typeof UserLevels[UserRole];
@@ -77,11 +75,6 @@ export class User extends GeneralBaseEntity {
   @OneToMany(() => Billing, (billing) => billing.user)
   billings: Billing[];
 
-  @OneToMany(() => ChatUsers, (chatUsers) => chatUsers.user)
-  chatUsers: ChatUsers[];
-
-  @OneToMany(() => Message, (message: Message) => message.sender)
-  messages: Message[];
 
   @OneToMany(() => Session, session => session.clients)
   clientSessions?: Session[];

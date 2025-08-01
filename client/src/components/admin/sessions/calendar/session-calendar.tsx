@@ -166,12 +166,12 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
                         <div className="w-full space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{format(new Date(session.dateTime), 'HH:mm')}</span>
-                            <span className="text-xs">{session.currency} {session.price}</span>
+                            <span className="text-xs">{session.currency} {session.pricePerClient}</span>
                           </div>
                           <div className="truncate font-medium">{session.title}</div>
                           <div className="flex items-center justify-between text-xs">
                             <span className="truncate">
-                              {session.client?.profile?.firstName} {session.client?.profile?.lastName}
+                              {session.clients?.length}
                             </span>
                             <span>{session.duration}m</span>
                           </div>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Filter, Plus, XIcon } from "lucide-react";
 
 // Types
-import { IUser } from "@/@types/user.type";
+import { ISession } from "@/@types/session.type";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -38,13 +38,13 @@ export default function SessionTable({
   const listStoreKey = storeKey + "-list";
   const singelStoreKey = storeKey + "-single";
 
-  const listStore = useRegisteredStore<TListHandlerStore<IUser>>(listStoreKey);
+  const listStore = useRegisteredStore<TListHandlerStore<ISession>>(listStoreKey);
 
   if (!listStore) {
     return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
   }
 
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IUser>>(singelStoreKey);
+  const singleStore = useRegisteredStore<TSingleHandlerStore<ISession>>(singelStoreKey);
 
   if (!singleStore) {
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
@@ -126,7 +126,7 @@ export default function SessionTable({
   );
 
   return (
-    <CardTable<IUser>
+    <CardTable<ISession>
       listStore={listStore}
       columns={tableColumns}
       renderToolbar={() => (

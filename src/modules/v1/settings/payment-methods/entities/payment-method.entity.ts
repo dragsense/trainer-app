@@ -1,6 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { SettingsCommonStatus } from '../../common-enums/settings-common.enum';
 import { PaymentMethodType } from '../enums/payment-method-type.enum';
 
 @Entity({ name: 'payment_methods' })
@@ -56,9 +55,6 @@ export class PaymentMethod {
     @Column({ type: 'json', nullable: true })
     config: Record<string, any> | null;
 
-    @ApiProperty({ enum: SettingsCommonStatus, default: SettingsCommonStatus.ACTIVE })
-    @Column({ type: 'enum', enum: SettingsCommonStatus, default: SettingsCommonStatus.ACTIVE })
-    status: SettingsCommonStatus;
 
     @ApiProperty({ example: '2025-06-13T10:00:00.000Z', description: 'Date when the record was created' })
     @CreateDateColumn({ type: 'timestamp with time zone' })

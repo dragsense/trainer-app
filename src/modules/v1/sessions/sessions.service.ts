@@ -4,7 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import {  Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from './entities/session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -26,22 +26,24 @@ export class SessionsService {
   ) { }
 
   async create(user: User, createSessionDto: CreateSessionDto): Promise<Session> {
-    const { trainerId, clientId, dateTime, ...data } = createSessionDto;
+    const { trainerId, clientIds, dateTime, ...data } = createSessionDto;
 
     // Validate users exist and have correct roles
-    const [trainer, client] = await Promise.all([
-      this.usersService.findOne({ id: trainerId }),
-      this.usersService.findOne({ id: clientId })
-    ]);
+    const trainer = await this.usersService.findOne({ id: trainerId });
 
 
     if (!trainer || trainer.level !== UserLevels[UserRole.TRAINER]) {
       throw new BadRequestException('Invalid trainer ID');
     }
 
-    if (!client || client.level !== UserLevels[UserRole.USER]) {
+    if (!clientIds || clientIds.length === 0) {
       throw new BadRequestException('Invalid client ID');
     }
+
+    const clients = await this.usersService.findByIds(clientIds);
+
+    if (clients.length === 0) throw new NotFoundException("No valid members found");
+
 
     const conflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
     if (conflict) {
@@ -52,7 +54,7 @@ export class SessionsService {
       ...data,
       dateTime,
       trainer,
-      client,
+      clients,
       createdBy: user,
       status: SessionStatus.SCHEDULED
     });
@@ -182,7 +184,7 @@ export class SessionsService {
       throw new BadRequestException('Can only update scheduled sessions');
     }
 
-    const { trainerId, clientId, ...data } = updateSessionDto;
+    const { trainerId, clientIds, ...data } = updateSessionDto;
 
     // Update trainer if specified
     if (trainerId) {
@@ -207,13 +209,17 @@ export class SessionsService {
       session.trainer = trainer;
     }
 
-    // Update client if specified
-    if (clientId) {
-      const client = await this.usersService.findOne({ id: clientId });
-      if (!client || client.level !== UserLevels[UserRole.USER]) {
-        throw new BadRequestException('Invalid client ID');
+    if (clientIds) {
+      if (clientIds.length === 0) {
+        throw new BadRequestException('Invalid client IDs');
       }
-      session.client = client;
+
+      const clients = await this.usersService.findByIds(clientIds);
+      if (clients.length === 0) {
+        throw new NotFoundException('No valid clients found');
+      }
+
+      session.clients = clients;
     }
 
     // Update other fields

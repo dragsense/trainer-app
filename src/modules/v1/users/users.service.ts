@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import { DataSource, EntityManager, Repository, FindOptionsWhere, DeepPartial, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
@@ -56,6 +56,16 @@ export class UsersService {
     }
 
     return user;
+  }
+
+
+  async findByIds(
+    ids: number[],
+  ): Promise<User[]> {
+
+    return this.userRepo.findBy({
+      id: In(ids),
+    });
   }
 
   async findAll(
