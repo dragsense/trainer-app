@@ -33,6 +33,9 @@ export const ReminderSchema = z.object({
     actions: z
         .array(z.nativeEnum(ReminderActions))
         .min(1, "At least one delivery method is required"),
+    recipientId: z.number().min(1, "Recipient ID must be a positive number"),
+    sessionId: z.number().min(0, "Session ID must be a non-negative number").optional(),
+    billingId: z.number().min(0, "Billing ID must be a non-negative number").optional(),
     priority: z.number().min(1).max(5).optional(),
     maxAttempts: z.number().min(1).max(10).optional(),
     retryInterval: z.number().min(1).optional(),
@@ -57,7 +60,10 @@ export default function RemindersPage() {
         isRecurring: { value: false },
         recurringInterval: { value: 7 },
         timeOfDay: { value: "09:00" },
-        intervalMinutes: { value: 30 }
+        intervalMinutes: { value: 30 },
+        recipientId: { value: 0 },
+        sessionId: { value: 0 },
+        billingId: { value: 0 }
     };
 
     return (

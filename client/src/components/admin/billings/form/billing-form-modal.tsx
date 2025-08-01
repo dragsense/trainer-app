@@ -47,7 +47,13 @@ export default function BillingFormModal({
   const { isSubmitting } = useStore(formStore);
   const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
-  const userInput = useUserListInput({ isSubmitting, multiple: false, level: UserLevels[UserRole.USER], prefix: "user" });
+  const userInput = useUserListInput({
+    isSubmitting,
+    multiple: false,
+    level: UserLevels[UserRole.USER],
+    prefix: "user",
+    valueType: "number"
+  });
 
   const fields: TFieldConfig[] = [
 
@@ -95,6 +101,7 @@ export default function BillingFormModal({
       name: "totalAmount",
       label: "Total Amount (cents)",
       type: "number",
+      valueType: "number",
       required: false,
     },
     {
@@ -102,6 +109,7 @@ export default function BillingFormModal({
       name: "totalTax",
       label: "Total Tax (cents)",
       type: "number",
+      valueType: "number",
       required: false,
     },
     {
@@ -109,6 +117,7 @@ export default function BillingFormModal({
       name: "discount",
       label: "Discount (cents)",
       type: "number",
+      valueType: "number",
       required: false,
     },
 

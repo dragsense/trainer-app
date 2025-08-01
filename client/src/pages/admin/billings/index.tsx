@@ -63,7 +63,7 @@ export default function BillingsPage() {
     status: { value: BillingStatus.PENDING },
     invoiceAmount: { value: 0 },
     currency: { value: BillingCurrency.USD },
-    userId: { value: 3 },
+    userId: { value: 0 },
     sessionId: { value: undefined },
     issueDate: { value: new Date() },
     dueDate: { value: new Date() },

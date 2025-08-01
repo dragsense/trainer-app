@@ -145,6 +145,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
       }, {} as TFormData);
 
 
+      console.log("Submitting data:", data);
       try {
         await mutation.mutateAsync(submissionData);
       } finally {

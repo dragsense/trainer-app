@@ -86,8 +86,17 @@ export function useInput({
         key={field.id}
         name={field.name}
         render={({ field: controllerField }) => {
-          const onChangeHandler = (result: unknown) => controllerField.onChange(convertValue(result, field.valueType));
+          const onChangeHandler = (value: any) => {
+            const parsed = convertValue(value, field.valueType);
 
+            // Trigger RHF control
+            controllerField.onChange(parsed);
+
+            // Trigger custom listener if provided
+            if (field.listeners?.onChange) {
+              field.listeners.onChange(parsed);
+            }
+          };
           const commonClass = cn(
             field.startAdornment && "pl-10",
             field.endAdornment && "pr-10",

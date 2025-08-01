@@ -17,6 +17,7 @@ export class CreateReminderDto {
   })
   @IsNotEmpty()
   @IsNumber()
+  @Min(1)
   recipientId: number;
 
   @ApiProperty({
