@@ -32,6 +32,12 @@ const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.SESSIONS]: "Sessions",
   [ADMIN_ROUTES.REMINDERS]: "Reminders",
   [ADMIN_ROUTES.BILLINGS]: "Billings",
+  [ADMIN_ROUTES.SETTINGS]: "Settings",
+  [ADMIN_ROUTES.SETTINGS_PROFILE]: "Settings | Profile",
+  [ADMIN_ROUTES.SETTINGS_NOTIFICATIONS]: "Settings | Notifications",
+  [ADMIN_ROUTES.SETTINGS_APP]: "Settings | App Settings",
+  [ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS]: "Settings | Payment Methods",
+  [ADMIN_ROUTES.SETTINGS_SECURITY]: "Settings | Security",
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
