@@ -28,6 +28,7 @@ import { NotificationsModule } from './modules/v1/notifications/notifications.mo
 import { FileUploadModule } from './modules/v1/file-upload/file-upload.module';
 import { SettingsModule } from './modules/v1/settings/settings.module';
 import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
+import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
 
 
 @Module({
@@ -79,7 +80,8 @@ import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
     StripeModule,
     FileUploadModule,
     BillingsModule,
-    NotificationsModule
+    NotificationsModule,
+    TrainerClientsModule
   ],
   controllers: [AppController],
   providers: [
