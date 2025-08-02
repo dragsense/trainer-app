@@ -1,19 +1,52 @@
-import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck } from "lucide-react";
+import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
-
-
 
 export const navItems: {
     title: string;
     icon?: LucideIcon;
     urls: string[];
+    children?: {
+        title: string;
+        icon?: LucideIcon;
+        url: string;
+    }[];
 }[] = [
         {
             title: "Dashboard",
             icon: LayoutDashboard,
             urls: [
                 ADMIN_ROUTES.DASHBOARD,
+                ADMIN_ROUTES.DASHBOARD_REVENUE,
+                ADMIN_ROUTES.DASHBOARD_SESSIONS,
+                ADMIN_ROUTES.DASHBOARD_PAYMENTS,
+                ADMIN_ROUTES.DASHBOARD_BILLING,
             ],
+            children: [
+                {
+                    title: "Overview",
+                    url: ADMIN_ROUTES.DASHBOARD,
+                },
+                {
+                    title: "Revenue Analytics",
+                    icon: TrendingUp,
+                    url: ADMIN_ROUTES.DASHBOARD_REVENUE,
+                },
+                {
+                    title: "Session Analytics",
+                    icon: Calendar,
+                    url: ADMIN_ROUTES.DASHBOARD_SESSIONS,
+                },
+                {
+                    title: "Payment Analytics",
+                    icon: CreditCard,
+                    url: ADMIN_ROUTES.DASHBOARD_PAYMENTS,
+                },
+                {
+                    title: "Billing Analytics",
+                    icon: Banknote,
+                    url: ADMIN_ROUTES.DASHBOARD_BILLING,
+                }
+            ]
         },
         {
             title: "Trainers",
@@ -35,7 +68,6 @@ export const navItems: {
             urls: [ADMIN_ROUTES.BILLINGS],
             icon: Banknote,
         },
-
         {
             title: "Reminders",
             urls: [ADMIN_ROUTES.REMINDERS],
@@ -43,8 +75,36 @@ export const navItems: {
         },
         {
             title: "Settings",
-            urls: [ADMIN_ROUTES.SETTINGS],
+            urls: [
+                ADMIN_ROUTES.SETTINGS,
+                ADMIN_ROUTES.SETTINGS_PROFILE,
+                ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+                ADMIN_ROUTES.SETTINGS_APP,
+                ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
+                ADMIN_ROUTES.SETTINGS_SECURITY,
+            ],
             icon: Settings,
+            children: [
+                {
+                    title: "Profile",
+                    url: ADMIN_ROUTES.SETTINGS_PROFILE,
+                },
+                {
+                    title: "Notifications",
+                    url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+                },
+                {
+                    title: "App Settings",
+                    url: ADMIN_ROUTES.SETTINGS_APP,
+                },
+                {
+                    title: "Payment Methods",
+                    url: ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
+                },
+                {
+                    title: "Security",
+                    url: ADMIN_ROUTES.SETTINGS_SECURITY,
+                }
+            ]
         }
-       
     ];

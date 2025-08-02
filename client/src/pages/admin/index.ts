@@ -1,4 +1,4 @@
-export { default as DashboardPage } from "./dashboard";
+export { DashboardPage, SessionAnalyticsPage, RevenueAnalyticsPage, PaymentAnalyticsPage, BillingAnalyticsPage } from "./dashboard";
 export { default as TrainersPage } from "./trainers";
 export { default as ClientsPage } from "./clients";
 export { default as SessionsPage } from "./sessions";

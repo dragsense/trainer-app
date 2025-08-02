@@ -1,13 +1,43 @@
 import { ADMIN_ROUTES } from "@/config/routes.config";
-import { DashboardPage, TrainersPage, ClientsPage, SessionsPage, RemindersPage, BillingsPage, ProfilePage, NotificationsPage, AppSettingsPage, PaymentMethodsPage, SecurityPage } from ".";
+import { 
+  DashboardPage, 
+  RevenueAnalyticsPage,
+  SessionAnalyticsPage,
+  PaymentAnalyticsPage,
+  BillingAnalyticsPage,
+  TrainersPage, 
+  ClientsPage, 
+  SessionsPage, 
+  RemindersPage, 
+  BillingsPage, 
+  ProfilePage, 
+  NotificationsPage, 
+  AppSettingsPage, 
+  PaymentMethodsPage, 
+  SecurityPage 
+} from ".";
 import { SettingsLayout } from "@/layouts";
-
-
 
 const adminRoutes = [
   {
     path: ADMIN_ROUTES.DASHBOARD,
     element: <DashboardPage />,
+  },
+  {
+    path: ADMIN_ROUTES.DASHBOARD_REVENUE,
+    element: <RevenueAnalyticsPage />,
+  },
+  {
+    path: ADMIN_ROUTES.DASHBOARD_SESSIONS,
+    element: <SessionAnalyticsPage />,
+  },
+  {
+    path: ADMIN_ROUTES.DASHBOARD_PAYMENTS,
+    element: <PaymentAnalyticsPage />,
+  },
+  {
+    path: ADMIN_ROUTES.DASHBOARD_BILLING,
+    element: <BillingAnalyticsPage />,
   },
   {
     path: ADMIN_ROUTES.TRAINERS,

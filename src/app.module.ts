@@ -27,6 +27,7 @@ import { BillingsModule } from './modules/v1/billings/billings.module';
 import { NotificationsModule } from './modules/v1/notifications/notifications.module';
 import { FileUploadModule } from './modules/v1/file-upload/file-upload.module';
 import { SettingsModule } from './modules/v1/settings/settings.module';
+import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
 
 
 @Module({
@@ -74,6 +75,7 @@ import { SettingsModule } from './modules/v1/settings/settings.module';
     SessionsModule,
     RemindersModule,
     SettingsModule,
+    DashboardModule,
     StripeModule,
     FileUploadModule,
     BillingsModule,

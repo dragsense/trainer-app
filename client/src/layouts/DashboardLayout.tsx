@@ -38,6 +38,10 @@ const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.SETTINGS_APP]: "Settings | App Settings",
   [ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS]: "Settings | Payment Methods",
   [ADMIN_ROUTES.SETTINGS_SECURITY]: "Settings | Security",
+  [ADMIN_ROUTES.DASHBOARD_REVENUE]: "Revenue Analytics",
+  [ADMIN_ROUTES.DASHBOARD_SESSIONS]: "Session Analytics",
+  [ADMIN_ROUTES.DASHBOARD_PAYMENTS]: "Payment Analytics",
+  [ADMIN_ROUTES.DASHBOARD_BILLING]: "Billing Analytics",
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

@@ -236,9 +236,6 @@ export class NotificationsService {
             case NotificationType.SESSION_SCHEDULED:
                 shouldNotify = settings.sessionNotifications;
                 break;
-            case NotificationType.NEW_MESSAGE:
-                shouldNotify = settings.chatNotifications;
-                break;
             default:
                 shouldNotify = true;
         }
@@ -312,11 +309,7 @@ export class NotificationsService {
         notification: Notification
     ): Promise<void> {
         try {
-            // Skip email notifications for chat messages
-            if (notification.type === NotificationType.NEW_MESSAGE) {
-                console.log(`📧 Skipping email notification for chat message to ${user.email}`);
-                return;
-            }
+        
 
             // Check if user has email notifications enabled
             const settings = await this.getNotificationSettings(user.id);

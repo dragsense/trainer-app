@@ -9,25 +9,11 @@ console.log('🔧 Socket URL:', SOCKET_API_URL);
 interface ServerToClientEvents {
   connect_error: (error: Error) => void;
   disconnect: (reason: string) => void;
-  message: (data: { sender: { id: number; name: string }; content: string; chatId: number }) => void;
-  messagesRemoved: (data: { messageIds: number[] }) => void;
-  clearChat: (status: boolean) => void;
-  newChat: (data: { chatId: number; chat: any; participants: any[] }) => void;
-  chatUpdated: (data: { chatId: number; lastMessage: any; unreadCounts: any[] }) => void;
-  chatRead: (data: { chatId: number; userId: number }) => void;
   newNotification: (data: any) => void;
   unreadCountUpdate: (data: { count: number }) => void;
 }
 
 interface ClientToServerEvents {
-  joinChat: (
-    data: { chatId: number },
-    callback: (response: { success: boolean; message: string } | { error: { message: string } }) => void
-  ) => void;
-  leaveChat: (
-    data: { chatId: number },
-    callback: (response: { success: boolean; message: string } | { error: { message: string } }) => void
-  ) => void;
   joinUserRoom: (
     data: { userId: number },
     callback: (response: { success: boolean; message: string } | { error: { message: string } }) => void
@@ -51,11 +37,11 @@ socket.on('connect', () => {
   console.log('✅ Socket connected:', socket.id);
 });
 
-socket.on('connect_error', (error) => {
+socket.on('connect_error', (error: any) => {
   console.error('❌ Connection error:', error.message);
 });
 
-socket.on('disconnect', (reason) => {
+socket.on('disconnect', (reason: any) => {
   console.warn('🔌 Disconnected:', reason);
 });
 
@@ -76,33 +62,6 @@ export const socketEmitter = <TResponse>(
     });
   });
 };
-
-// === Chat Room Management ===
-
-export const joinChat = (chatId: number) => socketEmitter<{ success: boolean; message: string }>('joinChat', { chatId });
-export const leaveChat = (chatId: number) => socketEmitter<{ success: boolean; message: string }>('leaveChat', { chatId });
-
-// === Message Events ===
-
-export const listenForMessages = (cb: ServerToClientEvents['message']) => socket.on('message', cb);
-export const removeMessageListener = (cb: ServerToClientEvents['message']) => socket.off('message', cb);
-
-export const listenForMessagesRemoved = (cb: ServerToClientEvents['messagesRemoved']) => socket.on('messagesRemoved', cb);
-export const removeMessagesRemovedListener = (cb: ServerToClientEvents['messagesRemoved']) => socket.off('messagesRemoved', cb);
-
-export const listenForClearChat = (cb: ServerToClientEvents['clearChat']) => socket.on('clearChat', cb);
-export const removeClearChatListener = (cb: ServerToClientEvents['clearChat']) => socket.off('clearChat', cb);
-
-// === Chat Lifecycle ===
-
-export const listenForNewChat = (cb: ServerToClientEvents['newChat']) => socket.on('newChat', cb);
-export const removeNewChatListener = (cb: ServerToClientEvents['newChat']) => socket.off('newChat', cb);
-
-export const listenForChatUpdated = (cb: ServerToClientEvents['chatUpdated']) => socket.on('chatUpdated', cb);
-export const removeChatUpdatedListener = (cb: ServerToClientEvents['chatUpdated']) => socket.off('chatUpdated', cb);
-
-export const listenForChatRead = (cb: ServerToClientEvents['chatRead']) => socket.on('chatRead', cb);
-export const removeChatReadListener = (cb: ServerToClientEvents['chatRead']) => socket.off('chatRead', cb);
 
 // === Notifications ===
 

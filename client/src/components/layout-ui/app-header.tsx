@@ -19,6 +19,7 @@ import { useLogout } from "@/hooks/use-logout";
 
 // Assets
 import navLogo from "@/assets/logos/nav-logo.png";
+import NotificationBell from "../shared-ui/notification-bell";
 
 
 interface AppHeaderProps {
@@ -42,6 +43,7 @@ export function AppHeader({ title }: AppHeaderProps) {
           <h1 className="text-lg md:text-2xl font-semibold">{title}</h1>
         </div>
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <NotificationBell />
           <Avatar className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg ">
             <AvatarImage src={navLogo} alt={firstName} />
             <AvatarFallback className="rounded-xxl bg-blue/10">

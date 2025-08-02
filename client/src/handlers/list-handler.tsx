@@ -27,7 +27,6 @@ import { ISingleHandlerProps, SingleHandler } from "./single-handler";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore } from "@/stores";
 
-
 interface IListHandlerProps<
   TData,
   TFormData,

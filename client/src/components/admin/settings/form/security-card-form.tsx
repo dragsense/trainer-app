@@ -27,20 +27,15 @@ interface ISecurityCardFormProps {
 
 export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
     const formStoreKey = storeKey + "-form";
-    const singleStoreKey = storeKey + "-single";
 
     // Move store calls to top level
     const formStore = useRegisteredStore<TFormHandlerStore<Partial<PasswordChangeData>, PasswordChangeData>>(formStoreKey);
-    const singleStore = useRegisteredStore<TSingleHandlerStore<PasswordChangeData>>(singleStoreKey);
 
     // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-    }
 
     const { isSubmitting } = useStore(formStore);
 

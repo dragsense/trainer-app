@@ -9,6 +9,10 @@ export const PUBLIC_ROUTES = {
 export type PublicRoute = keyof typeof PUBLIC_ROUTES;
 export const ADMIN_ROUTES = {
   DASHBOARD: "/dashboard",
+  DASHBOARD_REVENUE: "/dashboard/revenue",
+  DASHBOARD_SESSIONS: "/dashboard/sessions", 
+  DASHBOARD_PAYMENTS: "/dashboard/payments",
+  DASHBOARD_BILLING: "/dashboard/billing",
   TRAINERS: "/trainers",
   CLIENTS: "/clients",
   SESSIONS: "/sessions",
