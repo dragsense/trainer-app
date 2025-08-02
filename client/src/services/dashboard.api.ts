@@ -2,7 +2,7 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IDashboardStats, IDashboardRevenue, IPaymentMethodsOverview, ISessionsAnalytics, IClientsOverview, IRemindersAnalytics, IFinancialSummary, IBillingAnalytics } from "@/@types/dashboard.type";
+import { IDashboardStats, IDashboardRevenue, IPaymentMethodsOverview, ISessionsAnalytics, IClientsOverview, IRemindersAnalytics, IFinancialSummary, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
 
 // Constants
 const DASHBOARD_API_PATH = "/dashboard";
@@ -77,6 +77,48 @@ export const fetchBillingAnalytics = (params?: {
   return apiRequest(`${DASHBOARD_API_PATH}/billing/analytics${queryString ? `?${queryString}` : ''}`, "GET");
 };
 
+// Combined dashboard query function
+export const fetchCombinedDashboardData = async (params?: {
+  period?: 'day' | 'week' | 'month' | 'year';
+  date?: string;
+}): Promise<ICombinedDashboardData> => {
+  const { period = 'month', date } = params || {};
+
+  const [
+    stats,
+    revenue,
+    paymentMethods,
+    sessions,
+    clients,
+    reminders,
+    financial,
+    billing
+  ] = await Promise.all([
+    fetchDashboardStats(),
+    fetchRevenueAnalytics({ period, date }),
+    fetchPaymentMethodsOverview(),
+    fetchSessionsAnalytics({ period }),
+    fetchClientsOverview({ period }),
+    fetchRemindersAnalytics({ period }),
+    fetchFinancialSummary({ period }),
+    fetchBillingAnalytics({ 
+      period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly' 
+    })
+  ]);
+
+  return {
+    stats,
+    revenue,
+    paymentMethods,
+    sessions,
+    clients,
+    reminders,
+    financial,
+    billing
+  };
+};
+
+
 // Export dashboard API object for easier imports
 export const dashboardApi = {
   getStats: fetchDashboardStats,
@@ -87,4 +129,5 @@ export const dashboardApi = {
   getRemindersAnalytics: fetchRemindersAnalytics,
   getFinancialSummary: fetchFinancialSummary,
   getBillingAnalytics: fetchBillingAnalytics,
+  getCombinedData: fetchCombinedDashboardData,
 };

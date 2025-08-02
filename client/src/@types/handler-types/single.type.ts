@@ -1,5 +1,6 @@
 // Types
 import type { StoreApi } from "zustand";
+import { TQueryParams } from "../api/param.type";
 
 export interface ISingleHandlerBaseState<TResponse> {
   response?: TResponse | null;
@@ -13,6 +14,7 @@ export interface ISingleHandlerState<TResponse> extends ISingleHandlerBaseState<
 
   id: number;
   name: string,
+  params: TQueryParams;
   isCreating: boolean;
   isEditing: boolean;
   isDeleting: boolean;
@@ -21,6 +23,7 @@ export interface ISingleHandlerState<TResponse> extends ISingleHandlerBaseState<
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse) => void;
+  setParams: (params: TQueryParams) => void;
 
  setMode: (mode: 'create' | 'edit' | 'delete' | 'view', id?: number) => void;
 

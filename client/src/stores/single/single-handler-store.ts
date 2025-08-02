@@ -4,16 +4,18 @@ import { devtools } from 'zustand/middleware';
 
 // Types 
 import { ISingleHandlerState } from '@/@types/handler-types/single.type';
+import { TQueryParams } from '@/@types/api/param.type';
 
 // Config
 import { config } from '@/config';
 
-export const useSingleHandlerStore = <TResponse>(name: string) => {
+export const useSingleHandlerStore = <TResponse>(name: string, id: number = 0, initialParams: TQueryParams = {}) => {
     return create<ISingleHandlerState<TResponse>>()(
         devtools(
             (set) => ({
                 name,
-                id: 0,
+                id,
+                params: initialParams,
                 isLoading: false,
                 error: null,
                 response: null,
@@ -27,6 +29,7 @@ export const useSingleHandlerStore = <TResponse>(name: string) => {
                 setIsLoading: (isLoading) => set({ isLoading }),
                 setError: (error) => set({ error }),
                 setResponse: (response) => set({ response }),
+                setParams: (params) => set({ params }),
 
                 setMode: (mode, id: number = 0) => {
                     const newState = {

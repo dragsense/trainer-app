@@ -29,6 +29,7 @@ import { ConfirmDialog } from "@/components/layout-ui/app-alert-dialog";
 // Stores
 import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore, useSingleHandlerStore } from "@/stores";
 import { useStore } from "zustand";
+import { TQueryParams } from "@/@types/api/param.type";
 
 export type TSingleFormExtraProps<TData> = {
   open: boolean;
@@ -45,6 +46,8 @@ export interface ISingleHandlerProps<
   TFormExtraProps
 > extends Omit<IFormHandlerProps<TUpdateData, TResponse, TFormExtraProps>, 'mutationFn'> {
   name?: string;
+  id?: number,
+  initialParams?: TQueryParams 
   queryFn: (id: number) => Promise<TData>;
   SingleComponent?: React.ComponentType<{ storeKey: string } & TSingleExtraProps
   >;
@@ -60,6 +63,8 @@ export function SingleHandler<
   TFormExtraProps extends Record<string, any> = Record<string, any>
 >({
   name = "item",
+  id,
+  initialParams,
   queryFn,
   mutationFns,
   storeKey,
@@ -87,7 +92,7 @@ export function SingleHandler<
   // Initialize store
   let store = useRegisteredStore<TSingleHandlerStore<TData>>(sinleStoreKey);
   if (!store) {
-    store = useSingleHandlerStore<TData>(name);
+    store = useSingleHandlerStore<TData>(name, id, initialParams);
     registerStore<TSingleHandlerStore<TData>>(sinleStoreKey, store);
   }
 
@@ -97,13 +102,13 @@ export function SingleHandler<
   }, [sinleStoreKey, store]);
 
 
-  const { id, isDeleting } = useStore(store);
+  const { id: itemId, isDeleting } = useStore(store);
 
-  const queryKey = [sinleStoreKey, id];
+  const queryKey = [sinleStoreKey, itemId];
   const { data, error, isError, isLoading, isSuccess } = useQuery<TData, Error>({
     queryKey,
-    queryFn: () => queryFn(id!),
-    enabled: !!id,
+    queryFn: () => queryFn(itemId!),
+    enabled: !!itemId,
   });
 
   useEffect(() => {

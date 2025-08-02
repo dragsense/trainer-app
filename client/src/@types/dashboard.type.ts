@@ -209,3 +209,15 @@ export interface IBarChartData {
   value: number;
   fill?: string;
 }
+
+// Combined Dashboard Data Interface
+export interface ICombinedDashboardData {
+  stats: IDashboardStats;
+  revenue: IDashboardRevenue;
+  paymentMethods: IPaymentMethodsOverview;
+  sessions: ISessionsAnalytics;
+  clients: IClientsOverview;
+  reminders: IRemindersAnalytics;
+  financial: IFinancialSummary;
+  billing: IBillingAnalytics;
+}
