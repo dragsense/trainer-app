@@ -11,6 +11,7 @@ import { useInput } from "@/hooks/use-input";
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { IProfile, TProfileData } from "@/@types/setting.type";
+import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { useStore } from "zustand";
@@ -25,7 +26,7 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
     const singleStoreKey = storeKey + "-single";
 
     // Move store calls to top level - this fixes the hook rendering issue
-    const formStore = useRegisteredStore<TFormHandlerStore<TProfileData, IProfile>>(formStoreKey);
+    const formStore = useRegisteredStore<TFormHandlerStore<TProfileData, IMessageResponse>>(formStoreKey);
     const singleStore = useRegisteredStore<TSingleHandlerStore<IProfile>>(singleStoreKey);
 
     // Handle missing stores after hooks are called
@@ -84,31 +85,7 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             required: false,
         },
 
-        // ─── Health & Emergency Info ─────
-        {
-            id: "emergencyContactName",
-            name: "emergencyContactName",
-            label: "Emergency Contact Name",
-            placeholder: "Emergency contact name",
-            type: "text",
-            required: false,
-        },
-        {
-            id: "emergencyContactPhone",
-            name: "emergencyContactPhone",
-            label: "Emergency Contact Phone",
-            placeholder: "Emergency contact phone",
-            type: "tel",
-            required: false,
-        },
-        {
-            id: "medicalConditions",
-            name: "medicalConditions",
-            label: "Medical Conditions",
-            placeholder: "Any medical conditions to note...",
-            type: "textarea",
-            required: false,
-        },
+       
         {
             id: "fitnessGoals",
             name: "fitnessGoals",

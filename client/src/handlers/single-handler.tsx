@@ -1,11 +1,12 @@
 // React & Hooks
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 // Types
 import {
   MutationFns
 } from "@/@types/handler-types";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { TQueryParams } from "@/@types/api/param.type";
 
 
 // Custom Hooks
@@ -29,7 +30,6 @@ import { ConfirmDialog } from "@/components/layout-ui/app-alert-dialog";
 // Stores
 import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore, useSingleHandlerStore } from "@/stores";
 import { useStore } from "zustand";
-import { TQueryParams } from "@/@types/api/param.type";
 
 export type TSingleFormExtraProps<TData> = {
   open: boolean;
@@ -47,7 +47,7 @@ export interface ISingleHandlerProps<
 > extends Omit<IFormHandlerProps<TUpdateData, TResponse, TFormExtraProps>, 'mutationFn'> {
   name?: string;
   id?: number,
-  initialParams?: TQueryParams 
+  initialParams?: TQueryParams
   queryFn: (id: number) => Promise<TData>;
   SingleComponent?: React.ComponentType<{ storeKey: string } & TSingleExtraProps
   >;
@@ -86,6 +86,7 @@ export function SingleHandler<
 >) {
   const queryClient = useQueryClient();
   const { confirm, dialogProps } = useConfirm();
+  const [values, setValues] = useState<TUpdateData>();
 
   const sinleStoreKey = storeKey + "-single";
 
@@ -112,8 +113,20 @@ export function SingleHandler<
   });
 
   useEffect(() => {
-    console.log("🧠 Store ID changed:", isLoading);
-  }, [isLoading]);
+
+    if (data) {
+      const newValues = Object.entries(initialValues).reduce((acc, [key, config]) => {
+        if (!config.notIncluded) {
+          acc[key as keyof TUpdateData] = config.notInput
+            ? config.value
+            : data[key as keyof TData] || initialValues[key].value;
+        }
+        return acc;
+      }, {} as TUpdateData);
+      setValues(newValues);
+    }
+
+  }, [data]);
 
   useEffect(() => {
     store.getState().syncWithQuery({
@@ -190,6 +203,8 @@ export function SingleHandler<
   }, [isDeleting]);
 
 
+
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <>
@@ -204,6 +219,7 @@ export function SingleHandler<
           mutationFn={mutation.fn}
           FormComponent={FormComponent}
           initialValues={initialValues}
+          values={values}
           validationMode={validationMode}
           validationSchema={validationSchema}
           onSuccess={onSuccess || (() => toast.success('Operation successful'))}

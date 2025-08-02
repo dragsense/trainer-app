@@ -1,12 +1,12 @@
 // React & Hooks
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // External libraries
 import { Filter, Plus, XIcon } from "lucide-react";
 
 // Types
 import { IUser } from "@/@types/user.type";
-import { IListStoreApi } from "@/@types/handler-types";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,12 @@ import { columns } from "./client-columns";
 // Stores
 import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+
+// Config
+import { ADMIN_ROUTES } from "@/config/routes.config";
+
+// Utility
+import { buildRoutePath } from "@/lib/utils";
 
 interface IClientTableProps {
   storeKey: string;
@@ -52,9 +58,9 @@ export default function ClientTable({
   }
 
   const { setMode } = useStore(singleStore);
+  const navigate = useNavigate();
 
-
-  const { setFilters: setListFilters } = useStore(listStore);
+  const { setFilters: setListFilters, setItemAction } = useStore(listStore);
 
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -100,10 +106,26 @@ export default function ClientTable({
     setMode('delete', id);
   }
 
+  const handleView = (id: number) => {
+    navigate(buildRoutePath(ADMIN_ROUTES.TRAINER_CLIENTS, undefined, { clientId: id }));
+  }
+
+
+  const handleAssign = (clientId: number) => {
+    setItemAction({
+      itemName: 'Assign Trainer',
+      action: 'assign',
+      id: clientId,
+      type: 'client',
+    })
+  }
+
 
   const tableColumns = columns({
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleView,
+    handleAssign
   }
   );
 

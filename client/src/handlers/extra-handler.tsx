@@ -1,14 +1,18 @@
 import React from "react";
 
-import { ItemActionProps } from "@/@types/general.type";
-import { ExtraComponentProps, IExtraComponent } from "@/@types/handler-types";
+// Types
+import { TExtraComponentProps, IExtraComponent } from "@/@types/handler-types";
+
+// Stores
+import { TListHandlerStore } from "@/stores";
+import { useStore } from "zustand";
 
 
 
-interface ExtraComponentRendererProps<TListExtraProps> {
+interface ExtraComponentRendererProps<T, TListExtraProps> {
   extraComponents?: IExtraComponent<TListExtraProps>[];
-  itemAction: ItemActionProps | null;
-  setItemAction: React.Dispatch<React.SetStateAction<ItemActionProps | null>>;
+  store: TListHandlerStore<T>;
+  storeKey: string;
   listProps: TListExtraProps;
   handleInvalidateQuery: (res: unknown) => void;
 }
@@ -20,21 +24,25 @@ const useExtraComponentsMap = <TListExtraProps,>(
     if (!components) return null;
 
     return components.reduce((acc, extra) => {
-      acc[extra.trigerAction] = extra.comp;
+      acc[extra.triggerAction] = extra.comp;
       return acc;
-    }, {} as Record<string, React.ComponentType<ExtraComponentProps<TListExtraProps>>>);
+    }, {} as Record<string, React.ComponentType<TExtraComponentProps<TListExtraProps>>>);
   }, [components]);
 };
 
-export const ExtraComponentHandler = <TListExtraProps,>({
+export const ExtraComponentHandler = <T, TListExtraProps>({
   extraComponents,
-  itemAction,
-  setItemAction,
+  store,
   listProps,
+  storeKey,
   handleInvalidateQuery,
-}: ExtraComponentRendererProps<TListExtraProps>) => {
+}: ExtraComponentRendererProps<T, TListExtraProps>) => {
+
   const extraComponentsMap = useExtraComponentsMap(extraComponents);
-  const currentAction = itemAction?.extraAction;
+
+  const { itemAction, setItemAction } = useStore(store);
+
+  const currentAction = itemAction?.action;
 
   return React.useMemo(() => {
     if (!currentAction || !extraComponentsMap) return null;
@@ -46,6 +54,7 @@ export const ExtraComponentHandler = <TListExtraProps,>({
     return (
       <ExtraComp
         key={`extra-comp-${currentAction}`}
+        storeKey={storeKey}
         handleInvalidateQuery={handleInvalidateQuery}
         {...listProps}
       />

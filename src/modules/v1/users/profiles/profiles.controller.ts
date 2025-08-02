@@ -16,6 +16,25 @@ import { UpdateProfileDto }
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) { }
 
+  @Get('profile/me')
+  @ApiOperation({ summary: 'Get profile of the authenticated user' })
+  @ApiResponse({ status: 200, description: 'Profile found', type: Profile })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  findMe(@Req() req: any) {
+    return this.profilesService.findOneByUser({ id: req.user.id });
+  }
+
+
+  @Patch('profile/me')
+  @ApiOperation({ summary: 'Update profile of the authenticated user' })
+  @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
+  async updateMe(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+    const profile = await this.profilesService.findOneByUser({ id: req.user.id });
+    return this.profilesService.update(profile.id, updateProfileDto);
+  }
+
+
 
   @Get(':id')
   @ApiOperation({ summary: 'Get profile by user ID' })

@@ -1,12 +1,12 @@
 // React & Hooks
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // External libraries
 import { Filter, Plus, XIcon } from "lucide-react";
 
 // Types
 import { IUser } from "@/@types/user.type";
-import { IListStoreApi } from "@/@types/handler-types";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,12 @@ import { columns } from "./trainer-columns";
 import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
+// Utility
+import { buildRoutePath } from "@/lib/utils";
+
+// Config
+import { ADMIN_ROUTES } from "@/config/routes.config";
+
 interface ITrainerTableProps {
   storeKey: string;
 }
@@ -35,6 +41,7 @@ interface ITrainerTableProps {
 export default function TrainerTable({
   storeKey,
 }: ITrainerTableProps) {
+
 
   const listStoreKey = storeKey + "-list";
   const singelStoreKey = storeKey + "-single";
@@ -52,9 +59,10 @@ export default function TrainerTable({
   }
 
   const { setMode } = useStore(singleStore);
+  const navigate = useNavigate();
 
 
-  const { setFilters: setListFilters } = useStore(listStore);
+  const { setFilters: setListFilters, setItemAction } = useStore(listStore);
 
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -100,10 +108,24 @@ export default function TrainerTable({
     setMode('delete', id);
   }
 
+  const handleView = (trainerId: number) => {
+    navigate(buildRoutePath(ADMIN_ROUTES.TRAINER_CLIENTS, undefined, { trainerId: trainerId }));
+  }
+
+    const handleAssign = (trainerId: number) => {
+    setItemAction({
+      itemName: 'Assign Client',
+      action: 'assign',
+      id: trainerId,
+      type: 'trainer',
+  })
+  }
 
   const tableColumns = columns({
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleView,
+    handleAssign
   }
   );
 

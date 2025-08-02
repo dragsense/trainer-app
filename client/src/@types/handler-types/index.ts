@@ -3,18 +3,19 @@ import { IMessageResponse } from "../api/response.type";
 export type TItemActionProps = {
   itemName: string;
   action: string;
-  extraAction?: string;
+  type?: string;
   id: number;
 };
 
 
-export type ExtraComponentProps<T> = T & {
+export type TExtraComponentProps<T> = T & {
+  storeKey: string;
   handleInvalidateQuery: (res: unknown) => void;
 };
 
 export interface IExtraComponent<TListExtraProps = any> {
-  trigerAction: string;
-  comp: React.ComponentType<ExtraComponentProps<TListExtraProps>>;
+  triggerAction: string;
+  comp: React.ComponentType<TExtraComponentProps<TListExtraProps>>;
 }
 
 export interface MutationFns<TFormData, TResponse> {

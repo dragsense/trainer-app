@@ -1,5 +1,5 @@
 import { PageInnerLayout } from "@/layouts";
-import { PaymentMethodsAnalytics } from "@/page-components/dashboard";
+import { PaymentMethodsAnalytics } from "@/page-components";
 
 export default function PaymentAnalyticsPage() {
   return (

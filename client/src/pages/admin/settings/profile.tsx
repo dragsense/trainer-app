@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 // Types
-import { IProfile } from "@/@types/setting.type";
+import { IProfile, TProfileData } from "@/@types/setting.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers
@@ -35,7 +35,7 @@ export const ProfileSchema = z.object({
 });
 
 export default function ProfilePage() {
-  const PROFILE_INITIAL_VALUES: TDefaultValue<Partial<IProfile>> = {
+  const PROFILE_INITIAL_VALUES: TDefaultValue<Partial<TProfileData>> = {
     firstName: { value: "" },
     lastName: { value: "" },
     phoneNumber: { value: "" },
@@ -54,12 +54,13 @@ export default function ProfilePage() {
         </p>
       </div>
       
-      <SingleHandler<IProfile, Partial<IProfile>, IProfile | IMessageResponse>
+      <SingleHandler<IProfile, Partial<TProfileData>, IMessageResponse>
         queryFn={fetchProfile}
         storeKey="profileSettings"
         mutationFns={{
           updateFn: () => updateProfile
         }}
+        id={1}
         FormComponent={ProfileCardForm}
         validationSchema={ProfileSchema}
         initialValues={PROFILE_INITIAL_VALUES}

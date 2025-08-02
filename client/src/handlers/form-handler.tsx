@@ -1,15 +1,16 @@
 // React & Hooks
 import React, { ReactNode, useEffect } from "react";
+import { z } from "zod";
 
 // External Libraries
-import { DefaultValues, FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { DefaultValues, FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { z } from "zod";
-
+import { IMessageResponse } from "@/@types/api/response.type";
+import { TDefaultValue } from "@/@types/form/field.type";
 // Custom Hooks
 import { useApiMutation } from "@/hooks/use-api-mutation";
 
@@ -24,8 +25,7 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 // Stores
 import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { useStore } from "zustand";
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
@@ -37,6 +37,7 @@ export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
   onSuccess?: (response: TResponse | IMessageResponse | void) => void;
   onError?: (error: Error) => void;
   initialValues: Readonly<TDefaultValue<TFormData>>;
+  values?: TFormData;
   validationMode?: EVALIDATION_MODES;
   validationSchema: z.ZodType<TFormData, any, TFormData>;
   storeKey: string;
@@ -50,6 +51,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   onSuccess,
   onError,
   initialValues,
+  values,
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
   storeKey,
@@ -70,8 +72,6 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     store = useFormHandlerStore<TFormData, TResponse>(values);
     registerStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey, store);
   }
-
-
 
   const mutation = useApiMutation(mutationFn, {
     onMutate: () => {
@@ -110,6 +110,9 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     };
   }, [formStoreKey]);
 
+
+
+
   useEffect(() => {
     const unsubscribeStore = store.subscribe(
       (state) => {
@@ -125,10 +128,16 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     return unsubscribeStore;
   }, [onSuccess, onError]);
 
+  useEffect(() => {
+    if (values)
+      store.getState().setValues(values as TFormData);
+  }, [values]);
+
 
   const form = useForm<TFormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: (store.getState().values ?? {}) as DefaultValues<TFormData>,
+    values: (store.getState().values ?? {}) as TFormData,
     mode: validationMode,
   });
 
@@ -144,8 +153,6 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
         return acc;
       }, {} as TFormData);
 
-
-      console.log("Submitting data:", data);
       try {
         await mutation.mutateAsync(submissionData);
       } finally {
@@ -154,10 +161,6 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     });
 
     store.getState().setOnSubmit(submitHandler);
-
-
-
-
   }, [form, initialValues, mutation]);
 
 

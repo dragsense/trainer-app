@@ -13,7 +13,8 @@ import {
   TAppSettingData,
   TUpdateAppSettingData,
   TPaymentMethodData,
-  TUpdatePaymentMethodData
+  TUpdatePaymentMethodData,
+  TProfileData
 } from "@/@types/setting.type";
 
 // Constants
@@ -42,10 +43,10 @@ export const updateNotificationSettings = (data: Partial<INotificationSetting>) 
 
 // Profile Settings
 export const fetchProfile = () =>
-  apiRequest<IProfile>(`${PROFILES_API_PATH}/me`, "GET");
+  apiRequest<IProfile>(`${PROFILES_API_PATH}/profile/me`, "GET");
 
-export const updateProfile = (data: Partial<IProfile>) =>
-  apiRequest<IMessageResponse>(`${PROFILES_API_PATH}`, "PATCH", data);
+export const updateProfile = (data: Partial<TProfileData>) =>
+  apiRequest<IMessageResponse>(`${PROFILES_API_PATH}/profile/me`, "PATCH", data);
 
 // Payment Methods
 export const fetchPaymentMethods = () =>

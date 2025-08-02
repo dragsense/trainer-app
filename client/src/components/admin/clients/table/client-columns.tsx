@@ -20,10 +20,14 @@ import { Badge } from "@/components/ui/badge";
 
 export const columns = ({
   handleEdit,
-  handleDelete
+  handleDelete,
+  handleView,
+  handleAssign
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
+  handleView?: (id: number) => void;
+  handleAssign?: (id: number) => void;
 }
 ): ColumnDef<IUser>[] => [
 
@@ -74,6 +78,17 @@ export const columns = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {handleView && (
+                <DropdownMenuItem onClick={() => handleView(trainer.id)}>
+                  View Details
+                </DropdownMenuItem>
+              )}
+              {handleAssign && (
+                <DropdownMenuItem onClick={() => handleAssign(trainer.id)}>
+                  Assign Trainer
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               {handleEdit && (
                 <DropdownMenuItem onClick={() => handleEdit(trainer.id)}>

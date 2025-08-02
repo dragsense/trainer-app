@@ -26,6 +26,7 @@ export interface UseListInputProps<T> {
     valueType?: "string" | "number";
     modal?: boolean;
     searchType?: "local" | "api";
+    disabled?: boolean;
 }
 
 export function useListInput<T>({
@@ -38,6 +39,7 @@ export function useListInput<T>({
     queryFn,
     valueType,
     name,
+    disabled,
     label,
     id,
     modal = false,
@@ -52,12 +54,13 @@ export function useListInput<T>({
             type: "custom",
             valueType,
             required: true,
+            disabled,
             className: "w-full",
-            Component: ({ value, onChange }) => (
+            Component: ({ value, onChange, disabled }) => (
                 <ListInputWrapper<T>
                     value={value}
                     onChange={onChange}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || disabled}
                     multiple={multiple}
                     placeholder={placeholder}
                     getKey={getKey}
@@ -83,6 +86,7 @@ interface ListInputWrapperProps<T> extends TCustomInputWrapper {
     queryFn: (params: IListParams) => Promise<IPaginatedResponse<T>>;
     modal?: boolean;
     searchType?: "local" | "api";
+    disabled?: boolean;
 }
 
 export const ListInputWrapper = <T,>({
@@ -95,6 +99,7 @@ export const ListInputWrapper = <T,>({
     getLabel,
     queryFn,
     modal = false,
+    disabled = false,
     searchType = "local",
 }: ListInputWrapperProps<T>) => {
     const [search, setSearch] = useState("");
@@ -139,6 +144,7 @@ export const ListInputWrapper = <T,>({
             multiple={multiple}
             modal={modal}
             searchType={searchType}
+            disabled={disabled}
         />
     );
 };

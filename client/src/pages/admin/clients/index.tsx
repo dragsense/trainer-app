@@ -23,6 +23,7 @@ import { TDefaultValue } from "@/@types/form/field.type";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import { AssignTrainerClientForm } from "@/page-components";
 
 
 
@@ -85,6 +86,12 @@ export default function ClientsPage() {
         validationSchema={ClientSchema}
         initialValues={TRAINER_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
+        extraComponents={[
+          {
+            triggerAction: 'assign',
+            comp: AssignTrainerClientForm
+          }
+        ]}
       />
 
     </PageInnerLayout>

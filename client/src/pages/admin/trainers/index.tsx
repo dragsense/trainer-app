@@ -11,6 +11,7 @@ import { ListHandler } from "@/handlers";
 
 // Custom UI Components
 import { TrainerFormModal, TrainerTable } from "@/components/admin";
+import { AssignTrainerClientForm } from "@/page-components";
 
 
 // API
@@ -79,8 +80,8 @@ export default function TrainersPage() {
     certifications: { value: [] },
     level: { value: UserLevels[UserRole.TRAINER], notInput: true },
     isActive: { value: true },
-    experience: { value: 0},
-    rating: { value: 0},
+    experience: { value: 0 },
+    rating: { value: 0 },
   };
 
 
@@ -101,6 +102,12 @@ export default function TrainersPage() {
         validationSchema={TrainerSchema}
         initialValues={TRAINER_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
+        extraComponents={[
+          {
+            triggerAction: 'assign',
+            comp: AssignTrainerClientForm
+          }
+        ]}
       />
 
     </PageInnerLayout>

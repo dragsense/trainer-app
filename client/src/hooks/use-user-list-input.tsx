@@ -14,9 +14,10 @@ export interface UseUserListInputProps {
   level: number;
   prefix?: string;
   valueType?: "string" | "number";
+  disabled?: boolean;
 }
 
-export function useUserListInput({ level, isSubmitting, multiple = false, modal = false, prefix = "user", valueType }: UseUserListInputProps) {
+export function useUserListInput({ level, isSubmitting, multiple = false, modal = false, prefix = "user", valueType, disabled = false }: UseUserListInputProps) {
   return useListInput<IUser>({
     isSubmitting,
     multiple,
@@ -31,5 +32,6 @@ export function useUserListInput({ level, isSubmitting, multiple = false, modal 
     modal,
     valueType,
     searchType: "api",
+    disabled,
   });
 }

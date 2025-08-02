@@ -6,6 +6,7 @@ import { IPaginatedResponse } from "@/@types/api/response.type";
 import {
   IListParams,
 } from "@/@types/api/param.type";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 import {
   TItemActionProps,
@@ -24,8 +25,13 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Handlers
 import { ISingleHandlerProps, SingleHandler } from "./single-handler";
-import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { ExtraComponentHandler } from "./extra-handler";
+
+
+// Stores
+import { useStore } from "zustand";
 import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore } from "@/stores";
+
 
 interface IListHandlerProps<
   TData,
@@ -110,9 +116,8 @@ export function ListHandler<
     return () => deregisterStore(listStoreKey);
   }, [listStoreKey, store]);
 
-  const itemAction = store?.getState().itemAction;
- 
-    const queryKey = [listStoreKey];
+  
+  const queryKey = [listStoreKey];
 
 
   usePaginatedQuery<TData>(queryKey, async (params) => {
@@ -172,7 +177,7 @@ export function ListHandler<
     queryClient.invalidateQueries({
       queryKey,
     });
-    
+
     if (onSuccess) {
       onSuccess(_res as TResponse);
     }
@@ -182,6 +187,7 @@ export function ListHandler<
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ListComponent
         storeKey={storeKey}
+        
         {...(listProps as TListExtraProps)}
       />
 
@@ -192,7 +198,7 @@ export function ListHandler<
         TSingleExtraProps,
         TFormExtraProps
       >
-      name={name}
+        name={name}
         storeKey={storeKey}
         queryFn={queryFn}
         SingleComponent={SingleComponent}
@@ -217,18 +223,15 @@ export function ListHandler<
         validationMode={validationMode}
       />
 
-      {extraComponents?.map((extraComp, index) => {
-        const Component = extraComp.comp;
-        return (
-          <Component
-            key={index}
-            itemAction={itemAction}
-            setItemAction={(action: TItemActionProps | null) => store?.getState().setItemAction(action)}
-            {...(listProps as TListExtraProps)}
-            handleInvalidateQuery={handleInvalidateQuery}
-          />
-        );
-      })}
+
+      <ExtraComponentHandler<TData, TListExtraProps>
+        extraComponents={extraComponents}
+        storeKey={storeKey}
+        store={store}
+        listProps={listProps as TListExtraProps}
+        handleInvalidateQuery={handleInvalidateQuery}
+      />
+
     </ErrorBoundary>
   );
 }

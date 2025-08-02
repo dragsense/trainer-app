@@ -1,5 +1,5 @@
 import { PageInnerLayout } from "@/layouts";
-import { RevenueChart } from "@/page-components/dashboard";
+import { RevenueChart } from "@/page-components";
 
 export default function RevenueAnalyticsPage() {
   return (

@@ -1,4 +1,4 @@
-import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard } from "lucide-react";
+import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard, Users } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 export const navItems: {
@@ -57,6 +57,11 @@ export const navItems: {
             title: "Clients",
             urls: [ADMIN_ROUTES.CLIENTS],
             icon: User2,
+        },
+        {
+            title: "Trainer-Clients",
+            urls: [ADMIN_ROUTES.TRAINER_CLIENTS],
+            icon: Users,
         },
         {
             title: "Sessions",

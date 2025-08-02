@@ -1,49 +1,60 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe, Query, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TrainerClientsService } from './trainer-clients.service';
 import { CreateTrainerClientDto } from './dto/create-trainer-client.dto';
+import { TrainerClientListDto } from './dto/trainer-client-list.dto';
 
 @ApiTags('Trainer-Clients')
 @Controller('trainer-clients')
 export class TrainerClientsController {
-  constructor(private readonly trainerClientsService: TrainerClientsService) {}
+  constructor(private readonly trainerClientsService: TrainerClientsService) { }
 
-  @Post('assign')
+  @Post()
   @ApiOperation({ summary: 'Assign trainer to client' })
+  @ApiResponse({ status: 201, description: 'Trainer assigned to client successfully' })
+  @ApiResponse({ status: 409, description: 'Client is already assigned to this trainer' })
+  @ApiBody({ type: CreateTrainerClientDto, description: 'Details of the trainer-client assignment' })
   assignTrainerToClient(@Body() createTrainerClientDto: CreateTrainerClientDto) {
     return this.trainerClientsService.assignTrainerToClient(createTrainerClientDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all trainer-client assignments' })
-  findAll() {
-    return this.trainerClientsService.findAll();
+  @ApiResponse({ status: 200, description: 'List of trainer-client assignments', type: [CreateTrainerClientDto] })
+  @ApiResponse({ status: 404, description: 'No assignments found' })
+  findAll(@Query() queryDto: TrainerClientListDto) {
+    return this.trainerClientsService.findAll(queryDto);
   }
 
-  @Get('trainer/:trainerId/clients')
-  @ApiOperation({ summary: 'Get all clients for a trainer' })
-  getTrainerClients(@Param('trainerId') trainerId: string) {
-    return this.trainerClientsService.getTrainerClients(+trainerId);
-  }
 
-  @Get('client/:clientId/trainers')
-  @ApiOperation({ summary: 'Get all trainers for a client' })
-  getClientTrainers(@Param('clientId') clientId: string) {
-    return this.trainerClientsService.getClientTrainers(+clientId);
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get trainer-client assignment by ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID of the trainer-client assignment' })
+  @ApiResponse({ status: 200, description: 'Trainer-client assignment found', type: CreateTrainerClientDto })
+  @ApiResponse({ status: 404, description: 'Assignment not found' })
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.trainerClientsService.findOne(id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove assignment by ID' })
-  removeAssignment(@Param('id') id: string) {
-    return this.trainerClientsService.removeAssignment(+id);
+  @ApiParam({ name: 'id', type: Number, description: 'ID of the trainer-client assignment to remove' })
+  @ApiResponse({ status: 200, description: 'Assignment removed successfully' })
+  @HttpCode(204)
+  removeAssignment(@Param('id', ParseIntPipe) id: number) {
+    return this.trainerClientsService.removeAssignment(id);
   }
 
   @Delete('trainer/:trainerId/client/:clientId')
   @ApiOperation({ summary: 'Remove trainer from client' })
+  @ApiParam({ name: 'trainerId', type: Number, description: 'ID of the trainer' })
+  @ApiParam({ name: 'clientId', type: Number, description: 'ID of the client' })
+  @ApiResponse({ status: 200, description: 'Trainer removed from client successfully' })
   removeTrainerFromClient(
-    @Param('trainerId') trainerId: string,
-    @Param('clientId') clientId: string
+    @Param('trainerId', ParseIntPipe) trainerId: number,
+    @Param('clientId', ParseIntPipe) clientId: number
   ) {
-    return this.trainerClientsService.removeTrainerFromClient(+trainerId, +clientId);
+    return this.trainerClientsService.removeTrainerFromClient(trainerId, clientId);
   }
 }

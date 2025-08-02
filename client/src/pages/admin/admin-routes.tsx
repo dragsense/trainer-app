@@ -7,10 +7,11 @@ import {
   BillingAnalyticsPage,
   TrainersPage, 
   ClientsPage, 
+  TrainerClientsPage,
   SessionsPage, 
   RemindersPage, 
   BillingsPage, 
-  ProfilePage, 
+  ProfilePage,  
   NotificationsPage, 
   AppSettingsPage, 
   PaymentMethodsPage, 
@@ -46,6 +47,10 @@ const adminRoutes = [
   {
     path: ADMIN_ROUTES.CLIENTS,
     element: <ClientsPage />,
+  },
+  {
+    path: ADMIN_ROUTES.TRAINER_CLIENTS,
+    element: <TrainerClientsPage />,
   },
   {
     path: ADMIN_ROUTES.SESSIONS,

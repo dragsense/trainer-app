@@ -15,6 +15,7 @@ export const ADMIN_ROUTES = {
   DASHBOARD_BILLING: "/dashboard/billing",
   TRAINERS: "/trainers",
   CLIENTS: "/clients",
+  TRAINER_CLIENTS: "/trainer-clients",
   SESSIONS: "/sessions",
   REMINDERS: "/reminders",
   BILLINGS: "/billings",
