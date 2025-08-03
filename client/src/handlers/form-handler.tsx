@@ -41,6 +41,7 @@ export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
   validationMode?: EVALIDATION_MODES;
   validationSchema: z.ZodType<TFormData, any, TFormData>;
   storeKey: string;
+  useManualForm?: boolean; // New option for manual form handling
 }
 
 
@@ -55,6 +56,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
   storeKey,
+  useManualForm = false, // Default to false for backward compatibility
 }: IFormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
 
   const formStoreKey = storeKey + "-form";
@@ -133,43 +135,85 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
       store.getState().setValues(values as TFormData);
   }, [values]);
 
-
-  const form = useForm<TFormData>({
+  // React Hook Form setup (only if not using manual form)
+  const form = !useManualForm ? useForm<TFormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: (store.getState().values ?? {}) as DefaultValues<TFormData>,
-    values: (store.getState().values ?? {}) as TFormData,
-    mode: validationMode,
-  });
-
+      mode: validationMode,
+  }) : null;
 
   useEffect(() => {
-    const submitHandler = form.handleSubmit(async (data) => {
-      const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
-        if (!config.notIncluded) {
-          acc[key as keyof TFormData] = config.notInput
-            ? config.value
-            : data[key as keyof TFormData] || initialValues[key].value;
+    if (useManualForm) {
+      // Manual form submit handler
+      const manualSubmitHandler = async (e: React.BaseSyntheticEvent | undefined) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
         }
-        return acc;
-      }, {} as TFormData);
 
-      try {
-        await mutation.mutateAsync(submissionData);
-      } finally {
-        // any cleanup here
-      }
-    });
+        // Get current values from store
+        const currentValues = store.getState().values;
+        
+        try {
+          // Manual validation using Zod schema
+          const validatedData = validationSchema.parse(currentValues);
+          
+          console.log("Manual form - submitting data:", validatedData);
+          
+          // Submit the validated data
+          await mutation.mutateAsync(validatedData);
+          
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            console.error("Validation errors:", error.errors);
+            store.getState().setError(new Error("Validation failed: " + error.errors.map(e => e.message).join(", ")));
+          } else {
+            console.error("Submission error:", error);
+            store.getState().setError(error as Error);
+          }
+        }
+      };
 
-    store.getState().setOnSubmit(submitHandler);
-  }, [form, initialValues, mutation]);
+      store.getState().setOnSubmit(manualSubmitHandler);
+    } else {
+      // React Hook Form submit handler
+      const submitHandler = form!.handleSubmit(async (data) => {
+        const currentValues = store.getState().values || {};
+
+        const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
+          if (!config.notIncluded) {
+            acc[key as keyof TFormData] = config.notInput
+              ? config.value
+              : data[key as keyof TFormData] ?? initialValues[key].value;
+          }
+          return acc;
+        }, {} as TFormData);
+
+        console.log("React Hook Form - submitting data:", submissionData);
+        console.log("currentValues data:", currentValues);
+
+        try {
+          await mutation.mutateAsync(submissionData);
+        } finally {
+          // any cleanup here
+        }
+      });
+
+      store.getState().setOnSubmit(submitHandler);
+    }
+  }, [form, initialValues, mutation, useManualForm, validationSchema]);
 
 
 
-  const FormWrapper = ({ children }: { children: ReactNode }) => (
-    <Form {...form}>
-      {children}
-    </Form>
-  );
+  const FormWrapper = ({ children }: { children: ReactNode }) => {
+    if (useManualForm) {
+      // For manual form, just return a plain div (no React Hook Form wrapper)
+      return <div>{children}</div>;
+    } else {
+      // For React Hook Form, wrap with Form component
+      return <Form {...form!}>{children}</Form>;
+    }
+  };
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>

@@ -38,11 +38,14 @@ const ROUTE_TITLES: Record<string, string> = {
   [ADMIN_ROUTES.SETTINGS_NOTIFICATIONS]: "Settings | Notifications",
   [ADMIN_ROUTES.SETTINGS_APP]: "Settings | App Settings",
   [ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS]: "Settings | Payment Methods",
+  [ADMIN_ROUTES.SETTINGS_AVAILABILITY]: "Settings | Availability",
   [ADMIN_ROUTES.SETTINGS_SECURITY]: "Settings | Security",
   [ADMIN_ROUTES.DASHBOARD_REVENUE]: "Revenue Analytics",
   [ADMIN_ROUTES.DASHBOARD_SESSIONS]: "Session Analytics",
   [ADMIN_ROUTES.DASHBOARD_PAYMENTS]: "Payment Analytics",
   [ADMIN_ROUTES.DASHBOARD_BILLING]: "Billing Analytics",
+  [ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT]: "Settings | Stripe Connect",
+
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

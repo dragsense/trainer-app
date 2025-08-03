@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
-import { User, Bell, Settings, CreditCard, Shield } from "lucide-react";
+import { User, Bell, Settings, CreditCard, Shield, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROUTES } from "@/config/routes.config";
 
@@ -10,17 +10,23 @@ const settingsNavItems = [
         icon: User,
         description: "Manage your personal information"
     },
-    {
-        title: "Notifications",
-        href: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
-        icon: Bell,
-        description: "Configure notification preferences"
+     {
+        title: "User Availability",
+        href: ADMIN_ROUTES.SETTINGS_AVAILABILITY,
+        icon: Clock,
+        description: "Application availability settings"
     },
     {
         title: "App Settings",
         href: ADMIN_ROUTES.SETTINGS_APP,
         icon: Settings,
         description: "Application preferences"
+    },
+    {
+        title: "Notifications",
+        href: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+        icon: Bell,
+        description: "Configure notification preferences"
     },
     {
         title: "Payment Methods",

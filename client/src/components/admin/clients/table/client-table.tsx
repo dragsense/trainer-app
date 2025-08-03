@@ -107,6 +107,10 @@ export default function ClientTable({
   }
 
   const handleView = (id: number) => {
+    setMode('view', id);
+  }
+
+  const handleViewSessions = (id: number) => {
     navigate(buildRoutePath(ADMIN_ROUTES.TRAINER_CLIENTS, undefined, { clientId: id }));
   }
 
@@ -125,6 +129,7 @@ export default function ClientTable({
     handleEdit,
     handleDelete,
     handleView,
+    handleViewSessions,
     handleAssign
   }
   );

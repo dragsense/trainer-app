@@ -40,7 +40,6 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
     const { isSubmitting } = useStore(formStore);
 
     const fields: TFieldConfig[] = [
-        // ─── Email Notifications ──────────────
         {
             id: "emailNotifications",
             name: "emailNotifications",
@@ -48,8 +47,6 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
             type: "switch",
             required: false,
         },
-        
-        // ─── User Management Notifications ─────
         {
             id: "newUserNotifications",
             name: "newUserNotifications",
@@ -64,15 +61,6 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
             type: "switch",
             required: false,
         },
-
-        // ─── Financial Notifications ───────────
-        {
-            id: "invoiceNotifications",
-            name: "invoiceNotifications",
-            label: "Invoice Notifications",
-            type: "switch",
-            required: false,
-        },
         {
             id: "billingNotifications",
             name: "billingNotifications",
@@ -80,19 +68,10 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
             type: "switch",
             required: false,
         },
-
-        // ─── Session & Communication ───────────
         {
             id: "sessionNotifications",
             name: "sessionNotifications",
             label: "Session Notifications",
-            type: "switch",
-            required: false,
-        },
-        {
-            id: "chatNotifications",
-            name: "chatNotifications",
-            label: "Chat Notifications",
             type: "switch",
             required: false,
         },
@@ -119,8 +98,33 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
             formStore={formStore}
         >
             <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4">
-                    {inputs}
+                <div className="grid grid-cols-1 gap-6">
+                    <div className="space-y-3">
+                        {inputs[0]}
+                        <p className="text-sm text-gray-600 dark:text-gray-400 ml-4">
+                            Receive notifications via email for important updates and alerts
+                        </p>
+                    </div>
+
+                    <div className="space-y-3">
+                        {inputs[1]}
+                     
+                    </div>
+
+                    <div className="space-y-3">
+                        {inputs[2]}
+                    
+                    </div>
+
+                    <div className="space-y-3">
+                        {inputs[3]}
+                     
+                    </div>
+
+                    <div className="space-y-3">
+                        {inputs[4]}
+                      
+                    </div>
                 </div>
             </div>
         </CardForm>

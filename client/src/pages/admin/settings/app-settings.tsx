@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 // Types
-import { IAppSetting } from "@/@types/setting.type";
+import { IAppSetting, TAppSettingData } from "@/@types/setting.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers
@@ -24,30 +24,21 @@ export const AppSettingSchema = z.object({
 });
 
 export default function AppSettingsPage() {
-  const APP_SETTING_INITIAL_VALUES: TDefaultValue<Partial<IAppSetting>> = {
+  const APP_SETTING_INITIAL_VALUES: TDefaultValue<Partial<TAppSettingData>> = {
     allowNotification: { value: true },
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">App Settings</h1>
-        <p className="text-gray-600 mt-1">
-          Configure application preferences
-        </p>
-      </div>
-      
-      <SingleHandler<IAppSetting, Partial<IAppSetting>, IAppSetting | IMessageResponse>
+  return ( <SingleHandler<IAppSetting, TAppSettingData,  IMessageResponse>
         queryFn={fetchAppSettings}
         storeKey="appSettings"
         mutationFns={{
           updateFn: () => updateAppSettings
         }}
+        id={1}
         FormComponent={AppSettingCardForm}
         validationSchema={AppSettingSchema}
         initialValues={APP_SETTING_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
       />
-    </div>
   );
 }

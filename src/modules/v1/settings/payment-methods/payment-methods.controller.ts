@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaymentMethodsService } from './payment-methods.service';
@@ -19,13 +20,13 @@ import { PaymentMethodPaginatedDto } from './dto/payment-method-responses.dto';
 import { PaymentMethodsSeeder } from './payment-methods.seeder';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 
-@UseGuards(JwtAuthGuard)  
+@UseGuards(JwtAuthGuard)
 @ApiTags('Payment Methods')
-@Controller('payment-methods')
-export class PaymentMethodsController  {
-  constructor(private readonly paymentMethodsService: PaymentMethodsService, 
+@Controller('settings/payment-methods')
+export class PaymentMethodsController {
+  constructor(private readonly paymentMethodsService: PaymentMethodsService,
     private readonly paymentMethodsSeeder: PaymentMethodsSeeder
-  ) {}
+  ) { }
 
   async onApplicationBootstrap() {
     await this.paymentMethodsSeeder.seed();
@@ -68,6 +69,16 @@ export class PaymentMethodsController  {
     return this.paymentMethodsService.update(+id, updatePaymentMethodDto);
   }
 
+  @Patch(':id/toggle')
+  @ApiOperation({ summary: 'Toggle enabled status of a payment method' })
+  @ApiResponse({ status: 200, description: 'Payment method enabled/disabled successfully', type: PaymentMethod })
+  @ApiResponse({ status: 404, description: 'Payment method not found' })
+  toggleEnabled(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.paymentMethodsService.toggleEnabled(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a payment method' })
   @ApiResponse({ status: 200, description: 'Payment method deleted successfully' })
@@ -79,8 +90,8 @@ export class PaymentMethodsController  {
 
   @Get('active/all')
   @ApiOperation({ summary: 'Get all active payment methods' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: 'List of active payment methods',
     type: [PaymentMethod]
   })

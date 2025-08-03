@@ -2,13 +2,13 @@
 import { z } from "zod";
 
 // Components
-import { FormHandler, SingleHandler } from "@/handlers";
+import { FormHandler } from "@/handlers";
 
 // Page Components
 import SecurityCardForm from "@/components/admin/settings/form/security-card-form";
 
 // Services
-import { changePassword } from "@/services/setting.api";
+import { changePassword } from "@/services/user.api";
 
 // Types
 import { TDefaultValue } from "@/@types/form/field.type";
@@ -29,29 +29,22 @@ const passwordSchema = z.object({
     path: ["confirmPassword"],
 });
 
-const defaultValues: TDefaultValue<PasswordChangeData> = {
-    currentPassword: { value: "" },
-    newPassword: { value: "" },
-    confirmPassword: { value: "" },
-};
+
 
 export default function SecurityPage() {
-    const storeKey = "security-settings";
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Security Settings</h1>
-                <p className="text-muted-foreground">Manage your account security</p>
-            </div>
+    const INITIAL_VALUES: TDefaultValue<PasswordChangeData> = {
+        currentPassword: { value: "" },
+        newPassword: { value: "" },
+        confirmPassword: { value: "", notIncluded: true },
+    };
 
-            <FormHandler<PasswordChangeData, PasswordChangeData, IMessageResponse>  
-                storeKey={storeKey}
-                FormComponent={SecurityCardForm}
-                validationSchema={passwordSchema}
-                initialValues={defaultValues}
-                mutationFn={changePassword}
-            />
-        </div>
+    return (<FormHandler<PasswordChangeData, PasswordChangeData, IMessageResponse>
+        storeKey={'securitySettings'}
+        FormComponent={SecurityCardForm}
+        validationSchema={passwordSchema}
+        initialValues={INITIAL_VALUES}
+        mutationFn={changePassword}
+    />
     );
 }

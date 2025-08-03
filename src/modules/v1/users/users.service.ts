@@ -21,6 +21,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
 import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
+import { UserEmailService } from './services/user-email.service';
 
 @Injectable()
 export class UsersService {
@@ -34,6 +35,7 @@ export class UsersService {
     private readonly appSettingRepo: Repository<AppSetting>,
     @InjectRepository(NotificationSetting)
     private readonly notificationSettingRepo: Repository<NotificationSetting>,
+    private readonly userEmailService: UserEmailService,
   ) { }
 
   async findOne(
@@ -58,11 +60,9 @@ export class UsersService {
     return user;
   }
 
-
   async findByIds(
     ids: number[],
   ): Promise<User[]> {
-
     return this.userRepo.findBy({
       id: In(ids),
     });
@@ -134,7 +134,6 @@ export class UsersService {
     };
   }
 
-
   private generateStrongPassword(length: number): string {
     const chars = {
       alpha: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz',
@@ -167,50 +166,7 @@ export class UsersService {
       .join('');
   }
 
-  private async sendWelcomeEmail(
-    user: User,
-    tempPassword: string,
-  ): Promise<void> {
-
-    const appConfig = this.configService.get('app');
-
-
-    const appUrl = appConfig.appUrl;
-    const appName = appConfig.name;
-    const loginPath = appConfig.loginPath;
-    const loginUrl = `${appUrl}/${loginPath}`;
-    await this.mailerService.sendMail({
-      to: user.email,
-      from: this.configService.get('MAIL_FROM'),
-      subject: `Welcome to ${appName}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px;">
-          <h3>Welcome to ${appName}</h3>
-          <p>Your account has been created successfully.</p>
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p><strong>Temporary Password:</strong> ${tempPassword}</p>
-          <p style="color: #d32f2f; font-weight: 500;">
-            Note: This is a temporary password. Please change it after login.
-          </p>
-          <a href="${loginUrl}" style="
-            display: inline-block;
-            padding: 10px 20px;
-            background: #2196f3;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 10px;
-          ">
-            Login to ${appName}
-          </a>
-        </div>
-      `,
-      text: `Your account has been created successfully.`,
-    });
-  }
-
   async create(createUserDto: CreateUserDto, currentUser?: User): Promise<MessageResponse> {
-
     // Check if email exists
     const existingUser = await this.userRepo.findOne({
       where: { email: createUserDto.email },
@@ -236,7 +192,6 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
 
     return await this.dataSource.transaction(async (manager: EntityManager) => {
-
       // Create user
       const userData: DeepPartial<User> = {
         email: createUserDto.email,
@@ -275,22 +230,15 @@ export class UsersService {
       user.profile = profile;
 
       if (tempPassword) {
-        this.sendWelcomeEmail(user, tempPassword).catch((error) =>
-          console.error('Welcome email failed', error),
+        this.userEmailService.sendOnboardingEmail({
+          user,
+          tempPassword,
+          createdBy: currentUser,
+        }).catch((error) =>
+          console.error('Onboarding email failed', error),
         );
         user.password = tempPassword;
       }
-
-      const appSetting = this.appSettingRepo.create({
-        user: { id: user.id },
-      });
-      await manager.save(this.appSettingRepo.target, appSetting);
-
-      const notificationSetting = this.notificationSettingRepo.create({
-        user: { id: user.id },
-      });
-      await manager.save(this.notificationSettingRepo.target, notificationSetting);
-
 
       return { message: 'User created successfully.', user };
     });
@@ -298,7 +246,6 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne({ id }, { relations: ['profile'] });
-
 
     // Check email uniqueness if changed
     if (updateUserDto.email && updateUserDto.email !== user.email) {
@@ -323,27 +270,6 @@ export class UsersService {
 
       await manager.save(user);
 
-      // Update profile
-      if (user.profile) {
-        const profileData: DeepPartial<Profile> = {};
-        const profileFields = [
-          'firstName', 'lastName', 'phoneNumber', 'dateOfBirth', 'gender',
-          'address', 'bio', 'specialties', 'certifications', 'avatar',
-          'availabilityZones', 'availableTimeSlots', 'experience', 'rating',
-          'fitnessGoals', 'preferredTrainerGender', 'preferredWorkoutTimes'
-        ];
-
-        profileFields.forEach(field => {
-          if (updateUserDto[field] !== undefined) {
-            profileData[field] = updateUserDto[field];
-          }
-        });
-
-        if (Object.keys(profileData).length > 0) {
-          Object.assign(user.profile, profileData);
-          await manager.save(user.profile);
-        }
-      }
 
       return user;
     });
@@ -369,14 +295,37 @@ export class UsersService {
 
   async resetPassword(
     id: number,
-    resetPasswordDto: ResetPasswordDto
+    resetPasswordDto: ResetPasswordDto,
+    force: boolean = false
   ): Promise<MessageResponse> {
+    const { currentPassword, newPassword } = resetPasswordDto;
+
     const user = await this.findOne({ id }, { select: ['id', 'password'] });
 
-    // Hash and update password
+    if (!force) {
+      if (!currentPassword) {
+        throw new ConflictException('Current password is required');
+      }
+
+      const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isOldPasswordValid) {
+        throw new ConflictException('Old password is incorrect');
+      }
+    }
+
+    const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsOld) {
+      throw new ConflictException('New password must be different from the old password');
+    }
+
     const salt = await bcrypt.genSalt();
-    user.password = await bcrypt.hash(resetPasswordDto.newPassword, salt);
+    user.password = await bcrypt.hash(newPassword, salt);
     await this.userRepo.save(user);
+
+    // Send password reset confirmation email
+    this.userEmailService.sendPasswordResetConfirmation(user).catch((error) =>
+      console.error('Password reset confirmation email failed', error),
+    );
 
     return {
       message: 'Password reset successfully',
@@ -401,5 +350,4 @@ export class UsersService {
       lastName: superAdmin.lastName
     });
   }
-
 }

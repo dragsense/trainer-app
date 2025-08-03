@@ -52,7 +52,7 @@ export class PaymentMethod {
         description: 'Configuration data for the payment method',
         required: false
     })
-    @Column({ type: 'json', nullable: true })
+    @Column({ type: 'json', nullable: true, select: false })
     config: Record<string, any> | null;
 
 

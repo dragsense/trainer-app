@@ -10,7 +10,7 @@ import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { ListHandler } from "@/handlers";
 
 // Custom UI Components
-import { ClientFormModal, ClientTable } from "@/components/admin";
+import { ClientFormModal, ClientTable, ClientView } from "@/components/admin";
 
 
 // API
@@ -75,7 +75,7 @@ export default function ClientsPage() {
       <ListHandler<IUser, Partial<TUserData>, IUser | IMessageResponse>
         queryListFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
         ListComponent={ClientTable}
-        storeKey="trainersList"
+        storeKey="clientsList"
         mutationFns={{
           createFn: createUser,
           updateFn: updateUser,
@@ -83,6 +83,7 @@ export default function ClientsPage() {
         }}
         queryFn={fetchUser}
         FormComponent={ClientFormModal}
+        SingleComponent={ClientView}
         validationSchema={ClientSchema}
         initialValues={TRAINER_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}

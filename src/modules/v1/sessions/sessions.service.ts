@@ -11,6 +11,7 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { SessionListDto } from './dto/session-list.dto';
 import { UsersService } from '../users/users.service';
+import { UserAvailabilityService } from '../users/services/user-availability.service';
 import { MessageResponse } from '@/interfaces/general.interface';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { User } from '../users/entities/user.entity';
@@ -23,6 +24,7 @@ export class SessionsService {
     @InjectRepository(Session)
     private sessionsRepository: Repository<Session>,
     private readonly usersService: UsersService,
+    private readonly userAvailabilityService: UserAvailabilityService,
   ) { }
 
   async create(user: User, createSessionDto: CreateSessionDto): Promise<Session> {
@@ -45,9 +47,15 @@ export class SessionsService {
     if (clients.length === 0) throw new NotFoundException("No valid members found");
 
 
-    const conflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
-    if (conflict) {
+    // Check both scheduling conflicts and availability
+    const hasConflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
+    if (hasConflict) {
       throw new BadRequestException('Trainer has a scheduling conflict');
+    }
+
+    const isAvailable = await this.checkTrainerAvailability(trainer.id, dateTime, data.duration);
+    if (!isAvailable) {
+      throw new BadRequestException('Trainer is not available during the requested time');
     }
 
     const session = this.sessionsRepository.create({
@@ -190,14 +198,22 @@ export class SessionsService {
 
 
       if (data.dateTime || data.duration) {
-        const conflict = await this.checkSchedulingConflict(
+        const newDateTime = data.dateTime || session.dateTime;
+        const newDuration = data.duration || session.duration;
+        
+        const hasConflict = await this.checkSchedulingConflict(
           trainerId,
-          data.dateTime || session.dateTime,
-          data.duration || session.duration,
+          newDateTime,
+          newDuration,
           id // exclude current session
         );
-        if (conflict) {
+        if (hasConflict) {
           throw new BadRequestException('Trainer has a scheduling conflict');
+        }
+
+        const isAvailable = await this.checkTrainerAvailability(trainerId, newDateTime, newDuration);
+        if (!isAvailable) {
+          throw new BadRequestException('Trainer is not available during the requested time');
         }
       }
 
@@ -285,6 +301,27 @@ export class SessionsService {
 
     const conflictCount = await query.getCount();
     return conflictCount > 0;
+  }
+
+  private async checkTrainerAvailability(
+    trainerId: number,
+    dateTime: Date,
+    duration: number
+  ): Promise<boolean> {
+    try {
+      // Check if trainer is available during the requested time
+      const isAvailable = await this.userAvailabilityService.isUserAvailable(
+        trainerId,
+        dateTime,
+        duration
+      );
+      
+      return isAvailable;
+    } catch (error) {
+      console.error('Error checking trainer availability:', error);
+      // If availability service fails, allow the session (don't block on availability errors)
+      return true;
+    }
   }
 
   private isValidStatusTransition(currentStatus: SessionStatus, newStatus: SessionStatus): boolean {

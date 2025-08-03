@@ -167,7 +167,7 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired token');
     }
 
-    return await this.userService.resetPassword(payload.sub, { newPassword });
+    return await this.userService.resetPassword(payload.sub, { newPassword }, true);
 
   }
 }

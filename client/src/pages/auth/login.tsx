@@ -34,8 +34,8 @@ export default function Login() {
   const navigate = useNavigate();
 
   const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
-    email: { value: "" },
-    password: { value: "" },
+    email: { value: "admin@trainer-app.com" },
+    password: { value: "admin1245" },
   };
 
 

@@ -7,7 +7,7 @@ import {
     OneToOne,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { DayScheduleDto, UnavailablePeriodDto } from '../dto/create-availability.dto';
+import { DayScheduleDto, UnavailablePeriodDto } from '../dto/user-availability.dto';
 import { User } from './user.entity';
 
 @Entity('user-availabilities')

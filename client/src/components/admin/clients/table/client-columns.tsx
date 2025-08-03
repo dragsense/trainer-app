@@ -22,11 +22,13 @@ export const columns = ({
   handleEdit,
   handleDelete,
   handleView,
+  handleViewSessions,
   handleAssign
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   handleView?: (id: number) => void;
+  handleViewSessions?: (id: number) => void;
   handleAssign?: (id: number) => void;
 }
 ): ColumnDef<IUser>[] => [
@@ -66,7 +68,7 @@ export const columns = ({
     {
       id: "actions",
       cell: ({ row }) => {
-        const trainer = row.original;
+        const client = row.original;
 
         return (
           <DropdownMenu>
@@ -80,25 +82,30 @@ export const columns = ({
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {handleView && (
-                <DropdownMenuItem onClick={() => handleView(trainer.id)}>
+                <DropdownMenuItem onClick={() => handleView(client.id)}>
                   View Details
                 </DropdownMenuItem>
               )}
+              {handleViewSessions && (
+                <DropdownMenuItem onClick={() => handleViewSessions(client.id)}>
+                  View Sessions
+                </DropdownMenuItem>
+              )}
               {handleAssign && (
-                <DropdownMenuItem onClick={() => handleAssign(trainer.id)}>
+                <DropdownMenuItem onClick={() => handleAssign(client.id)}>
                   Assign Trainer
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               {handleEdit && (
-                <DropdownMenuItem onClick={() => handleEdit(trainer.id)}>
+                <DropdownMenuItem onClick={() => handleEdit(client.id)}>
                   Edit
                 </DropdownMenuItem>
               )}
               {handleDelete && (
                 <DropdownMenuItem
                   className="text-destructive"
-                  onClick={() => handleDelete(trainer.id)}
+                  onClick={() => handleDelete(client.id)}
                 >
                   Delete
                 </DropdownMenuItem>

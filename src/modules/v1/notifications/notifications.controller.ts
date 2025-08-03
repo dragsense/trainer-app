@@ -19,6 +19,7 @@ import { Notification } from './entities/notification.entity';
 import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 import { NotificationType } from './enums/notification.enum';
+import { UpdateNotificationSettingDto } from '../settings/notification-settings/dto/update-notification-setting.dto';
 
 @ApiTags('notifications')
 @Controller('notifications')
@@ -88,10 +89,10 @@ export class NotificationsController {
     @ApiResponse({ status: 200, description: 'Notification settings updated successfully', type: NotificationSetting })
     updateNotificationSettings(
         @Request() req,
-        @Body() settings: Partial<NotificationSetting>
+        @Body() settingDto: UpdateNotificationSettingDto
     ): Promise<NotificationSetting> {
         const userId = req.user.id;
-        return this.notificationsService.updateNotificationSettings(userId, settings);
+        return this.notificationsService.updateNotificationSettings(userId, settingDto);
     }
 
     @Patch('mark-all-read')

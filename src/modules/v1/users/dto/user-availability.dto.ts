@@ -141,7 +141,7 @@ export class WeeklyScheduleDto {
     sunday: DayScheduleDto;
 }
 
-export class CreateAvailabilityDto {
+export class UserAvailabilityDto {
     @ApiProperty({
         type: () => [UnavailablePeriodDto],
         description: 'List of unavailable periods',

@@ -109,6 +109,10 @@ export default function TrainerTable({
   }
 
   const handleView = (trainerId: number) => {
+    setMode('view', trainerId);
+  }
+
+  const handleViewClients = (trainerId: number) => {
     navigate(buildRoutePath(ADMIN_ROUTES.TRAINER_CLIENTS, undefined, { trainerId: trainerId }));
   }
 
@@ -125,6 +129,7 @@ export default function TrainerTable({
     handleEdit,
     handleDelete,
     handleView,
+    handleViewClients,
     handleAssign
   }
   );

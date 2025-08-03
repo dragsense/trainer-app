@@ -7,34 +7,37 @@ import { RemindersService } from './reminders.service';
 import { ReminderSchedulerService } from './services/reminder-scheduler.service';
 import { ReminderSubscriber } from './services/reminder-subscriber.service';
 import { ReminderEmailService } from './services/reminder-email.service';
+import { ReminderNotificationService } from './services/reminder-notification.service';
 import { Reminder } from './entities/reminder.entity';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
-import { Profile } from '../users/profiles/entities/profile.entity';
+import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
-import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
+import { ReminderBillingService } from './services/reminder-billing.service';
+import { Billing } from '../billings/entities/billing.entity';
+import { BillingsModule } from '../billings/billings.module';
+import { StripeModule } from '../stripe/stripe.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Reminder, User, Profile, AppSetting, NotificationSetting]),
+    TypeOrmModule.forFeature([Reminder, Billing]),
+    UsersModule,
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot({
-      // Enable wildcard event listeners
       wildcard: true,
-      // Max listeners per event to prevent memory leaks
       maxListeners: 10,
-      // Ignore errors in event handlers (they're already logged)
       ignoreErrors: true,
     }),
+    NotificationsModule,
+    BillingsModule,
+    StripeModule
   ],
   controllers: [RemindersController],
   providers: [
     RemindersService,
+    ReminderBillingService,
     ReminderSchedulerService,
     ReminderEmailService,
+    ReminderNotificationService,
     ReminderSubscriber,
-    UsersService,
   ],
   exports: [RemindersService],
 })

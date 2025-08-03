@@ -10,6 +10,7 @@ import {
   Query,
   ParseIntPipe,
   Version,
+  Patch,
 } from '@nestjs/common';
 
 import {
@@ -39,6 +40,7 @@ import { UserRole, UserLevels } from '@/modules/v1/users/enums/user.enum';
 import { RoleLevelGuard } from '@/guards/level.guard';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserListDto } from './dto/user-list.dto';
+import { UserAvailabilityDto } from './dto/user-availability.dto';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
@@ -143,8 +145,7 @@ export class UsersController {
     return this.usersService.remove(id, currentUser);
   }
 
-  @ApiOperation({ summary: 'Reset user password' })
-  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiOperation({ summary: 'Reset authenticated user password' })
   @ApiBody({
     type: ResetPasswordDto,
     description: 'Reset user password',
@@ -152,11 +153,13 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @MinRoleLevel(UserLevels[UserRole.TRAINER])
-  @Put(':id/reset-password')
+  @Put('me/reset-password')
   resetPassword(
-    @Param('id', ParseIntPipe) id: number,
+    @AuthUser() user: any,
     @Body() resetPasswordDto: ResetPasswordDto
   ) {
+    const id = user.id;
     return this.usersService.resetPassword(id, resetPasswordDto);
   }
+
 }

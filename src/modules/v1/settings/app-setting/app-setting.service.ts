@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppSetting } from './entities/app-setting.entity';
+import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
+import { MessageResponse } from '@/interfaces/general.interface';
 
 @Injectable()
 export class AppSettingService {
@@ -18,13 +20,10 @@ export class AppSettingService {
     return item;
   }
 
-  async updateAllowNotification(userId: number, allowNotification: boolean): Promise<AppSetting> {
-    let appSetting = await this.getAppSettingByUserId(userId);
-    if (!appSetting) {
-      throw new NotFoundException(`AppSetting with User ID ${userId} not found`);
-    } else {
-      appSetting.allowNotification = allowNotification;
-    }
-    return this.appSettingRepo.save(appSetting);
+  async updateAppSetting(userId: number, settingDto: UpdateAppSettingDto): Promise<MessageResponse> {
+    const existingSettings = await this.getAppSettingByUserId(userId);
+    Object.assign(existingSettings, settingDto);
+    await this.appSettingRepo.save(existingSettings);
+    return { message: 'App setting updated successfully' };
   }
 }

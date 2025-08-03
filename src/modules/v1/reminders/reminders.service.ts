@@ -28,7 +28,7 @@ export class RemindersService {
     const reminder = this.reminderRepository.create({
       ...createReminderDto,
       creator: { id: user.id },
-      recipient: { id: createReminderDto.recipientId },
+      recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId }: undefined,
       session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
       billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
       status: ReminderStatus.SCHEDULED,

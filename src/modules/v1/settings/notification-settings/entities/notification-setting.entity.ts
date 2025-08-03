@@ -20,11 +20,6 @@ export class NotificationSetting {
     @Column({ type: 'boolean', default: true })
     userUpdateNotifications: boolean;
 
-
-    @ApiProperty({ example: true, description: 'Enable invoice notifications', default: true })
-    @Column({ type: 'boolean', default: true })
-    invoiceNotifications: boolean;
-
     @ApiProperty({ example: true, description: 'Enable billing notifications', default: true })
     @Column({ type: 'boolean', default: true })
     billingNotifications: boolean;
@@ -32,10 +27,6 @@ export class NotificationSetting {
     @ApiProperty({ example: true, description: 'Enable session notifications', default: true })
     @Column({ type: 'boolean', default: true })
     sessionNotifications: boolean;
-
-    @ApiProperty({ example: true, description: 'Enable chat message notifications', default: true })
-    @Column({ type: 'boolean', default: true })
-    chatNotifications: boolean;
 
     @ApiProperty({ type: () => User, description: 'The user this notification setting belongs to' })
     @OneToOne(() => User, { onDelete: 'CASCADE' })

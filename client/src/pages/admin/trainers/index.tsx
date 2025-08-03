@@ -11,6 +11,7 @@ import { ListHandler } from "@/handlers";
 
 // Custom UI Components
 import { TrainerFormModal, TrainerTable } from "@/components/admin";
+import { TrainerView } from "@/components/admin/trainers";
 import { AssignTrainerClientForm } from "@/page-components";
 
 
@@ -99,6 +100,7 @@ export default function TrainersPage() {
         }}
         queryFn={fetchUser}
         FormComponent={TrainerFormModal}
+        SingleComponent={TrainerView}
         validationSchema={TrainerSchema}
         initialValues={TRAINER_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}

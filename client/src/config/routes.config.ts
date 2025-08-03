@@ -25,6 +25,7 @@ export const ADMIN_ROUTES = {
   SETTINGS_APP: "/settings/app",
   SETTINGS_PAYMENT_METHODS: "/settings/payment-methods",
   SETTINGS_SECURITY: "/settings/security",
+  SETTINGS_AVAILABILITY: "/settings/availability",
 } as const;
 
 export type AdminRoute = keyof typeof ADMIN_ROUTES;

@@ -21,11 +21,13 @@ export const columns = ({
   handleEdit,
   handleDelete,
   handleView,
+  handleViewClients,
   handleAssign,
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   handleView?: (trainerId: number) => void;
+  handleViewClients?: (trainerId: number) => void;
   handleAssign?: (trainerId: number) => void;
 }
 ): ColumnDef<IUser>[] => [
@@ -116,6 +118,11 @@ export const columns = ({
               <DropdownMenuSeparator />
               {handleView && (
                 <DropdownMenuItem onClick={() => handleView(trainer.id)}>
+                  View Details
+                </DropdownMenuItem>
+              )}
+              {handleViewClients && (
+                <DropdownMenuItem onClick={() => handleViewClients(trainer.id)}>
                   View Clients
                 </DropdownMenuItem>
               )}

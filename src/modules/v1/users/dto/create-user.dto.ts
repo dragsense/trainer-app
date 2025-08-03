@@ -50,13 +50,4 @@ export class CreateUserDto extends CreateProfileDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({
-    example: 1,
-    description: 'Trainer user ID to assign to the client (only used when admin creates a client)'
-  })
-  @IsOptional()
-  @Type(() => Number)
-  trainerId?: number;
-
-
 }

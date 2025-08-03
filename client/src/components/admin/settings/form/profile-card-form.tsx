@@ -10,7 +10,7 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { IProfile, TProfileData } from "@/@types/setting.type";
+import { IProfile, TProfileData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
@@ -118,8 +118,8 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
 
     return (
         <CardForm
-            title=""
-            description=""
+            title="Update Profile"
+            description="Manage your personal information"
             footerContent={footerContent}
             formStore={formStore}
         >

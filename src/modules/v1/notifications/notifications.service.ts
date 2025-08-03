@@ -14,6 +14,7 @@ import { NotificationSubscriber } from './notification.subscriber';
 import { UserNotificationSubscriber } from './user-notification.subscriber';
 import { BillingNotificationSubscriber } from './billing-notification.subscriber';
 import { NotificationStatus, NotificationType } from './enums/notification.enum';
+import { UpdateNotificationSettingDto } from '../settings/notification-settings/dto/update-notification-setting.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -170,9 +171,9 @@ export class NotificationsService {
         return settings;
     }
 
-    async updateNotificationSettings(userId: number, settings: Partial<NotificationSetting>): Promise<NotificationSetting> {
+    async updateNotificationSettings(userId: number, settingDto: UpdateNotificationSettingDto): Promise<NotificationSetting> {
         const existingSettings = await this.getNotificationSettings(userId);
-        Object.assign(existingSettings, settings);
+        Object.assign(existingSettings, settingDto);
         return await this.notificationSettingRepo.save(existingSettings);
     }
 
@@ -223,10 +224,6 @@ export class NotificationsService {
                 break;
             case NotificationType.USER_UPDATED:
                 shouldNotify = settings.userUpdateNotifications;
-                break;
-           
-            case NotificationType.INVOICE_GENERATED:
-                shouldNotify = settings.invoiceNotifications;
                 break;
            
             case NotificationType.BILLING_DUE:

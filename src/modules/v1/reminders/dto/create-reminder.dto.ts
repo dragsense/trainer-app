@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max, IsDateString, ValidateIf } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReminderType, ReminderStatus, ReminderFrequency, ReminderActions } from '../enums/reminder.enum';
 export class CreateReminderDto {
@@ -15,15 +15,17 @@ export class CreateReminderDto {
     description: 'Recipient user ID',
     example: 1,
   })
-  @IsNotEmpty()
+  @ValidateIf(o => o.type === ReminderType.CUSTOM)
+  @IsOptional()
   @IsNumber()
   @Min(1)
-  recipientId: number;
+  recipientId?: number;
 
   @ApiProperty({
     description: 'Session ID (required if type is SESSION)',
     example: 1,
   })
+  @ValidateIf(o => o.type === ReminderType.SESSION)
   @IsOptional()
   @IsNumber()
   sessionId?: number;
@@ -32,6 +34,7 @@ export class CreateReminderDto {
     description: 'Billing ID (required if type is PAYMENT)',
     example: 1,
   })
+  @ValidateIf(o => o.type === ReminderType.BILLING)
   @IsOptional()
   @IsNumber()
   billingId?: number;

@@ -27,13 +27,13 @@ import { columns } from "./billing-columns";
 import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
-interface ISessionTableProps {
+interface IBillingTableProps {
   storeKey: string;
 }
 
-export default function SessionTable({
+export default function BillingTable({
   storeKey,
-}: ISessionTableProps) {
+}: IBillingTableProps) {
 
   const listStoreKey = storeKey + "-list";
   const singelStoreKey = storeKey + "-single";
@@ -131,7 +131,7 @@ export default function SessionTable({
       columns={tableColumns}
       renderToolbar={() => (
         <div className="flex flex-col xl:flex-row xl:items-center gap-2">
-          <h3 className="text-bold">Sessions</h3>
+          <h3 className="text-bold">Billings</h3>
 
           <div className="flex flex-1 justify-between items-center gap-2">
             <div className="flex-1 flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function SessionTable({
             <Button
               onClick={handleCreate}
             >
-              <Plus /> <span className="hidden sm:inline capitalize">Add Session</span>
+              <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
             </Button>
           </div>
         </div>

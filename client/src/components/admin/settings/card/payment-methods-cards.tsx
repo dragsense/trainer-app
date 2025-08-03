@@ -1,11 +1,13 @@
 import { Switch } from "@/components/ui/switch";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import {  CreditCard, DollarSign } from "lucide-react";
+import { CardTitle } from "@/components/ui/card";
+import { CreditCard, DollarSign, Settings } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IPaymentMethod } from "@/@types/setting.type";
 import { useStore } from "zustand";
+import { AppCard } from "@/components/layout-ui/app-card";
+import { Button } from "@/components/ui/button";
 
 interface PaymentMethodsCardsProps {
   storeKey: string;
@@ -41,9 +43,41 @@ export function PaymentMethodsCards({
   if (!singleStore) {
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
-  
 
-  const { response: data, isLoading, error } = useStore(listStore);
+
+  const { response: data, isLoading, error, setItemAction } = useStore(listStore);
+
+
+  const handleConfigureMethod = (method: IPaymentMethod) => {
+    setItemAction({
+      itemName: "PaymentMethod",
+      action: "configurePaymentMethod",
+      id: method.id,
+    });
+  };
+
+  const handleToggleMethod = (method: IPaymentMethod) => {
+    setItemAction({
+      itemName: "PaymentMethod",
+      action: "togglePaymentMethod",
+      id: method.id,
+    });
+  };
+
+  const extraActions = (method: IPaymentMethod) => {
+    if (!method.configSchema) return null;
+
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => handleConfigureMethod(method)}
+      >
+        <Settings className="h-4 w-4 mr-2" />
+        Configure
+      </Button>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -70,34 +104,39 @@ export function PaymentMethodsCards({
     <div className="space-y-6">
       <div className="grid gap-6">
         {data?.map((method) => (
-          <Card key={method.id} className="overflow-hidden">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  {getPaymentMethodIcon(method.key)}
-                  <div>
-                    <CardTitle className="text-lg">{method.name}</CardTitle>
-                    <p className="text-sm text-gray-500">Type: {method.key}</p>
+          <AppCard key={method.id} className="overflow-hidden"
+
+            header={
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    {getPaymentMethodIcon(method.key)}
+                    <div>
+                      <CardTitle className="text-lg">{method.name}</CardTitle>
+                      <p className="text-sm text-gray-500">Type: {method.key}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-4">
-              
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor={`enabled-${method.id}`} className="text-sm text-gray-500">
-                      Enabled
-                    </Label>
-                    <Switch
-                      id={`enabled-${method.id}`}
-                      disabled={method.key === PaymentMethodType.CASH}
-                      checked={method.isEnabled || false}
-                      onCheckedChange={() => {}}
-                    />
+                  <div className="flex items-center space-x-4">
+
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor={`enabled-${method.id}`} className="text-sm text-gray-500">
+                        Enabled
+                      </Label>
+                      <Switch
+                        id={`enabled-${method.id}`}
+                        disabled={method.key === PaymentMethodType.CASH}
+                        checked={method.isEnabled || false}
+                        onCheckedChange={() => handleToggleMethod(method)}
+                      />
+                    </div>
+                    {extraActions(method)}
                   </div>
-                
+
                 </div>
-              </div>
-            </CardHeader>
-          </Card>
+              </>
+            }>
+            {null}
+          </AppCard>
         ))}
       </div>
 

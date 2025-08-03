@@ -1,4 +1,5 @@
 import { AppSetting } from "#/modules/v1/settings/app-setting/entities/app-setting.entity";
+import { CreateNotificationSettingDto } from "#/modules/v1/settings/notification-settings/dto/create-notification-setting.dto";
 import { NotificationSetting } from "#/modules/v1/settings/notification-settings/entities/notification-setting.entity";
 import { PaymentMethod } from "#/modules/v1/settings/payment-methods/entities/payment-method.entity";
 import { Profile } from "#/modules/v1/users/profiles/entities/profile.entity";
@@ -15,21 +16,11 @@ export interface IAppSetting extends AppSetting, GeneralBaseEntity {}
 
 export interface INotificationSetting extends NotificationSetting, GeneralBaseEntity {}
 
-export interface IProfile extends Profile, GeneralBaseEntity {}
 
 export interface IPaymentMethod extends PaymentMethod, GeneralBaseEntity {}
 
-// Combined Settings Interface
-export interface ISettings {
-  profile: IProfile;
-  notifications: INotificationSetting;
-  paymentMethods: IPaymentMethod[];
-  appSetting: IAppSetting;
-}
 
-// Data types for API calls
-export type TProfileData = CreateProfileDto;
 export type TAppSettingData = CreateAppSettingDto;
-export type TUpdateAppSettingData = UpdateAppSettingDto;
+export type TNotificationSettingData = CreateNotificationSettingDto;
 export type TPaymentMethodData = CreatePaymentMethodDto;
 export type TUpdatePaymentMethodData = UpdatePaymentMethodDto;

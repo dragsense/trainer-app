@@ -5,16 +5,13 @@ import { apiRequest } from "@/utils/fetcher";
 import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
 import { IListParams } from "@/@types/api/param.type";
 import { 
-  ISettings, 
   IAppSetting, 
   INotificationSetting, 
-  IProfile, 
   IPaymentMethod,
   TAppSettingData,
-  TUpdateAppSettingData,
   TPaymentMethodData,
   TUpdatePaymentMethodData,
-  TProfileData
+  TNotificationSettingData
 } from "@/@types/setting.type";
 
 // Constants
@@ -22,7 +19,7 @@ const SETTINGS_API_PATH = "/settings";
 const APP_SETTINGS_API_PATH = `${SETTINGS_API_PATH}/app-setting`;
 const NOTIFICATION_SETTINGS_API_PATH = `${SETTINGS_API_PATH}/notification-settings`;
 const PAYMENT_METHODS_API_PATH = `${SETTINGS_API_PATH}/payment-methods`;
-const PROFILES_API_PATH = "/users/profiles";
+
 
 // App Settings
 export const fetchAppSettings = () =>
@@ -31,22 +28,17 @@ export const fetchAppSettings = () =>
 export const createAppSettings = (data: TAppSettingData) =>
   apiRequest<IAppSetting>(`${APP_SETTINGS_API_PATH}`, "POST", data);
 
-export const updateAppSettings = (data: TUpdateAppSettingData) =>
+export const updateAppSettings = (data: Partial<TAppSettingData>) =>
   apiRequest<IMessageResponse>(`${APP_SETTINGS_API_PATH}`, "PATCH", data);
 
 // Notification Settings
 export const fetchNotificationSettings = () =>
   apiRequest<INotificationSetting>(`${NOTIFICATION_SETTINGS_API_PATH}`, "GET");
 
-export const updateNotificationSettings = (data: Partial<INotificationSetting>) =>
+export const updateNotificationSettings = (data: Partial<TNotificationSettingData>) =>
   apiRequest<IMessageResponse>(`${NOTIFICATION_SETTINGS_API_PATH}`, "PATCH", data);
 
 // Profile Settings
-export const fetchProfile = () =>
-  apiRequest<IProfile>(`${PROFILES_API_PATH}/profile/me`, "GET");
-
-export const updateProfile = (data: Partial<TProfileData>) =>
-  apiRequest<IMessageResponse>(`${PROFILES_API_PATH}/profile/me`, "PATCH", data);
 
 // Payment Methods
 export const fetchPaymentMethods = () =>
@@ -83,29 +75,12 @@ export const fetchPaymentMethod = (id: number) =>
 export const createPaymentMethod = (data: TPaymentMethodData) =>
   apiRequest<IPaymentMethod>(`${PAYMENT_METHODS_API_PATH}`, "POST", data);
 
-export const updatePaymentMethod = (id: number) => (data: Partial<TUpdatePaymentMethodData>) =>
+export const updatePaymentMethod = (id: number) => (data: TUpdatePaymentMethodData) =>
   apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}`, "PATCH", data);
+
+export const toggleEnabledPaymentMethod = (id: number)  =>
+  apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}/toggle`, "PATCH", {});
 
 export const deletePaymentMethod = (id: number) =>
   apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}`, "DELETE");
 
-// Combined Settings
-export const fetchAllSettings = async (): Promise<ISettings> => {
-  const [profile, notifications, paymentMethods, appSetting] = await Promise.all([
-    fetchProfile(),
-    fetchNotificationSettings(),
-    fetchPaymentMethods(),
-    fetchAppSettings(),
-  ]);
-
-  return {
-    profile,
-    notifications,
-    paymentMethods,
-    appSetting,
-  };
-};
-
-// Security API
-export const changePassword = (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => 
-  apiRequest<IMessageResponse>("/auth/change-password", "PUT", data);

@@ -16,10 +16,7 @@ export type TSignupData = {
   confirmPassword: string;
 } & RegisterDto;
 
-export type TForgotPasswordData = {
-} & ForgotPasswordDto;
+export type TForgotPasswordData = ForgotPasswordDto;
 
-export type TResetPasswordData = {
-  confirmPassword: string;
-} & ResetPasswordWithTokenDto;
+export type TResetPasswordData = ResetPasswordWithTokenDto;
 

@@ -7,6 +7,7 @@ import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { PaymentMethodListDto } from './dto/payment-method-list.dto';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { PAYMENT_METHOD_CONFIGS, PaymentMethodType } from './enums/payment-method-type.enum';
+import { MessageResponse } from '@/interfaces/general.interface';
 
 @Injectable()
 export class PaymentMethodsService {
@@ -112,6 +113,17 @@ export class PaymentMethodsService {
     return paymentMethod;
   }
 
+  async toggleEnabled(id: number): Promise<MessageResponse> {
+    const method = await this.findOne(id);
+
+    method.isEnabled = !method.isEnabled;
+    await this.paymentMethodRepo.save(method);
+
+    return {
+      message: `Payment method with ID ${id} has been ${method.isEnabled ? 'enabled' : 'disabled'}.`
+    }
+  }
+
   async update(id: number, updatePaymentMethodDto: UpdatePaymentMethodDto): Promise<PaymentMethod> {
     const paymentMethod = await this.findOne(id);
 
@@ -156,7 +168,7 @@ export class PaymentMethodsService {
 
   async getStripeConfig(): Promise<{ secretKey: string; webhookSecret?: string; publishableKey: string } | null> {
     const stripeMethod = await this.findByKey(PaymentMethodType.STRIPE);
-    
+
     if (!stripeMethod || !stripeMethod.config) {
       return null;
     }

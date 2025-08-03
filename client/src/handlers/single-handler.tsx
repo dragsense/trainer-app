@@ -53,6 +53,7 @@ export interface ISingleHandlerProps<
   >;
   mutationFns?: MutationFns<TUpdateData, TResponse>;
   singleProps?: TSingleExtraProps;
+  useManualForm?: boolean; // Add manual form option
 }
 
 export function SingleHandler<
@@ -77,6 +78,7 @@ export function SingleHandler<
   initialValues,
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
+  useManualForm = false, // Add manual form parameter
 }: ISingleHandlerProps<
   TData,
   TUpdateData,
@@ -226,6 +228,7 @@ export function SingleHandler<
           onError={onError}
           formProps={formProps}
           storeKey={storeKey}
+          useManualForm={useManualForm}
         />
 
 

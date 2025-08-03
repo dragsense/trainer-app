@@ -53,10 +53,6 @@ export class User extends GeneralBaseEntity {
   @Column({ type: 'boolean', default: true })
   isActive?: boolean;
 
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'trainer_id' })
-  trainer?: User;
-
   @ManyToOne(() => User, (user) => user.createdUsers, {
     onDelete: 'RESTRICT',
     nullable: true,
@@ -86,9 +82,6 @@ export class User extends GeneralBaseEntity {
 
   @OneToMany(() => Reminder, reminder => reminder.creator)
   createdReminders?: Reminder[];
-
-  @OneToMany(() => Reminder, reminder => reminder.recipient)
-  receivedReminders?: Reminder[];
 
   @OneToMany(() => Reminder, reminder => reminder.recipient)
   reminders?: Reminder[];

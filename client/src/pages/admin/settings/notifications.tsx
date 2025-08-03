@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 // Types
-import { INotificationSetting } from "@/@types/setting.type";
+import { INotificationSetting, TNotificationSettingData } from "@/@types/setting.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers
@@ -20,46 +20,35 @@ import { TDefaultValue } from "@/@types/form/field.type";
 
 // Schema
 export const NotificationSchema = z.object({
-  emailNotifications: z.boolean().optional(),
-  newUserNotifications: z.boolean().optional(),
-  userUpdateNotifications: z.boolean().optional(),
-  invoiceNotifications: z.boolean().optional(),
-  billingNotifications: z.boolean().optional(),
-  sessionNotifications: z.boolean().optional(),
-  chatNotifications: z.boolean().optional(),
+    emailNotifications: z.boolean().optional(),
+    newUserNotifications: z.boolean().optional(),
+    userUpdateNotifications: z.boolean().optional(),
+    invoiceNotifications: z.boolean().optional(),
+    billingNotifications: z.boolean().optional(),
+    sessionNotifications: z.boolean().optional(),
+    chatNotifications: z.boolean().optional(),
 });
 
 export default function NotificationsPage() {
-  const NOTIFICATION_INITIAL_VALUES: TDefaultValue<Partial<INotificationSetting>> = {
-    emailNotifications: { value: true },
-    newUserNotifications: { value: true },
-    userUpdateNotifications: { value: true },
-    invoiceNotifications: { value: true },
-    billingNotifications: { value: true },
-    sessionNotifications: { value: true },
-    chatNotifications: { value: true },
-  };
+    const NOTIFICATION_INITIAL_VALUES: TDefaultValue<Partial<INotificationSetting>> = {
+        emailNotifications: { value: true },
+        newUserNotifications: { value: true },
+        userUpdateNotifications: { value: true },
+        billingNotifications: { value: true },
+        sessionNotifications: { value: true },
+    };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Notification Settings</h1>
-        <p className="text-gray-600 mt-1">
-          Configure your notification preferences
-        </p>
-      </div>
-      
-      <SingleHandler<INotificationSetting, Partial<INotificationSetting>, INotificationSetting | IMessageResponse>
-        queryFn={fetchNotificationSettings}
-        storeKey="notificationSettings"
-        mutationFns={{
-          updateFn: () => updateNotificationSettings
-        }}
-        FormComponent={NotificationCardForm}
-        validationSchema={NotificationSchema}
-        initialValues={NOTIFICATION_INITIAL_VALUES}
-        validationMode={EVALIDATION_MODES.OnChange}
-      />
-    </div>
-  );
+    return ( <SingleHandler<INotificationSetting, TNotificationSettingData, IMessageResponse>
+                queryFn={fetchNotificationSettings}
+                storeKey="notificationSettings"
+                mutationFns={{
+                    updateFn: () => updateNotificationSettings
+                }}
+                id={1}
+                FormComponent={NotificationCardForm}
+                validationSchema={NotificationSchema}
+                initialValues={NOTIFICATION_INITIAL_VALUES}
+                validationMode={EVALIDATION_MODES.OnChange}
+            />
+    );
 }

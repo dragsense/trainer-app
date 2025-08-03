@@ -18,6 +18,7 @@ import {
   SecurityPage 
 } from ".";
 import { SettingsLayout } from "@/layouts";
+import AvailabilityPage from "./settings/availability";
 
 const adminRoutes = [
   {
@@ -71,6 +72,10 @@ const adminRoutes = [
       {
         path: ADMIN_ROUTES.SETTINGS_PROFILE,
         element: <ProfilePage />,
+      },
+        {
+        path: ADMIN_ROUTES.SETTINGS_AVAILABILITY,
+        element: <AvailabilityPage />,
       },
       {
         path: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
