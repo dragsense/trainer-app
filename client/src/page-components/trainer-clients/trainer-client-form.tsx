@@ -1,6 +1,7 @@
 
 // External Libraries
 import { z } from "zod";
+import { useShallow } from 'zustand/shallow';
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -10,7 +11,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { TTrainerClientData } from "@/@types/trainer.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TExtraComponentProps } from "@/@types/handler-types";
+import { TActionComponentProps } from "@/@types/handler-types";
 import { IUser } from "@/@types/user.type";
 
 // Layouts
@@ -20,8 +21,7 @@ import { TrainerClientAssignFormModal } from "@/components/admin";
 import { assignTrainerToClient } from "@/services/trainer-client.api";
 
 // Store
-import { TListHandlerStore, useRegisteredStore } from "@/stores";
-import { useStore } from "zustand";
+import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 // Schema
 export const AssignTrainerSchema = z.object({
@@ -29,8 +29,7 @@ export const AssignTrainerSchema = z.object({
     clientId: z.number().min(1, "Client is required"),
 });
 
-interface IAssignTrainerClientFormProps extends TExtraComponentProps<any> {
-    storeKey: string;
+interface IAssignTrainerClientFormProps extends TActionComponentProps<any> {
 }
 
 
@@ -42,21 +41,26 @@ interface IAssignTrainerClientFormExtraProps {
 }
 
 export default function AssignTrainerClientForm({
-    storeKey,
+    storeKey
 }: IAssignTrainerClientFormProps) {
 
-    const listStoreKey = storeKey + "-list";
+    const singleStoreKey = storeKey + "-single";
+    const singleStore = useRegisteredStore<TSingleHandlerStore<IUser>>(singleStoreKey);
 
-    const listStore = useRegisteredStore<TListHandlerStore<IUser>>(listStoreKey);
-
-    if (!listStore) {
-        return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
+    if (!singleStore) {
+        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { itemAction, setItemAction } = useStore(listStore);
+    const { id, action, reset } = singleStore(useShallow(state => ({
+        id: state.id,
+        action: state.action,
+        reset: state.reset,
 
-    const trainerId = itemAction?.type === "trainer" ? itemAction?.id : 0;
-    const clientId = itemAction?.type === "client" ? itemAction?.id : 0;
+    })));
+
+
+    const trainerId = action === "assignClient" ? id : 0;
+    const clientId = action === "assignTrainer" ? id : 0;
 
     const INITIAL_VALUES: TDefaultValue<TTrainerClientData> = {
         trainerId: { value: trainerId },
@@ -74,10 +78,8 @@ export default function AssignTrainerClientForm({
             formProps={{
                 trainerId,
                 clientId,
-                open: itemAction?.action === "assign",
-                onClose: () => {
-                    setItemAction(null);
-                },
+                open: !!action,
+                onClose: reset
             }}
 
         />

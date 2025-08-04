@@ -19,7 +19,6 @@ export const ADMIN_ROUTES = {
   SESSIONS: "/sessions",
   REMINDERS: "/reminders",
   BILLINGS: "/billings",
-  REFERRALS: "/referrals",
   SETTINGS: "/settings",
   SETTINGS_PROFILE: "/settings/profile",
   SETTINGS_NOTIFICATIONS: "/settings/notifications",
@@ -28,8 +27,6 @@ export const ADMIN_ROUTES = {
   SETTINGS_SECURITY: "/settings/security",
   SETTINGS_AVAILABILITY: "/settings/availability",
   SETTINGS_STRIPE_CONNECT: "/settings/stripe-connect",
-  SETTINGS_PLATFORM: "/settings/platform",
-  SETTINGS_REFERRAL: "/settings/referral",
 } as const;
 
 export type AdminRoute = keyof typeof ADMIN_ROUTES;

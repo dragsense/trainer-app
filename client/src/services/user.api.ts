@@ -25,12 +25,12 @@ export const me = async () =>
 
 
 export const createUser = (data: Partial<TUserData>) =>
-    apiRequest<IUser>(`${USERS_API_PATH}`, "POST", data);
+    apiRequest<{ user: IUser, message: string}>(`${USERS_API_PATH}`, "POST", data);
 
 export const updateUser = (id: number) => (data: Partial<TUserData>) =>
     apiRequest<IMessageResponse>(
         `${USERS_API_PATH}/${id}`,
-        "PATCH",
+        "PUT",
         data
     );
 

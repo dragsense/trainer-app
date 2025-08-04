@@ -57,7 +57,6 @@ export type TCustomInputWrapper = {
 export type TDefaultValue<T> = {
   [K in keyof T]: {
     notIncluded?: boolean;
-    notInput?: boolean;
     value: T[K];
   };
 };

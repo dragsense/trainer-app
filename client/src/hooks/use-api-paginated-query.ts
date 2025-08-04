@@ -9,7 +9,7 @@ import {
 
 // Types
 import { IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
+import { IListParams, TQueryParams } from "@/@types/api/param.type";
 
 
 export function usePaginatedQuery<T = any>(
@@ -44,7 +44,7 @@ export function usePaginatedQuery<T = any>(
   };
 
 
-  const setFilters = (filters: Record<string, any>) => {
+  const setFilters = (filters: TQueryParams) => {
     setParams((prev) => ({ ...prev, filters, page: 1 }));
   };
 

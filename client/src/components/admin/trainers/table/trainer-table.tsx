@@ -58,11 +58,11 @@ export default function TrainerTable({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const { setMode } = useStore(singleStore);
+  const { setAction } = useStore(singleStore);
   const navigate = useNavigate();
 
 
-  const { setFilters: setListFilters, setItemAction } = useStore(listStore);
+  const { setFilters: setListFilters } = useStore(listStore);
 
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -97,32 +97,30 @@ export default function TrainerTable({
   };
 
   const handleCreate = () => {
-    setMode('create');
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    setMode('edit', id);
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    setMode('delete', id);
+    setAction('delete', id);
   }
 
   const handleView = (trainerId: number) => {
-    setMode('view', trainerId);
+    setAction('view', trainerId);
   }
 
   const handleViewClients = (trainerId: number) => {
     navigate(buildRoutePath(ADMIN_ROUTES.TRAINER_CLIENTS, undefined, { trainerId: trainerId }));
   }
 
-    const handleAssign = (trainerId: number) => {
-    setItemAction({
-      itemName: 'Assign Client',
-      action: 'assign',
-      id: trainerId,
-      type: 'trainer',
-  })
+  const handleAssign = (trainerId: number) => {
+    setAction(
+      'assignClient',
+      trainerId,
+    )
   }
 
   const tableColumns = columns({

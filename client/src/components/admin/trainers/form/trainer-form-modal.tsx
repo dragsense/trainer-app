@@ -1,14 +1,15 @@
 
 // External Libraries
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { IUser, TUserData } from "@/@types/user.type";
 
 // Components
@@ -16,37 +17,43 @@ import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { CredentialModal } from "@/components/custom-ui/credential-modal";
 
-// Hooks
-import { useStore } from "zustand";
 
 export interface ITrainerFormModalProps {
   storeKey: string;
+  open: boolean;
+  isEditing?: boolean;
+  onClose: () => void;
 }
 
 export default function TrainerFormModal({
-  storeKey
+  storeKey,
+  open,
+  isEditing = false,
+  onClose,
 }: ITrainerFormModalProps) {
 
-  const formStoreKey = storeKey + "-form";
-  const singelStoreKey = storeKey + "-single";
 
-  const formStore = useRegisteredStore<TFormHandlerStore<TUserData, IUser>>(formStoreKey);
+
+  const formStoreKey = storeKey + "-form";
+
+  const formStore = useRegisteredStore<TFormHandlerStore<TUserData, { user: IUser, message: string}>>(formStoreKey);
 
   if (!formStore) {
     return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IUser>>(singelStoreKey);
-
-  if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
-  }
-
-  const {isSubmitting, response} = useStore(formStore);
-  const { isEditing, isCreating, setResetActions } = useStore(singleStore);
+  const { isSubmitting, response } = formStore(useShallow(state => ({
+    isSubmitting: state.isSubmitting,
+    response: state.response
+  })));
 
   const [credentialModalOpen, setCredentialModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (response) {
+      setCredentialModalOpen(true);
+    }
+  }, [response])
 
   const fields: TFieldConfig[] = [
     // ─── Basic Info ──────────────
@@ -172,15 +179,14 @@ export default function TrainerFormModal({
     },
   ];
 
-
-
   const { inputs } = useInput({
     fields,
     showRequiredAsterisk: true,
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) setResetActions();
+    if (state === false)
+      onClose();
   };
 
   const formButtons = (
@@ -190,7 +196,7 @@ export default function TrainerFormModal({
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          setResetActions();
+          onClose();
         }}
       >
         Cancel
@@ -203,36 +209,37 @@ export default function TrainerFormModal({
   );
 
   return <>
-
-    <ModalForm<TUserData, IUser>
-      title={`${isEditing ? "Edit" : "Add"} Trainer`}
-      description={`${isEditing ? "Edit" : "Add a new"} trainer`}
-      open={isEditing || isCreating}
-      onOpenChange={onOpenChange}
-      formStore={formStore}
-      footerContent={formButtons}
-      width="3xl"
+    <ModalForm<TUserData, { user: IUser, message: string}>
+    title={`${isEditing ? "Edit" : "Add"} Trainer`}
+    description={`${isEditing ? "Edit" : "Add a new"} trainer`}
+    open={open}
+    onOpenChange={onOpenChange}
+    formStore={formStore}
+    footerContent={formButtons}
+    width="3xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {inputs}
-      </div>
-    </ModalForm>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      {inputs}
+    </div>
+  </ModalForm >
 
-    {isEditing && response && (
-      <CredentialModal
-        open={credentialModalOpen}
-        onOpenChange={(state: boolean) => {
-          if (!state) {
-            setCredentialModalOpen(false);
-          }
-        }}
-        closeModal={() => {
+
+    <CredentialModal
+      open={credentialModalOpen}
+      onOpenChange={(state: boolean) => {
+        if (!state) {
           setCredentialModalOpen(false);
-        }}
-        email={response.email}
-        password={response.password}
-      />
-    )}
+          onClose();
+        }
+      }}
+      closeModal={() => {
+        setCredentialModalOpen(false);
+        onClose();
+      }}
+      email={response?.user.email}
+      password={response?.user.password}
+    />
+
 
   </>
 }

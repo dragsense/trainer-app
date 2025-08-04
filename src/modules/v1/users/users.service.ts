@@ -276,12 +276,10 @@ export class UsersService {
   }
 
   async remove(id: number, currentUser: User): Promise<MessageResponse> {
-    const user = await this.findOne({ id }, { relations: ['createdBy'] });
+    const user = await this.findOne({ id }, { relations: ['owner'] });
 
     // Only admins can delete users, and they cannot delete super admins
-    if (
-      currentUser.level < UserLevels[UserRole.ADMIN] ||
-      user.level === UserLevels[UserRole.SUPER_ADMIN]
+    if (user.level === UserLevels[UserRole.SUPER_ADMIN]
     ) {
       throw new ForbiddenException('Insufficient permissions to delete this user');
     }

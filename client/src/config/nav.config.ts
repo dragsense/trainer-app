@@ -73,11 +73,7 @@ export const navItems: {
             urls: [ADMIN_ROUTES.BILLINGS],
             icon: Banknote,
         },
-        {
-            title: "Referrals",
-            urls: [ADMIN_ROUTES.REFERRALS],
-            icon: Gift,
-        },
+      
         {
             title: "Reminders",
             urls: [ADMIN_ROUTES.REMINDERS],
@@ -93,8 +89,6 @@ export const navItems: {
                 ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
                 ADMIN_ROUTES.SETTINGS_SECURITY,
                 ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
-                ADMIN_ROUTES.SETTINGS_PLATFORM,
-                ADMIN_ROUTES.SETTINGS_REFERRAL,
             ],
             icon: Settings,
             children: [
@@ -122,14 +116,7 @@ export const navItems: {
                     title: "Stripe Connect",
                     url: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
                 },
-                {
-                    title: "Platform Settings",
-                    url: ADMIN_ROUTES.SETTINGS_PLATFORM,
-                },
-                {
-                    title: "Referral Settings",
-                    url: ADMIN_ROUTES.SETTINGS_REFERRAL,
-                }
+            
             ]
         }
     ];

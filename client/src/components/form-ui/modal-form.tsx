@@ -1,18 +1,17 @@
 // React
 import { ReactNode } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // External Libraries
 import { Loader2 } from "lucide-react";
 
-// Types
-import { IFormStoreApi } from "@/@types/handler-types";
 
 // UI Components
 import { AppDialog } from "@/components/layout-ui/app-dialog";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // Store
-import { useStore } from "zustand";
+import { TFormHandlerStore } from "@/stores";
 
 // Utility Function
 import { cn } from "@/lib/utils";
@@ -39,7 +38,7 @@ interface IModalFormProps<TFormData, TResponse> {
   footerContent?: ReactNode;
   children: ReactNode;
   width?: TDialogWidth;
-  formStore: IFormStoreApi<TFormData, TResponse>;
+  formStore: TFormHandlerStore<TFormData, TResponse>;
 }
 
 export function ModalForm<TFormData, TResponse>({
@@ -53,7 +52,13 @@ export function ModalForm<TFormData, TResponse>({
   formStore,
 }: IModalFormProps<TFormData, TResponse>) {
 
-  const { isSubmitting, error, onSubmit } = useStore(formStore);
+
+    const { isSubmitting, error, onSubmit } = formStore(useShallow(state => ({
+      isSubmitting: state.isSubmitting,
+      error: state.error,
+      onSubmit: state.onSubmit
+    })));
+
 
 
   return (

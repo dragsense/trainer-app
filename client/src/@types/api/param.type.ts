@@ -1,5 +1,5 @@
 
-export type TQueryParams = Record<string, string | number | boolean | undefined>;
+export type TQueryParams = Record<string, unknown>;
 
 export interface IListParams {
 
@@ -10,4 +10,3 @@ export interface IListParams {
   sortOrder?: "ASC" | "DESC";
   filters?: TQueryParams;
 }
-

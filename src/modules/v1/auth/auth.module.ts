@@ -11,12 +11,10 @@ import { AuthController } from './auth.controller';
 import { getJwtConfig } from '@/config/jwt.config';
 
 import { UsersModule } from '@/modules/v1/users/users.module';
-import { ReferralsModule } from '@/modules/v1/referrals/referrals.module';
 
 @Module({
   imports: [
     UsersModule,
-    ReferralsModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,

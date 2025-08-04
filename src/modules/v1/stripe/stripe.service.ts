@@ -4,13 +4,11 @@ import { DataSource } from 'typeorm';
 import { Billing } from '../billings/entities/billing.entity';
 import { BillingStatus, BillingType, BillingCurrency } from '../billings/enums/billing.enum';
 import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
-import { PlatformSettingsService } from '../settings/platform/platform-settings.service';
 import Stripe from 'stripe';
 import { User } from '../users/entities/user.entity';
 import { Session } from '../sessions/entities/session.entity';
 import { UsersService } from '../users/users.service';
 import { BillingsService } from '../billings/billings.service';
-import { ReferralsService } from '../referrals/referrals.service';
 import { CreateBillingDto } from '../billings/dto/create-billing.dto';
 import { UserRole, UserLevels } from '../users/enums/user.enum';
 import { StripeConnectAccount } from '../settings/stripe-connect/entities/stripe-connect-account.entity';
@@ -26,7 +24,6 @@ export class StripeService {
     private readonly paymentMethodsService: PaymentMethodsService,
     private readonly billingsService: BillingsService,
     private readonly usersService: UsersService,
-    private readonly platformSettingsService: PlatformSettingsService,
   ) {
     this.initializeStripe();
   }
@@ -89,8 +86,7 @@ export class StripeService {
    */
   private async getPlatformFeePercentage(): Promise<number> {
     try {
-      const settings = await this.platformSettingsService.getPlatformFeeSettings();
-      return settings.platformFeePercentage;
+      return 2
     } catch (error) {
       this.logger.warn('Failed to get platform fee from settings, using default 2%:', error.message);
       return 2; // Fallback to 2% if settings not available

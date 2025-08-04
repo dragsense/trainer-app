@@ -6,7 +6,6 @@ import { StripeBillingService } from './services/stripe-billing.service';
 import { StripeInvoiceService } from './services/stripe-invoice.service';
 import { StripeTransactionService } from './services/stripe-transaction.service';
 import { PaymentMethodsModule } from '../settings/payment-methods/payment-methods.module';
-import { PlatformSettingsModule } from '../settings/platform/platform-settings.module';
 import { BillingsModule } from '../billings/billings.module';
 import { UsersModule } from '../users/users.module';
 import { StripeConnectAccount } from '../settings/stripe-connect/entities/stripe-connect-account.entity';
@@ -15,7 +14,6 @@ import { StripeConnectAccount } from '../settings/stripe-connect/entities/stripe
   imports: [
     TypeOrmModule.forFeature([StripeConnectAccount]),
     PaymentMethodsModule,
-    PlatformSettingsModule,
     forwardRef(() => BillingsModule),
     UsersModule,
   ],

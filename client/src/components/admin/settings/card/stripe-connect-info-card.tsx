@@ -1,42 +1,12 @@
-// External Libraries
-import { useEffect, useState } from "react";
 
 // Components
 import { AppCard } from "@/components/layout-ui/app-card";
 
-// API
-import { fetchPlatformSettings } from "@/services/setting.api";
 
-// Types
-import { IPlatformSetting } from "@/@types/setting.type";
 
 export default function StripeConnectInfoCard() {
-  const [platformFee, setPlatformFee] = useState<number>(2); // Default fallback
-  const [loading, setLoading] = useState(true);
+  
 
-  useEffect(() => {
-    const loadPlatformFee = async () => {
-      try {
-        const response = await fetchPlatformSettings();
-        const feeData = response.data;
-        if (feeData) {
-          // Find platform fee percentage from settings
-          const platformFeeSetting = feeData.find((setting: IPlatformSetting) => 
-            setting.key === 'platformFeePercentage'
-          );
-          if (platformFeeSetting) {
-            setPlatformFee(parseFloat(platformFeeSetting.value));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load platform fee:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPlatformFee();
-  }, []);
 
   return (
     <AppCard 
@@ -74,7 +44,7 @@ export default function StripeConnectInfoCard() {
           <div>
             <h4 className="font-medium">Get Paid Fast</h4>
             <p className="text-muted-foreground">
-              Receive automatic payouts to your bank account with low platform fees ({loading ? '...' : `${platformFee}%`} per transaction).
+              Receive automatic payouts to your bank account with low platform fees 2% per transaction.
             </p>
           </div>
         </div>

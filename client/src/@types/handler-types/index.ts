@@ -8,14 +8,14 @@ export type TItemActionProps = {
 };
 
 
-export type TExtraComponentProps<T> = T & {
+export type TActionComponentProps<T> = T & {
   storeKey: string;
-  handleInvalidateQuery: (res: unknown) => void;
+  action: string;
 };
 
-export interface IExtraComponent<TListExtraProps = any> {
-  triggerAction: string;
-  comp: React.ComponentType<TExtraComponentProps<TListExtraProps>>;
+export interface IActionComponent<TListActionProps = any> {
+  action: string;
+  comp: React.ComponentType<TActionComponentProps<TListActionProps>>;
 }
 
 export interface MutationFns<TFormData, TResponse> {

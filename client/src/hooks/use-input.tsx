@@ -57,7 +57,7 @@ export function useInput({
 
   const convertValue = (input: unknown, type?: string): any => {
     const getValue = (val: any) => {
-      if (val === "") return undefined;
+      if (val === "") return val;
       if (type === "number") return Number(val);
       if (type === "boolean") return !!val;
       if (type === "date") return new Date(val);

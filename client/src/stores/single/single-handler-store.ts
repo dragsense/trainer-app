@@ -19,45 +19,18 @@ export const useSingleHandlerStore = <TResponse>(name: string, id: number = 0, i
                 isLoading: false,
                 error: null,
                 response: null,
-
-                isCreating: false,
-                isEditing: false,
-                isDeleting: false,
-                isViewing: false,
-
+                action: '',
+           
                 // State setters
                 setIsLoading: (isLoading) => set({ isLoading }),
                 setError: (error) => set({ error }),
                 setResponse: (response) => set({ response }),
                 setParams: (params) => set({ params }),
 
-                setMode: (mode, id: number = 0) => {
-                    const newState = {
-                        id,
-                        isCreating: false,
-                        isEditing: false,
-                        isDeleting: false,
-                        isViewing: false,
-                    };
-
-                    switch (mode) {
-                        case 'create': newState.isCreating = true; break;
-                        case 'edit': newState.isEditing = true; break;
-                        case 'delete': newState.isDeleting = true; break;
-                        case 'view': newState.isViewing = true; break;
-                    }
-
-                    set(newState);
+                setAction: (action: string, id: number = 0) => {
+                    set({ id, action });
                 },
 
-    
-                setResetActions: () => set({
-                    id: 0,
-                    isCreating: false,
-                    isEditing: false,
-                    isDeleting: false,
-                    isViewing: false,
-                }),
 
                 syncWithQuery: ({ isLoading, error, isSuccess, response }) => {
                     set({
@@ -74,10 +47,7 @@ export const useSingleHandlerStore = <TResponse>(name: string, id: number = 0, i
                     error: null,
                     response: null,
                     isSuccess: false,
-                    isCreating: false,
-                    isEditing: false,
-                    isDeleting: false,
-                    isViewing: false,
+                    action: '',
                 })
             }),
             {

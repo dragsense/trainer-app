@@ -1,11 +1,10 @@
 // React & Hooks
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 
 // Types
 import {
-  MutationFns
+  IActionComponent,
 } from "@/@types/handler-types";
-import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TQueryParams } from "@/@types/api/param.type";
 
 
@@ -14,195 +13,195 @@ import { useApiMutation } from "@/hooks/use-api-mutation";
 import { useConfirm } from "@/hooks/use-confirm";
 
 // External Libraries
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 // Error Components
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
-// Handlers
-import { FormHandler, IFormHandlerProps } from "./form-handler";
-
 // UI Components
 import { ConfirmDialog } from "@/components/layout-ui/app-alert-dialog";
+import { ActionComponentHandler } from "./action-handler";
 
 // Stores
 import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore, useSingleHandlerStore } from "@/stores";
-import { useStore } from "zustand";
 
-export type TSingleFormExtraProps<TData> = {
-  open: boolean;
-  closeForm: () => void;
-  values: TData | null;
-  isEditMode: boolean;
-};
+// Hooks
+import { useApiQuery } from "@/hooks/use-api-query";
+import { useShallow } from "zustand/shallow";
+
 
 export interface ISingleHandlerProps<
-  TData,
-  TUpdateData,
-  TResponse,
+  IData,
   TSingleExtraProps,
-  TFormExtraProps
-> extends Omit<IFormHandlerProps<TUpdateData, TResponse, TFormExtraProps>, 'mutationFn'> {
+> {
+  storeKey: string;
+  listStoreKey?: string;
+  initialId?: number;
   name?: string;
-  id?: number,
-  initialParams?: TQueryParams
-  queryFn: (id: number) => Promise<TData>;
-  SingleComponent?: React.ComponentType<{ storeKey: string } & TSingleExtraProps
-  >;
-  mutationFns?: MutationFns<TUpdateData, TResponse>;
+  initialParams?: TQueryParams;
+  queryFn: (id: number, queryParams: TQueryParams) => Promise<IData>;
+  deleteFn?: (id: number) => Promise<void>;
+  onDeleteSuccess?: () => void;
+  SingleComponent: React.ComponentType<{ storeKey: string } & TSingleExtraProps>;
+  actionComponents?: IActionComponent<TSingleExtraProps>[];
   singleProps?: TSingleExtraProps;
-  useManualForm?: boolean; // Add manual form option
 }
 
 export function SingleHandler<
-  TData,
-  TUpdateData extends Record<string, any> = any,
-  TResponse = any,
+  IData,
   TSingleExtraProps = any,
-  TFormExtraProps extends Record<string, any> = Record<string, any>
 >({
-  name = "item",
-  id,
-  initialParams,
+  name = "Item",
+  initialParams = {},
+  initialId = 0,
   queryFn,
-  mutationFns,
+  deleteFn,
+  onDeleteSuccess,
   storeKey,
   SingleComponent,
   singleProps,
-  formProps,
-  FormComponent,
-  onSuccess,
-  onError,
-  initialValues,
-  validationMode = EVALIDATION_MODES.OnChange,
-  validationSchema,
-  useManualForm = false, // Add manual form parameter
+  actionComponents = []
 }: ISingleHandlerProps<
-  TData,
-  TUpdateData,
-  TResponse,
-  TSingleExtraProps,
-  TFormExtraProps
+  IData,
+  TSingleExtraProps
 >) {
-  const queryClient = useQueryClient();
-  const { confirm, dialogProps } = useConfirm();
-  const [values, setValues] = useState<TUpdateData>();
+  const singleStoreKey = storeKey + "-single";
 
-  const sinleStoreKey = storeKey + "-single";
-
-  // Initialize store
-  let store = useRegisteredStore<TSingleHandlerStore<TData>>(sinleStoreKey);
+  let store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
   if (!store) {
-    store = useSingleHandlerStore<TData>(name, id, initialParams);
-    registerStore<TSingleHandlerStore<TData>>(sinleStoreKey, store);
+    store = useSingleHandlerStore<IData>(name, initialId, initialParams);
+    registerStore<TSingleHandlerStore<IData>>(singleStoreKey, store);
   }
 
   useEffect(() => {
-    registerStore(sinleStoreKey, store);
-    return () => deregisterStore(sinleStoreKey);
-  }, [sinleStoreKey, store]);
+    registerStore(singleStoreKey, store);
+    return () => deregisterStore(singleStoreKey);
+  }, [singleStoreKey, store]);
 
 
-  const { id: itemId, isDeleting } = useStore(store);
+  const id = store((state) => state.id);
 
-  const queryKey = [sinleStoreKey, itemId];
-  const { data, error, isError, isLoading, isSuccess } = useQuery<TData, Error>({
+  const queryKey = [singleStoreKey, id];
+
+
+  useApiQuery<IData>(
     queryKey,
-    queryFn: () => queryFn(itemId!),
-    enabled: !!itemId,
-  });
+    async (params) => {
+      store.setState({ isLoading: true });
+      try {
+        const response = await queryFn(id, params);
+        store.setState({
+          isLoading: false,
+          error: null,
+          response,
+          isSuccess: true,
+        });
+        return response;
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        store.setState({
+          response: null,
+          isLoading: false,
+          error: err,
+          isSuccess: false,
 
-  useEffect(() => {
+        });
+        throw err;
 
-    if (data) {
-      const newValues = Object.entries(initialValues).reduce((acc, [key, config]) => {
-        if (!config.notIncluded) {
-          acc[key as keyof TUpdateData] = config.notInput
-            ? config.value
-            : data[key as keyof TData] || initialValues[key].value;
-        }
-        return acc;
-      }, {} as TUpdateData);
-      setValues(newValues);
-    }
-
-  }, [data]);
-
-  useEffect(() => {
-    store.getState().syncWithQuery({
-      isLoading,
-      error: isError ? error : null,
-      response: isSuccess ? data : undefined,
-      isSuccess,
-    });
-  }, [isLoading, isError, isSuccess]);
-
-  const mutation = useMemo(() => {
-    if (id && mutationFns?.updateFn) {
-      return { fn: mutationFns.updateFn(id), type: "update" as const };
-    } else if (mutationFns?.createFn) {
-      return { fn: mutationFns.createFn, type: "create" as const };
-    }
-    return {
-      fn: async () => { throw new Error("No mutation function available"); },
-      type: "none" as const
-    };
-  }, [id, mutationFns])
-
-
-  const { mutate: deleteItem } = useApiMutation(
-    mutationFns?.deleteFn || (() => Promise.reject("No delete function")), {
-    onMutate: () => {
-      store.getState().syncWithQuery({
-        isLoading: true,
-        error: null,
-        isSuccess: false
-      });
+      }
     },
-
-    onSuccess: () => {
-      store.getState().syncWithQuery({
-        isLoading: false,
-        error: null,
-        isSuccess: true,
-        response: null
-      });
-      toast.success("Item deleted successfully!");
-      mutationFns?.onSuccess?.("deleted")();
-      queryClient.invalidateQueries({
-        queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
-      });
-    },
-    onError: (error: Error) => {
-      store.getState().syncWithQuery({
-        isLoading: false,
-        error: error,
-        isSuccess: false
-      });
+    initialParams,
+    {
+      enabled: !!id,
     }
-  });
+  );
 
-  const handleDeleteItem = useMemo(() => (
-    (itemName: string, id: number) => {
-      confirm(
-        "Delete Item",
-        `Are you sure you want to delete this ${itemName}?`,
-        () => deleteItem(id),
-        () => { },
-        "destructive"
-      );
-    }
-  ), [confirm, deleteItem]);
 
-  useEffect(() => {
 
-    if (isDeleting) {
-      handleDeleteItem(name, id!);
-    }
+  const internalActionComponents: IActionComponent<TSingleExtraProps>[] = useMemo(() => {
+    if (!deleteFn) return actionComponents;
 
-  }, [isDeleting]);
+    return [
+      ...actionComponents,
+      {
+        action: "delete",
+        comp: ({ action, storeKey }) => {
+          const { confirm, dialogProps } = useConfirm();
+
+          const singleStoreKey = storeKey + "-single";
+          const store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
+
+          if (!store) {
+            return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+          }
+
+          const { id, name, reset } = store(useShallow(state => ({
+            id: state.id,
+            name: state.name,
+            reset: state.reset
+          })));
+
+          const { mutate: deleteItem } = useApiMutation(
+            deleteFn,
+            {
+              onMutate: () => {
+                store.getState().syncWithQuery({
+                  isLoading: true,
+                  error: null,
+                  isSuccess: false,
+                });
+              },
+              onSuccess: () => {
+                store.getState().syncWithQuery({
+                  isLoading: false,
+                  error: null,
+                  isSuccess: true,
+                  response: null,
+                });
+                onDeleteSuccess?.();
+                toast.success(`${name} deleted successfully!`);
+              },
+              onError: (error: Error) => {
+                store.getState().syncWithQuery({
+                  isLoading: false,
+                  error,
+                  isSuccess: false,
+                });
+
+                toast.error(`Failed to delete ${name}: ${error.message}`);
+              },
+            }
+          );
+
+          const handleDeleteItem = useMemo(
+            () =>
+              () =>
+                confirm(
+                  "Delete Item",
+                  `Are you sure you want to delete this ${name}?`,
+                  async () => {
+                    await deleteItem(id);
+                    reset();
+                  },
+                  () => { reset() },
+
+                  "destructive"
+                ),
+            [deleteFn, id]
+          );
+
+          useEffect(() => {
+            if (action === "delete") {
+              handleDeleteItem();
+            }
+          }, [action, handleDeleteItem]);
+
+          return <ConfirmDialog {...dialogProps} />;
+        },
+      },
+    ];
+  }, [actionComponents, deleteFn]);
 
 
 
@@ -217,22 +216,12 @@ export function SingleHandler<
           />
         )}
 
-        <FormHandler<TUpdateData, TResponse, TFormExtraProps>
-          mutationFn={mutation.fn}
-          FormComponent={FormComponent}
-          initialValues={initialValues}
-          values={values}
-          validationMode={validationMode}
-          validationSchema={validationSchema}
-          onSuccess={onSuccess || (() => toast.success('Operation successful'))}
-          onError={onError}
-          formProps={formProps}
+        <ActionComponentHandler<IData, TSingleExtraProps>
+          extraComponents={internalActionComponents}
           storeKey={storeKey}
-          useManualForm={useManualForm}
+          listProps={singleProps as TSingleExtraProps}
         />
 
-
-        {dialogProps && <ConfirmDialog {...dialogProps} />}
       </>
     </ErrorBoundary>
   );

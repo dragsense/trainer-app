@@ -15,20 +15,13 @@ export interface ISingleHandlerState<TResponse> extends ISingleHandlerBaseState<
   id: number;
   name: string,
   params: TQueryParams;
-  isCreating: boolean;
-  isEditing: boolean;
-  isDeleting: boolean;
-  isViewing: boolean;
-
+  action: string;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse) => void;
   setParams: (params: TQueryParams) => void;
-
- setMode: (mode: 'create' | 'edit' | 'delete' | 'view', id?: number) => void;
-
+  setAction: (action: string, id?: number) => void;
   setResetActions: () => void;
-
   syncWithQuery: (state: ISingleHandlerBaseState<TResponse>) => void;
 
   reset: () => void;
