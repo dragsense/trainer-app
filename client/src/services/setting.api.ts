@@ -11,7 +11,12 @@ import {
   TAppSettingData,
   TPaymentMethodData,
   TUpdatePaymentMethodData,
-  TNotificationSettingData
+  TNotificationSettingData,
+  IStripeConnectStatus,
+  TCreateStripeConnectData,
+  IStripeConnectCreateResponse,
+  IStripeConnectDeleteResponse,
+
 } from "@/@types/setting.type";
 
 // Constants
@@ -84,3 +89,14 @@ export const toggleEnabledPaymentMethod = (id: number)  =>
 export const deletePaymentMethod = (id: number) =>
   apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}`, "DELETE");
 
+// Stripe Connect
+const STRIPE_CONNECT_API_PATH = `${SETTINGS_API_PATH}/stripe-connect`;
+
+export const getStripeConnectStatus = () =>
+  apiRequest<IStripeConnectStatus>(`${STRIPE_CONNECT_API_PATH}`, "GET");
+
+export const createStripeConnect = (data: TCreateStripeConnectData) =>
+  apiRequest<IStripeConnectCreateResponse>(`${STRIPE_CONNECT_API_PATH}`, "POST", data);
+
+export const deleteStripeConnect = () =>
+  apiRequest<IStripeConnectDeleteResponse>(`${STRIPE_CONNECT_API_PATH}`, "DELETE");

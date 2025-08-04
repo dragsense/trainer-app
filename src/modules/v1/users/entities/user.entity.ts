@@ -19,6 +19,7 @@ import { UserLevels, UserRole } from '../enums/user.enum';
 import { Reminder } from '../../reminders/entities/reminder.entity';
 import { Billing } from '../../billings/entities/billing.entity';
 import { UserAvailability } from './user-availability.entity';
+import { StripeConnectAccount } from '../../settings/stripe-connect/entities/stripe-connect-account.entity';
 
 
 export type UserLevelType = typeof UserLevels[UserRole];
@@ -100,5 +101,15 @@ export class User extends GeneralBaseEntity {
   })
   @JoinColumn()
   availability: UserAvailability;
+
+  @ApiProperty({
+    type: () => StripeConnectAccount,
+    description: "Stripe Connect account of the trainer",
+    required: false,
+  })
+  @OneToOne(() => StripeConnectAccount, (stripeConnect) => stripeConnect.user, {
+    cascade: true,
+  })
+  stripeConnectAccount: StripeConnectAccount;
 
 }

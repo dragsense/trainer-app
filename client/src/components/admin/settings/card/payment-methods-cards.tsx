@@ -24,7 +24,7 @@ const getPaymentMethodIcon = (key: PaymentMethodType) => {
   }
 };
 
-export function PaymentMethodsCards({
+export default function PaymentMethodsCards({
   storeKey
 }: PaymentMethodsCardsProps) {
 

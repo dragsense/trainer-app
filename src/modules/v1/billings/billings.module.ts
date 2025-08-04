@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BillingsService } from './billings.service';
 import { BillingsController } from './billings.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,7 +20,7 @@ import { Session } from '../sessions/entities/session.entity';
     UsersModule,
     MailerModule,
     SettingsModule,
-    StripeModule,
+    forwardRef(() => StripeModule),
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],

@@ -16,7 +16,6 @@ import { ConfigService } from '@nestjs/config';
 
 import { MessageResponse } from '@/interfaces/general.interface';
 
-
 import { User } from '../users/entities/user.entity';
 
 import { ResetPasswordWithTokenDto } from './dto/reset-password.dto';
@@ -24,6 +23,7 @@ import { RegisterDto } from './dto/register.dto';
 
 import { UsersService } from '../users/users.service';
 import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { ReferralsService } from '../referrals/referrals.service';
 
 @Injectable()
 export class AuthService {
@@ -32,8 +32,8 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly mailerService: MailerService,
     private readonly userService: UsersService,
+    private readonly referralsService: ReferralsService,
   ) { }
-
 
   async register(
     registerDto: RegisterDto,
@@ -41,6 +41,34 @@ export class AuthService {
     return await this.userService.create({
       ...registerDto, level: UserLevels[UserRole.ADMIN],
     });
+  }
+
+  async registerWithReferral(
+    registerDto: RegisterDto,
+    referralCode: string,
+  ): Promise<MessageResponse> {
+    // Create the user first
+    const userResult = await this.userService.create({
+      ...registerDto, 
+      level: UserLevels[UserRole.ADMIN],
+    });
+
+    // If user creation successful and referral code provided, try to create referral record
+    if (referralCode) {
+      try {
+        // Find the newly created user
+        const createdUser = await this.userService.findOne({ email: registerDto.email });
+        if (createdUser) {
+          await this.referralsService.createReferralByCode(referralCode, createdUser.id);
+        }
+      } catch (error) {
+        // Log the error but don't fail registration if referral fails
+        console.error('Failed to process referral code during signup:', error);
+        // User is still created successfully even if referral processing fails
+      }
+    }
+
+    return userResult;
   }
 
 

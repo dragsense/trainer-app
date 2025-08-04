@@ -29,6 +29,7 @@ import { FileUploadModule } from './modules/v1/file-upload/file-upload.module';
 import { SettingsModule } from './modules/v1/settings/settings.module';
 import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
 import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
+import { PlatformSettingsModule } from './modules/v1/settings/platform/platform-settings.module';
 
 
 @Module({
@@ -76,12 +77,13 @@ import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clien
     SessionsModule,
     RemindersModule,
     SettingsModule,
+    PlatformSettingsModule,
     DashboardModule,
     StripeModule,
     FileUploadModule,
     BillingsModule,
     NotificationsModule,
-    TrainerClientsModule
+    TrainerClientsModule,
   ],
   controllers: [AppController],
   providers: [

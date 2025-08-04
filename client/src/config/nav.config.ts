@@ -1,4 +1,4 @@
-import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard, Users } from "lucide-react";
+import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard, Users, Gift } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
 
 export const navItems: {
@@ -74,6 +74,11 @@ export const navItems: {
             icon: Banknote,
         },
         {
+            title: "Referrals",
+            urls: [ADMIN_ROUTES.REFERRALS],
+            icon: Gift,
+        },
+        {
             title: "Reminders",
             urls: [ADMIN_ROUTES.REMINDERS],
             icon: Clock,
@@ -87,6 +92,9 @@ export const navItems: {
                 ADMIN_ROUTES.SETTINGS_APP,
                 ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
                 ADMIN_ROUTES.SETTINGS_SECURITY,
+                ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+                ADMIN_ROUTES.SETTINGS_PLATFORM,
+                ADMIN_ROUTES.SETTINGS_REFERRAL,
             ],
             icon: Settings,
             children: [
@@ -109,6 +117,18 @@ export const navItems: {
                 {
                     title: "Security",
                     url: ADMIN_ROUTES.SETTINGS_SECURITY,
+                },
+                {
+                    title: "Stripe Connect",
+                    url: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+                },
+                {
+                    title: "Platform Settings",
+                    url: ADMIN_ROUTES.SETTINGS_PLATFORM,
+                },
+                {
+                    title: "Referral Settings",
+                    url: ADMIN_ROUTES.SETTINGS_REFERRAL,
                 }
             ]
         }

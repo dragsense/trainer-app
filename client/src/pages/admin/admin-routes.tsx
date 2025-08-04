@@ -10,12 +10,16 @@ import {
   TrainerClientsPage,
   SessionsPage, 
   RemindersPage, 
-  BillingsPage, 
+  BillingsPage,
+  ReferralsPage,
   ProfilePage,  
   NotificationsPage, 
   AppSettingsPage, 
   PaymentMethodsPage, 
-  SecurityPage 
+  SecurityPage,
+  StripeConnectPage,
+  PlatformSettingsPage,
+  ReferralPage
 } from ".";
 import { SettingsLayout } from "@/layouts";
 import AvailabilityPage from "./settings/availability";
@@ -66,6 +70,10 @@ const adminRoutes = [
     element: <BillingsPage />,
   },
   {
+    path: ADMIN_ROUTES.REFERRALS,
+    element: <ReferralsPage />,
+  },
+  {
     path: ADMIN_ROUTES.SETTINGS,
     element: <SettingsLayout />,
     children: [
@@ -92,6 +100,18 @@ const adminRoutes = [
       {
         path: ADMIN_ROUTES.SETTINGS_SECURITY,
         element: <SecurityPage />,
+      },
+      {
+        path: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+        element: <StripeConnectPage />,
+      },
+      {
+        path: ADMIN_ROUTES.SETTINGS_PLATFORM,
+        element: <PlatformSettingsPage />,
+      },
+      {
+        path: ADMIN_ROUTES.SETTINGS_REFERRAL,
+        element: <ReferralPage />,
       },
     ],
   },

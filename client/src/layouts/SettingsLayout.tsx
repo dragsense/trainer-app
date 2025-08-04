@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
-import { User, Bell, Settings, CreditCard, Shield, Clock } from "lucide-react";
+import { User, Bell, Settings, CreditCard, Shield, Clock, Link } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROUTES } from "@/config/routes.config";
 
@@ -39,6 +39,12 @@ const settingsNavItems = [
         href: ADMIN_ROUTES.SETTINGS_SECURITY,
         icon: Shield,
         description: "Security and privacy settings"
+    },
+    {
+        title: "Stripe Connect",
+        href: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+        icon: Link,
+        description: "Connect your Stripe account"
     }
 ];
 

@@ -6,6 +6,7 @@ import {
   Res,
   HttpStatus,
   UnauthorizedException,
+  Param,
 } from '@nestjs/common';
 
 import { Response } from 'express';
@@ -14,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiParam,
 } from '@nestjs/swagger';
 
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
@@ -81,6 +83,20 @@ export class AuthController {
   @Post('signup')
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @ApiOperation({ summary: 'Register a new user via referral link' })
+  @ApiParam({ name: 'referralCode', description: 'Referral code from the signup link' })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({
+    status: 204,
+    description: 'User registered successfully via referral.',
+    type: MessageResponseDto
+  })
+  @ApiResponse({ status: 409, description: 'The email is already taken' })
+  @Post('signup/:referralCode')
+  registerWithReferral(@Param('referralCode') referralCode: string, @Body() registerDto: RegisterDto) {
+    return this.authService.registerWithReferral(registerDto, referralCode);
   }
 
   @ApiOperation({

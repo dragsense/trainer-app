@@ -11,13 +11,25 @@ import { CreatePaymentMethodDto } from "#/modules/v1/settings/payment-methods/dt
 import { UpdatePaymentMethodDto } from "#/modules/v1/settings/payment-methods/dto/update-payment-method.dto";
 import { CreateProfileDto } from "#/modules/v1/users/profiles/dto/create-profile.dto";
 
+// Stripe Connect Types
+import { CreateStripeConnectDto } from "#/modules/v1/settings/stripe-connect/dto/create-stripe-connect.dto";
+import { StripeConnectStatusDto, StripeConnectCreateResponseDto, StripeConnectDeleteResponseDto } from "#/modules/v1/settings/stripe-connect/dto/stripe-connect-responses.dto";
+
+
+
 // Extend backend entities with frontend-specific properties
 export interface IAppSetting extends AppSetting, GeneralBaseEntity {}
 
 export interface INotificationSetting extends NotificationSetting, GeneralBaseEntity {}
 
-
 export interface IPaymentMethod extends PaymentMethod, GeneralBaseEntity {}
+
+// Stripe Connect Types (using backend DTOs directly)
+export type IStripeConnectStatus = StripeConnectStatusDto;
+export type TCreateStripeConnectData = CreateStripeConnectDto;
+export type IStripeConnectCreateResponse = StripeConnectCreateResponseDto;
+export type IStripeConnectDeleteResponse = StripeConnectDeleteResponseDto;
+
 
 
 export type TAppSettingData = CreateAppSettingDto;
