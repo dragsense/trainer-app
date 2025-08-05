@@ -1,9 +1,6 @@
 
 // External Libraries
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useShallow } from 'zustand/shallow';
-
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
 
@@ -15,7 +12,6 @@ import { IUser, TUserData } from "@/@types/user.type";
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
-import { CredentialModal } from "@/components/custom-ui/credential-modal";
 
 
 export interface ITrainerFormModalProps {
@@ -36,24 +32,15 @@ export default function TrainerFormModal({
 
   const formStoreKey = storeKey + "-form";
 
-  const formStore = useRegisteredStore<TFormHandlerStore<TUserData, { user: IUser, message: string}>>(formStoreKey);
+  const formStore = useRegisteredStore<TFormHandlerStore<TUserData, { user: IUser, message: string }>>(formStoreKey);
 
   if (!formStore) {
     return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const { isSubmitting, response } = formStore(useShallow(state => ({
-    isSubmitting: state.isSubmitting,
-    response: state.response
-  })));
+  const isSubmitting = formStore(state => state.isSubmitting);
 
-  const [credentialModalOpen, setCredentialModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (response) {
-      setCredentialModalOpen(true);
-    }
-  }, [response])
 
   const fields: TFieldConfig[] = [
     // ─── Basic Info ──────────────
@@ -209,37 +196,49 @@ export default function TrainerFormModal({
   );
 
   return <>
-    <ModalForm<TUserData, { user: IUser, message: string}>
-    title={`${isEditing ? "Edit" : "Add"} Trainer`}
-    description={`${isEditing ? "Edit" : "Add a new"} trainer`}
-    open={open}
-    onOpenChange={onOpenChange}
-    formStore={formStore}
-    footerContent={formButtons}
-    width="3xl"
+    <ModalForm<TUserData, { user: IUser, message: string }>
+      title={`${isEditing ? "Edit" : "Add"} Trainer`}
+      description={`${isEditing ? "Edit" : "Add a new"} trainer`}
+      open={open}
+      onOpenChange={onOpenChange}
+      formStore={formStore}
+      footerContent={formButtons}
+      width="3xl"
     >
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      {inputs}
-    </div>
-  </ModalForm >
+      <div className="space-y-8">
+        {/* Basic Info */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.slice(0, 4) /* firstName → phoneNumber */}
+          </div>
+        </div>
 
+        {/* Personal Details */}
+        <div>
+          <h3 className="text-sm font-semibold  mb-3">Personal Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.slice(4, 7) /* dateOfBirth → address */}
+          </div>
+        </div>
 
-    <CredentialModal
-      open={credentialModalOpen}
-      onOpenChange={(state: boolean) => {
-        if (!state) {
-          setCredentialModalOpen(false);
-          onClose();
-        }
-      }}
-      closeModal={() => {
-        setCredentialModalOpen(false);
-        onClose();
-      }}
-      email={response?.user.email}
-      password={response?.user.password}
-    />
+        {/* Trainer Details */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Trainer Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.slice(7, 12) /* bio → rating */}
+          </div>
+        </div>
 
+        {/* Status */}
+        <div>
+          <h3 className="text-sm font-semibold  mb-3">Status</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.slice(12) /* isActive */}
+          </div>
+        </div>
+      </div>
+    </ModalForm>
 
   </>
 }

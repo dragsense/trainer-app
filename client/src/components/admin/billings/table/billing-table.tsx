@@ -50,10 +50,9 @@ export default function BillingTable({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const { setMode } = useStore(singleStore);
+  const setAction = singleStore(state => state.setAction);
+  const setListFilters = listStore(state => state.setFilters);
 
-
-  const { setFilters: setListFilters } = useStore(listStore);
 
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -88,20 +87,24 @@ export default function BillingTable({
   };
 
   const handleCreate = () => {
-    setMode('create');
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    setMode('edit', id);
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    setMode('delete', id);
+    setAction('delete', id);
   }
 
+  const handleView = (id: number) => {
+    setAction('view', id);
+  }
 
   const tableColumns = columns({
     handleEdit,
+    handleView,
     handleDelete
   }
   );

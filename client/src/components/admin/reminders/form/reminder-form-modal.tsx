@@ -4,7 +4,6 @@ import { Loader2 } from "lucide-react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
-import { useUserListInput } from "@/hooks/use-user-list-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
@@ -19,8 +18,8 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
 import { useStore } from "zustand";
-import { useSessionListInput } from "@/hooks/use-session-list-input";
-import { useBillingListInput } from "@/hooks/use-billing-list-input";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { useSearchableUsers } from "@/hooks/use-searchable";
 
 export interface IReminderFormModalProps {
   storeKey: string;
@@ -45,9 +44,22 @@ export default function ReminderFormModal({
   if (!singleStore) {
     return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
   }
+const isSubmitting = formStore(state => state.isSubmitting);
 
-  const { isSubmitting, values } = useStore(formStore);
-  const { isEditing, isCreating, setResetActions } = useStore(singleStore);
+
+  const UserSelect = React.memo(
+    ({ props, }: { props: any; }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
+
+        useSearchable={() => useSearchableUsers({})}
+        getLabel={(item) => item.email}
+        getKey={(item) => item.id.toString()}
+        shouldFilter={false}
+      />
+    )
+  );
 
 
   const userInput = useUserListInput({

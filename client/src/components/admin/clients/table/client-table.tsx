@@ -25,7 +25,6 @@ import { CardTable } from "@/components/table-ui/card-table";
 import { columns } from "./client-columns";
 
 // Stores
-import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 // Config
@@ -57,10 +56,9 @@ export default function ClientTable({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const { setMode } = useStore(singleStore);
+  const setAction = singleStore(state => state.setAction);
+  const setListFilters = listStore(state => state.setFilters);
   const navigate = useNavigate();
-
-  const { setFilters: setListFilters, setItemAction } = useStore(listStore);
 
 
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -95,19 +93,19 @@ export default function ClientTable({
   };
 
   const handleCreate = () => {
-    setMode('create');
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    setMode('edit', id);
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    setMode('delete', id);
+    setAction('delete', id);
   }
 
   const handleView = (id: number) => {
-    setMode('view', id);
+    setAction('view', id);
   }
 
   const handleViewSessions = (id: number) => {
@@ -116,12 +114,7 @@ export default function ClientTable({
 
 
   const handleAssign = (clientId: number) => {
-    setItemAction({
-      itemName: 'Assign Trainer',
-      action: 'assign',
-      id: clientId,
-      type: 'client',
-    })
+    setAction('assignTrainer', clientId);
   }
 
 
@@ -204,7 +197,7 @@ export default function ClientTable({
           </div>
         </div>
       )}
-      emptyMessage="No trainers found."
+      emptyMessage="No clients found."
       showPagination
     />
   );

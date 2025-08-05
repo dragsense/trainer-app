@@ -1,36 +1,41 @@
-
 // External Libraries
 import { Loader2 } from "lucide-react";
+import React, { useMemo } from "react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
+import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { IBilling, TBillingData } from "@/@types/billing.type";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
 import { BillingCurrency, BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { IUser } from "@/@types/user.type";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { LineItemInput } from "./line-item-input";
 
-// Hooks
-import { useStore } from "zustand";
-import { useUserListInput } from "@/hooks/use-user-list-input";
+
 
 export interface IBillingFormModalProps {
   storeKey: string;
+  open: boolean;
+  isEditing?: boolean;
+  onClose: () => void;
 }
 
 export default function BillingFormModal({
-  storeKey
+  storeKey,
+  open,
+  isEditing = false,
+  onClose,
 }: IBillingFormModalProps) {
 
   const formStoreKey = storeKey + "-form";
-  const singelStoreKey = storeKey + "-single";
 
   const formStore = useRegisteredStore<TFormHandlerStore<TBillingData, IBilling>>(formStoreKey);
 
@@ -38,26 +43,38 @@ export default function BillingFormModal({
     return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling>>(singelStoreKey);
 
-  if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
-  }
+  const isSubmitting = formStore(state => state.isSubmitting);
 
-  const { isSubmitting } = useStore(formStore);
-  const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
-  const userInput = useUserListInput({
-    isSubmitting,
-    multiple: false,
-    level: UserLevels[UserRole.USER],
-    prefix: "user",
-    valueType: "number"
-  });
+  const UserSelect = React.memo(
+    ({ props, }: { props: any; }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
 
-  const fields: TFieldConfig[] = [
+        useSearchable={() => useSearchableUsers({})}
+        getLabel={(item) => item.email}
+        getKey={(item) => item.id.toString()}
+        shouldFilter={false}
+      />
+    )
+  );
 
-    ...userInput,
+  const fields = useMemo<TFieldConfig[]>(() => [
+    {
+      id: "userId",
+      name: "userId",
+      label: "Trainer",
+      placeholder: "Select User",
+      type: "custom",
+      required: true,
+      valueType: "number",
+      Component: (props) => (
+        <UserSelect props={props} />
+
+      ),
+    },
     {
       id: "issueDate",
       name: "issueDate",
@@ -136,8 +153,7 @@ export default function BillingFormModal({
       placeholder: "e.g. Net 30",
       required: false,
     },
-  ];
-
+  ], []);
 
 
   const { inputs } = useInput({
@@ -146,7 +162,7 @@ export default function BillingFormModal({
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) setResetActions();
+    if (state === false) onClose();
   };
 
   const formButtons = (
@@ -156,7 +172,7 @@ export default function BillingFormModal({
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          setResetActions();
+          onClose();
         }}
       >
         Cancel
@@ -173,7 +189,7 @@ export default function BillingFormModal({
     <ModalForm<TBillingData, IBilling>
       title={`${isEditing ? "Edit" : "Add"} Billing`}
       description={`${isEditing ? "Edit" : "Add a new"} billing`}
-      open={isEditing || isCreating}
+      open={open}
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}

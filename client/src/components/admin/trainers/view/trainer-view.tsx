@@ -86,24 +86,24 @@ function TrainerDetailContent({ trainer }: { trainer: IUser }) {
             >
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {trainer.profile?.experience && (
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Experience</label>
-                                <p className="text-sm flex items-center gap-2">
-                                    <Calendar className="w-4 h-4" />
-                                    {trainer.profile.experience} years
-                                </p>
-                            </div>
-                        )}
-                        {trainer.profile?.rating && (
-                            <div>
-                                <label className="text-sm font-medium text-muted-foreground">Rating</label>
-                                <p className="text-sm flex items-center gap-2">
-                                    <Star className="w-4 h-4 text-yellow-500" />
-                                    {trainer.profile.rating}/5.0
-                                </p>
-                            </div>
-                        )}
+
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Experience</label>
+                            <p className="text-sm flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                {trainer.profile?.experience || 0} years
+                            </p>
+                        </div>
+
+
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Rating</label>
+                            <p className="text-sm flex items-center gap-2">
+                                <Star className="w-4 h-4 text-yellow-500" />
+                                {trainer.profile?.rating || 0}/5.0
+                            </p>
+                        </div>
+
                     </div>
 
                     {trainer.profile?.bio && (

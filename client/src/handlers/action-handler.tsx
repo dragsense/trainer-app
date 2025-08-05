@@ -7,7 +7,7 @@ import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 
 interface ActionComponentRendererProps<TListActionProps> {
-  extraComponents?: IActionComponent<TListActionProps>[];
+  actionComponents?: IActionComponent<TListActionProps>[];
   storeKey: string;
   listProps: TListActionProps;
 }
@@ -26,12 +26,12 @@ const useActionComponentsMap = <TListActionProps,>(
 };
 
 export const ActionComponentHandler = <IData, TListActionProps,>({
-  extraComponents,
+  actionComponents,
   storeKey,
   listProps
 }: ActionComponentRendererProps<TListActionProps>) => {
 
-  const extraComponentsMap = useActionComponentsMap(extraComponents);
+  const actionComponentsMap = useActionComponentsMap(actionComponents);
 
   const singleStoreKey = storeKey + "-single";
   const singleStore = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
@@ -42,11 +42,10 @@ export const ActionComponentHandler = <IData, TListActionProps,>({
 
   const action = useStore(singleStore, state => state.action);
 
-
   return React.useMemo(() => {
-    if (!action || !extraComponentsMap) return null;
+    if (!action || !actionComponentsMap) return null;
 
-    const ActionComp = extraComponentsMap[action];
+    const ActionComp = actionComponentsMap[action];
 
     if (!ActionComp) return null;
 

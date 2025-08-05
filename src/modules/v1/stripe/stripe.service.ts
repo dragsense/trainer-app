@@ -62,7 +62,7 @@ export class StripeService {
 
   private async findAdminUser(): Promise<User> {
     const admin = await this.dataSource.manager.findOne(User, {
-      where: { level: UserLevels[UserRole.ADMIN] }
+      where: { level: UserLevels[UserRole.TRAINER] }
     });
 
     if (!admin) {

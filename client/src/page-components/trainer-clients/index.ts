@@ -1,1 +1,1 @@
-export { default as AssignTrainerClientForm } from "./trainer-client-form";
+export { default as TrainerClientAssignForm } from "./trainer-client-assign-form";

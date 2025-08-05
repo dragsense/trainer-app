@@ -8,7 +8,7 @@ import {
 } from "@/@types/api/param.type";
 
 // Custom Hooks
-import { usePaginatedQuery } from "@/hooks/use-api-paginated-query";
+import { useApiPaginatedQuery } from "@/hooks/use-api-paginated-query";
 
 // Error Components
 import { ErrorBoundary } from 'react-error-boundary';
@@ -68,7 +68,7 @@ export function ListHandler<
   const queryKey = [listStoreKey];
 
 
-  usePaginatedQuery<TData>(queryKey, async (params) => {
+  useApiPaginatedQuery<TData>(queryKey, async (params) => {
     store.setState({ isLoading: true });
     try {
       const response = await queryFn(params);

@@ -13,7 +13,7 @@ export const me = async () =>
   apiRequest<IBilling>(`${SESSIONS_API_PATH}/me`, "GET");
 
 export const createBilling = (data: Partial<TBillingData>) =>
-    apiRequest<IBilling>(`${SESSIONS_API_PATH}`, "POST", data);
+    apiRequest<IMessageResponse>(`${SESSIONS_API_PATH}`, "POST", data);
 
 export const updateBilling = (id: number) => (data: Partial<TBillingData>) =>
     apiRequest<IMessageResponse>(

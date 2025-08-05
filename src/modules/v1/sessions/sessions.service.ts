@@ -27,7 +27,7 @@ export class SessionsService {
     private readonly userAvailabilityService: UserAvailabilityService,
   ) { }
 
-  async create(user: User, createSessionDto: CreateSessionDto): Promise<Session> {
+  async create(user: User, createSessionDto: CreateSessionDto): Promise<MessageResponse> {
     const { trainerId, clientIds, dateTime, ...data } = createSessionDto;
 
     // Validate users exist and have correct roles
@@ -68,7 +68,7 @@ export class SessionsService {
     });
 
     await this.sessionsRepository.save(session);
-    return this.findOne(session.id, user);
+    return { message: 'Session created successfully' };
   }
 
   async findAll(queryDto: SessionListDto, user: User): Promise<PaginationResponse<Session>> {
@@ -96,7 +96,7 @@ export class SessionsService {
     const userLevel = user.level;
     if (userLevel === UserLevels[UserRole.TRAINER]) {
       query.where('session.trainer.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.ADMIN]) {
+    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else {
       throw new ForbiddenException('Invalid role');
@@ -152,11 +152,12 @@ export class SessionsService {
   async findOne(id: number, user: User): Promise<Session> {
     const query = this.sessionsRepository
       .createQueryBuilder('session')
-      .leftJoinAndSelect('session.trainer', 'trainer')
-      .leftJoinAndSelect('session.client', 'client')
+      .where('session.id = :id', { id })
       .leftJoinAndSelect('session.createdBy', 'createdBy')
       .leftJoinAndSelect('session.reminders', 'reminders')
-      .where('session.id = :id', { id });
+      .leftJoinAndSelect('session.trainer', 'trainer')
+      .loadRelationCountAndMap('session.clientCount', 'session.clients')
+      .loadAllRelationIds({ relations: ['clients'] })
 
     // Role-based access control
     const userLevel = user.level;
@@ -164,7 +165,7 @@ export class SessionsService {
       query.andWhere('trainer.id = :userId', { userId: user.id });
     } else if (userLevel === UserLevels[UserRole.USER]) {
       query.andWhere('client.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.ADMIN]) {
+    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else {
       throw new ForbiddenException('Invalid role');
@@ -200,7 +201,7 @@ export class SessionsService {
       if (data.dateTime || data.duration) {
         const newDateTime = data.dateTime || session.dateTime;
         const newDuration = data.duration || session.duration;
-        
+
         const hasConflict = await this.checkSchedulingConflict(
           trainerId,
           newDateTime,
@@ -315,7 +316,7 @@ export class SessionsService {
         dateTime,
         duration
       );
-      
+
       return isAvailable;
     } catch (error) {
       console.error('Error checking trainer availability:', error);

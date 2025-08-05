@@ -29,20 +29,20 @@ export const AssignTrainerSchema = z.object({
     clientId: z.number().min(1, "Client is required"),
 });
 
-interface IAssignTrainerClientFormProps extends TActionComponentProps<any> {
+interface ITrainerClientAssignFormProps extends TActionComponentProps<any> {
 }
 
 
-interface IAssignTrainerClientFormExtraProps {
+interface ITrainerClientAssignFormExtraProps {
     trainerId?: number;
     clientId?: number;
     open: boolean;
     onClose: () => void;
 }
 
-export default function AssignTrainerClientForm({
+export default function TrainerClientAssignForm({
     storeKey
-}: IAssignTrainerClientFormProps) {
+}: ITrainerClientAssignFormProps) {
 
     const singleStoreKey = storeKey + "-single";
     const singleStore = useRegisteredStore<TSingleHandlerStore<IUser>>(singleStoreKey);
@@ -67,8 +67,9 @@ export default function AssignTrainerClientForm({
         clientId: { value: clientId },
     };
 
+
     return (
-        <FormHandler<TTrainerClientData, IMessageResponse, IAssignTrainerClientFormExtraProps>
+        <FormHandler<TTrainerClientData, IMessageResponse, ITrainerClientAssignFormExtraProps>
             storeKey="assignTrainer"
             FormComponent={TrainerClientAssignFormModal}
             mutationFn={assignTrainerToClient}

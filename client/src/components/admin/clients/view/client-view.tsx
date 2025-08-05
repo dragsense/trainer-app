@@ -1,5 +1,6 @@
 // External Libraries
 import { ReactNode } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { User, Mail, Phone, MapPin, Target, Calendar } from "lucide-react";
 import { IUser } from "@/@types/user.type";
 
 // Stores
-import { useStore } from "zustand";
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IClientViewProps {
@@ -28,18 +28,25 @@ export default function ClientView({ storeKey }: IClientViewProps) {
         return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { response: client, isViewing } = useStore(singleStore);
+    const { response: client, action, reset } = singleStore(useShallow(state => ({
+        response: state.response,
+        action: state.action,
+        reset: state.reset,
+
+    })));
+
 
     if (!client) {
         return null;
     }
 
-    const handleClose = () => {
+    const handleCloseView = () => {
+        reset();
     };
 
     return (
-        <Dialog open={isViewing} onOpenChange={handleClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
+            <DialogContent className="min-w-2xl max-h-[90vh] overflow-y-auto">
                 <AppDialog
                     title="Client Details"
                     description="View detailed information about this client"
@@ -62,7 +69,7 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
     const InfoItem = ({ icon, label, value, className = "" }: {
         icon: ReactNode;
         label: string;
-        value: string | number | undefined | null;
+        value: string | number | undefined | null | ReactNode;
         className?: string;
     }) => (
         <div className={`flex items-center gap-3 ${className}`}>
@@ -99,9 +106,9 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                 </div>
             </AppCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="">
                 {/* Personal Information */}
-                <AppCard 
+                <AppCard
                     header={
                         <div className="flex items-center gap-2">
                             <User className="w-5 h-5" />
@@ -113,54 +120,36 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                     }
                 >
                     <div className="space-y-4">
-                        <InfoItem 
+                        <InfoItem
                             icon={<User className="w-4 h-4" />}
                             label="Full Name"
                             value={profile ? `${profile.firstName} ${profile.lastName}` : undefined}
                         />
-                        <InfoItem 
+                        <InfoItem
                             icon={<Mail className="w-4 h-4" />}
                             label="Email"
                             value={client.email}
                         />
-                        <InfoItem 
+                        <InfoItem
                             icon={<Phone className="w-4 h-4" />}
                             label="Phone Number"
                             value={profile?.phoneNumber}
                         />
-                        <InfoItem 
+                        <InfoItem
                             icon={<MapPin className="w-4 h-4" />}
                             label="Address"
                             value={profile?.address}
                         />
-                        <InfoItem 
+                        <InfoItem
                             icon={<User className="w-4 h-4" />}
                             label="Gender"
                             value={profile?.gender}
                         />
-                    </div>
-                </AppCard>
 
-                {/* Fitness Information */}
-                <AppCard 
-                    header={
-                        <div className="flex items-center gap-2">
-                            <Target className="w-5 h-5" />
-                            <div>
-                                <span className="font-semibold">Fitness Profile</span>
-                                <p className="text-sm text-muted-foreground">Client's fitness goals and preferences</p>
-                            </div>
-                        </div>
-                    }
-                >
-                    <div className="space-y-4">
-                        {/* Fitness Goals */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-2">
-                                <Target className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">Fitness Goals:</span>
-                            </div>
-                            {profile?.fitnessGoals && profile.fitnessGoals.length > 0 ? (
+                        <InfoItem
+                            icon={<User className="w-4 h-4" />}
+                            label="Fitness Goals:"
+                            value={profile?.fitnessGoals && profile.fitnessGoals.length > 0 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {profile.fitnessGoals.map((goal, index) => (
                                         <Badge key={index} variant="outline">
@@ -171,17 +160,16 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                             ) : (
                                 <p className="text-muted-foreground">No fitness goals specified</p>
                             )}
-                        </div>
+                        />
 
-                    
-
-                     
                     </div>
                 </AppCard>
+
+
             </div>
 
             {/* Additional Information */}
-            <AppCard 
+            <AppCard
                 header={
                     <div className="flex items-center gap-2">
                         <Phone className="w-5 h-5" />
@@ -193,22 +181,12 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
                 }
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <InfoItem 
-                        icon={<Phone className="w-4 h-4" />}
-                        label="Emergency Contact"
-                        value={profile?.emergencyContactName}
-                    />
-                    <InfoItem 
-                        icon={<Phone className="w-4 h-4" />}
-                        label="Emergency Contact Phone"
-                        value={profile?.emergencyContactPhone}
-                    />
-                    <InfoItem 
+                    <InfoItem
                         icon={<Calendar className="w-4 h-4" />}
                         label="Member Since"
                         value={new Date(client.createdAt).toLocaleDateString()}
                     />
-                    <InfoItem 
+                    <InfoItem
                         icon={<Calendar className="w-4 h-4" />}
                         label="Last Updated"
                         value={new Date(client.updatedAt).toLocaleDateString()}
@@ -230,7 +208,7 @@ function ClientDetailContent({ client }: IClientDetailContentProps) {
             </AppCard>
 
             {/* Client Availability Preferences */}
-            <AppCard 
+            <AppCard
                 header={
                     <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5" />

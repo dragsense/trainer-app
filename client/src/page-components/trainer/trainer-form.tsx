@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -22,6 +23,7 @@ import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 // Components
 import { TrainerFormModal } from "@/components/admin";
+import { CredentialModal } from "@/components/shared-ui/credential-modal";
 
 // Services
 import { createUser, updateUser } from "@/services/user.api";
@@ -80,9 +82,14 @@ export default function TrainerForm({
 }: ITrainerFormProps) {
 
     const queryClient = useQueryClient();
+    const [credentialModalContent, setCredentialModalContent] = useState({
+        open: false,
+        email: "",
+        password: ""
+    });
 
 
-    const TRAINER_INITIAL_VALUES: TDefaultValue<TUserData> = {
+    const INITIAL_VALUES: TDefaultValue<TUserData> = {
         firstName: { value: "" },
         lastName: { value: "" },
         email: { value: "" },
@@ -112,9 +119,11 @@ export default function TrainerForm({
         reset: state.reset
     })));
 
-    const getInitialValues = (): typeof TRAINER_INITIAL_VALUES => {
+    const isEditing = !!response;
+
+    const getInitialValues = (): typeof INITIAL_VALUES => {
         if (!response) {
-            return TRAINER_INITIAL_VALUES;
+            return INITIAL_VALUES;
         }
 
         const flatResponse = {
@@ -124,9 +133,9 @@ export default function TrainerForm({
 
 
         const updatedValues = {
-            ...TRAINER_INITIAL_VALUES,
+            ...INITIAL_VALUES,
             ...Object.fromEntries(
-                Object.entries(TRAINER_INITIAL_VALUES).map(([key, original]) => {
+                Object.entries(INITIAL_VALUES).map(([key, original]) => {
                     const newValue = (flatResponse as any)[key];
                     return [
                         key,
@@ -154,21 +163,54 @@ export default function TrainerForm({
         );
     }
 
-    return <FormHandler<TUserData, { user: IUser, message: string } | IMessageResponse, ITrainerFormExtraProps>
-        mutationFn={response ? updateUser(response.id) : createUser}
-        FormComponent={TrainerFormModal}
-        storeKey={storeKey}
-        initialValues={initialValues}
-        validationSchema={TrainerSchema}
-        validationMode={EVALIDATION_MODES.OnSubmit}
-        onSuccess={(response) => {
-            queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
-        }}
-        formProps={{
-            open: !!action,
-            onClose: reset,
-            isEditing: !!response,
-        }}
-    />
+    const handleClose = () => {
+        reset();
+        setCredentialModalContent({ open: false, email: "", password: "" });
+    };
+
+    return <>
+
+
+        <FormHandler<TUserData, { user: IUser, message: string } | IMessageResponse, ITrainerFormExtraProps>
+            mutationFn={isEditing ? updateUser(response.id) : createUser}
+            FormComponent={TrainerFormModal}
+            storeKey={storeKey}
+            initialValues={initialValues}
+            validationSchema={TrainerSchema}
+            validationMode={EVALIDATION_MODES.OnSubmit}
+            onSuccess={(response) => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+
+
+                if (!isEditing && response && response.user) {
+                    setCredentialModalContent({
+                        open: true,
+                        email: response.user.email,
+                        password: response.user.password
+                    })
+                }
+
+            }}
+            formProps={{
+                open: !!action,
+                onClose: reset,
+                isEditing,
+            }}
+        />
+
+        <CredentialModal
+            open={credentialModalContent.open}
+            onOpenChange={(state: boolean) => {
+                if (!state) {
+                    handleClose();
+                }
+            }}
+            closeModal={() => {
+                handleClose();
+            }}
+            email={credentialModalContent.email}
+            password={credentialModalContent.password}
+        />
+    </>
 
 }

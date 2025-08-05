@@ -1,7 +1,6 @@
 
 // External Libraries
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
@@ -14,17 +13,20 @@ import { IUser, TUserData } from "@/@types/user.type";
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
-import { CredentialModal } from "@/components/custom-ui/credential-modal";
 
-// Hooks
-import { useStore } from "zustand";
 
 export interface IClientFormModalProps {
   storeKey: string;
+  open: boolean;
+  isEditing?: boolean;
+  onClose: () => void;
 }
 
 export default function ClientFormModal({
-  storeKey
+  storeKey,
+  open,
+  isEditing = false,
+  onClose,
 }: IClientFormModalProps) {
 
   const formStoreKey = storeKey + "-form";
@@ -42,10 +44,7 @@ export default function ClientFormModal({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const {isSubmitting, response} = useStore(formStore);
-  const { isEditing, isCreating, setResetActions } = useStore(singleStore);
-
-  const [credentialModalOpen, setCredentialModalOpen] = useState(false);
+  const isSubmitting = formStore(state => state.isSubmitting);
 
 
   const fields: TFieldConfig[] = [
@@ -121,7 +120,7 @@ export default function ClientFormModal({
       placeholder: "Short description about yourself...",
       required: false,
     },
-   
+
     {
       id: "isActive",
       name: "isActive",
@@ -132,14 +131,14 @@ export default function ClientFormModal({
   ];
 
 
-
   const { inputs } = useInput({
     fields,
     showRequiredAsterisk: true,
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) setResetActions();
+    if (state === false)
+      onClose();
   };
 
   const formButtons = (
@@ -149,7 +148,7 @@ export default function ClientFormModal({
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          setResetActions();
+          onClose();
         }}
       >
         Cancel
@@ -161,36 +160,39 @@ export default function ClientFormModal({
     </div>
   );
 
-  return <>
-
-    <ModalForm<TUserData, IUser>
-      title={`${isEditing ? "Edit" : "Add"} Client`}
-      description={`${isEditing ? "Edit" : "Add a new"} trainer`}
-      open={isEditing || isCreating}
-      onOpenChange={onOpenChange}
-      formStore={formStore}
-      footerContent={formButtons}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {inputs}
+  return <ModalForm<TUserData, IUser>
+    title={`${isEditing ? "Edit" : "Add"} Client`}
+    description={`${isEditing ? "Edit" : "Add a new"} trainer`}
+    open={open}
+    onOpenChange={onOpenChange}
+    formStore={formStore}
+    footerContent={formButtons}
+  >
+    <div className="space-y-8">
+      {/* Basic Info */}
+      <div>
+        <h3 className="text-sm font-semibold mb-4">Basic Info</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {inputs.slice(0, 4) /* firstName → phoneNumber */}
+        </div>
       </div>
-    </ModalForm>
 
-    {isEditing && response && (
-      <CredentialModal
-        open={credentialModalOpen}
-        onOpenChange={(state: boolean) => {
-          if (!state) {
-            setCredentialModalOpen(false);
-          }
-        }}
-        closeModal={() => {
-          setCredentialModalOpen(false);
-        }}
-        email={response.email}
-        password={response.password}
-      />
-    )}
+      {/* Personal Details (Optional) */}
+      <div>
+        <h3 className="text-sm font-semibold mb-4">Personal Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {inputs.slice(4, 7) /* dateOfBirth → address */}
+        </div>
+      </div>
 
-  </>
+      {/* Client Settings */}
+      <div>
+        <h3 className="text-sm font-semibold mb-4">Client Settings</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {inputs.slice(7, 8) /* bio */}
+          {inputs.slice(8)     /* isActive */}
+        </div>
+      </div>
+    </div>
+  </ModalForm>
 }

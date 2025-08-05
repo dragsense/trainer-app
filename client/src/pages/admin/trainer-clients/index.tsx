@@ -1,80 +1,57 @@
-// External Libraries
-import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 
-
 // Types
-import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { ITrainerClient } from "@/@types/trainer-client.type";
 
 // Handlers
-import { ListHandler } from "@/handlers";
+import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { TrainerClientTable, TrainerClientFormModal } from "@/components/admin";
+import { TrainerClientTable } from "@/components/admin";
+import { TrainerClientAssignForm } from "@/page-components";
 
-// Types
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TDefaultValue } from "@/@types/form/field.type";
-import { ITrainerClient, TTrainerClientData } from "@/@types/trainer.type";
+// API
+import { fetchTrainerClientById, fetchTrainerClients, removeTrainerClientAssignment } from "@/services/trainer-client.api";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
 
-// Services
-import { assignTrainerToClient, fetchTrainerClientById, fetchTrainerClients, updateTrainerClient, removeTrainerClientAssignment } from "@/services/trainer-client.api";
-
-
-
-// Schema
-export const TrainerClientSchema = z.object({
-    trainerId: z.number().min(1, "Trainer is required"),
-    clientId: z.number().min(1, "Client is required"),
-});
-
-
-
-interface ITrainerClientFormExtraProps {
-    trainerId?: number;
-    clientId?: number;
-}
-
-export default function TrainerClientPage() {
+export default function TrainerClientsPage() {
 
     const [searchParams] = useSearchParams();
 
     const tId = searchParams.get("trainerId");
-    const cId = searchParams.get("clientId");
+    const cId = searchParams.get("trainerClientId");
 
     const trainerId = tId ? Number(tId) : 0;
     const clientId = cId ? Number(cId) : 0;
 
-    const INITIAL_VALUES: TDefaultValue<TTrainerClientData> = {
-        trainerId: { value: trainerId ? Number(trainerId) : 0 },
-        clientId: { value: clientId ? Number(clientId) : 0 },
-    };
+    const queryTrainerClient = useQueryClient();
+
+    const STORE_KEY = 'trainerClient';
 
     return (
         <PageInnerLayout Header={<Header />}>
-            <ListHandler<ITrainerClient, Partial<TTrainerClientData>, IMessageResponse, any, ITrainerClientFormExtraProps>
-                queryListFn={(params) => fetchTrainerClients(params, { trainerId, clientId })}
-                ListComponent={TrainerClientTable}
-                storeKey={`trainerclient`}
-                mutationFns={{
-                    createFn: assignTrainerToClient,
-                    updateFn: updateTrainerClient,
-                    deleteFn: removeTrainerClientAssignment
-                }}
+            <SingleHandler<ITrainerClient>
                 queryFn={fetchTrainerClientById}
-                FormComponent={TrainerClientFormModal}
-                validationSchema={TrainerClientSchema}
-                initialValues={INITIAL_VALUES}
-                validationMode={EVALIDATION_MODES.OnChange}
-                formProps={{
-                    trainerId,
-                    clientId,
-                }}
+                deleteFn={removeTrainerClientAssignment}
+                storeKey={STORE_KEY}
+                onDeleteSuccess={() => queryTrainerClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
+                SingleComponent={() => null}
+                actionComponents={[
+                    {
+                        action: 'createOrUpdate',
+                        comp: TrainerClientAssignForm
+                    },
+                ]}
             />
 
+            <ListHandler<ITrainerClient>
+                queryFn={(params) => fetchTrainerClients(params, { trainerId, clientId })}
+                ListComponent={TrainerClientTable}
+                storeKey={STORE_KEY}
+            />
         </PageInnerLayout>
     );
 }

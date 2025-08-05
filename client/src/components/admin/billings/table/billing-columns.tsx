@@ -21,9 +21,11 @@ import { Badge } from "@/components/ui/badge";
 
 export const columns = ({
   handleEdit,
+  handleView,
   handleDelete
 }: {
   handleEdit?: (id: number) => void;
+  handleView?: (id: number) => void;
   handleDelete?: (id: number) => void;
 }
 ): ColumnDef<IBilling>[] => [
@@ -131,6 +133,11 @@ export const columns = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
+                {handleView && (
+                <DropdownMenuItem onClick={() => handleView(billing.id)}>
+                  View
+                </DropdownMenuItem>
+              )}
               {handleEdit && (
                 <DropdownMenuItem onClick={() => handleEdit(billing.id)}>
                   Edit

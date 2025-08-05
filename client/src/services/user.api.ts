@@ -4,11 +4,11 @@ import { apiRequest } from "@/utils/fetcher";
 // Types
 import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
 import { IListParams } from "@/@types/api/param.type";
-import { 
-    IUser, 
-    TResetPasswordDto, 
-    TUserData, 
-    IProfile, 
+import {
+    IUser,
+    TResetPasswordDto,
+    TUserData,
+    IProfile,
     TProfileData,
     IUserAvailability,
     TUpdateUserAvailabilityData,
@@ -25,7 +25,7 @@ export const me = async () =>
 
 
 export const createUser = (data: Partial<TUserData>) =>
-    apiRequest<{ user: IUser, message: string}>(`${USERS_API_PATH}`, "POST", data);
+    apiRequest<{ user: IUser, message: string }>(`${USERS_API_PATH}`, "POST", data);
 
 export const updateUser = (id: number) => (data: Partial<TUserData>) =>
     apiRequest<IMessageResponse>(
@@ -38,6 +38,9 @@ export const fetchUsers = (
     params: IListParams,
     level?: number
 ) => {
+
+    console.log('👥 Fetching users with params:', params);
+
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append("page", params.page.toString());
     if (params.limit) queryParams.append("limit", params.limit.toString());
@@ -60,6 +63,7 @@ export const fetchUsers = (
         "GET"
     );
 };
+
 
 
 

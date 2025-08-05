@@ -1,6 +1,6 @@
 // External Libraries
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal} from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 
 // UI Components
@@ -21,9 +21,11 @@ import { Badge } from "@/components/ui/badge";
 
 export const columns = ({
   handleEdit,
+  handleView,
   handleDelete
 }: {
   handleEdit?: (id: number) => void;
+  handleView?: (id: number) => void;
   handleDelete?: (id: number) => void;
 }
 ): ColumnDef<ISession>[] => [
@@ -48,12 +50,12 @@ export const columns = ({
       header: "Trainer",
       cell: ({ row }) => {
         const trainer = row.original.trainer;
-        return trainer?.profile ? 
-          `${trainer.profile.firstName} ${trainer.profile.lastName}` : 
+        return trainer?.profile ?
+          `${trainer.profile.firstName} ${trainer.profile.lastName}` :
           trainer?.email || '-';
       },
     },
-{
+    {
       accessorKey: "clientCount",
       header: "Total Clients",
       cell: ({ row }) => {
@@ -61,7 +63,7 @@ export const columns = ({
         return clientCount || 0;
       },
     },
-    
+
     {
       accessorKey: "dateTime",
       header: "Date & Time",
@@ -115,6 +117,11 @@ export const columns = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {handleView && (
+                <DropdownMenuItem onClick={() => handleView(session.id)}>
+                  View
+                </DropdownMenuItem>
+              )}
               {handleEdit && (
                 <DropdownMenuItem onClick={() => handleEdit(session.id)}>
                   Edit

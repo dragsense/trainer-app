@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
 import { TCustomInputWrapper } from "@/@types/form/field.type";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 export const LineItemInput: React.FC<TCustomInputWrapper> = ({
   value,
@@ -41,13 +41,32 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
   return (
     <div className="space-y-4">
       {lineItems.map((item, index) => (
-        <Card key={index} className="relative">
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+        <AppCard
+          key={index}
+          className="relative"
+          footer={
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-red-500 hover:text-red-700"
+                onClick={() => removeItem(index)}
+                disabled={disabled}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Description</Label>
               <Input
                 value={item.description}
-                onChange={(e) => updateItem(index, "description", e.target.value)}
+                onChange={(e) =>
+                  updateItem(index, "description", e.target.value)
+                }
                 placeholder="e.g. Personal Training Session"
                 disabled={disabled}
               />
@@ -59,7 +78,11 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 type="number"
                 value={item.quantity}
                 onChange={(e) =>
-                  updateItem(index, "quantity", parseInt(e.target.value || "0"))
+                  updateItem(
+                    index,
+                    "quantity",
+                    parseInt(e.target.value || "0")
+                  )
                 }
                 min={1}
                 disabled={disabled}
@@ -72,7 +95,11 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 type="number"
                 value={item.unitPrice}
                 onChange={(e) =>
-                  updateItem(index, "unitPrice", parseInt(e.target.value || "0"))
+                  updateItem(
+                    index,
+                    "unitPrice",
+                    parseInt(e.target.value || "0")
+                  )
                 }
                 min={0}
                 disabled={disabled}
@@ -85,7 +112,11 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 type="number"
                 value={item.amount}
                 onChange={(e) =>
-                  updateItem(index, "amount", parseInt(e.target.value || "0"))
+                  updateItem(
+                    index,
+                    "amount",
+                    parseInt(e.target.value || "0")
+                  )
                 }
                 min={0}
                 disabled={disabled}
@@ -104,19 +135,8 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 disabled={disabled}
               />
             </div>
-          </CardContent>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-            onClick={() => removeItem(index)}
-            disabled={disabled}
-          >
-            <Trash2 className="w-5 h-5" />
-          </Button>
-        </Card>
+          </div>
+        </AppCard>
       ))}
 
       <Button

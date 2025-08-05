@@ -91,9 +91,8 @@ export class Session extends GeneralBaseEntity {
   })
   trainer: User;
 
-
   @ApiProperty({ type: () => [User], description: 'Clients assigned to the session' })
-  @ManyToMany(() => User, { eager: true })
+  @ManyToMany(() => User, { eager: true, cascade: true })
   @JoinTable({
     name: 'sessions_clients',
     joinColumn: { name: 'sessionId', referencedColumnName: 'id' },

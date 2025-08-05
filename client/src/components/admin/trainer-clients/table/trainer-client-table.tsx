@@ -50,8 +50,8 @@ export default function TrainerClientTable({
     return `Single store "${singleStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const { setMode } = useStore(singleStore);
-  const { setFilters: setListFilters } = useStore(listStore);
+  const setAction = singleStore(state => state.setAction);
+  const setListFilters = listStore(state => state.setFilters);
 
   const [filters, setFilters] = useState<Record<string, any>>({});
 
@@ -85,15 +85,15 @@ export default function TrainerClientTable({
   };
 
   const handleCreate = () => {
-    setMode('create');
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    setMode('edit', id);
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    setMode('delete', id);
+    setAction('delete', id);
   }
 
   const tableColumns = columns({

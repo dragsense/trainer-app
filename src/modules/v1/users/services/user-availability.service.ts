@@ -14,7 +14,7 @@ export class UserAvailabilityService {
     private readonly availabilityRepository: Repository<UserAvailability>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findByUserId(userId: number): Promise<UserAvailability> {
     const availability = await this.availabilityRepository.findOne({
@@ -43,25 +43,25 @@ export class UserAvailabilityService {
       const currentUser = await this.userRepository.findOne({
         where: { id: currentUserId },
       });
-      
+
       if (!currentUser || currentUser.level > 1) { // Not admin or super admin
         throw new ForbiddenException('You can only update your own availability');
       }
     }
 
     const availability = await this.findByUserId(userId);
-    
+
     // Update fields
     if (updateDto.weeklySchedule) {
       availability.weeklySchedule = updateDto.weeklySchedule;
     }
-    
+
     if (updateDto.unavailablePeriods) {
       availability.unavailablePeriods = updateDto.unavailablePeriods;
     }
 
     await this.availabilityRepository.save(availability);
-    return {message: 'User Availability updated successfully'};
+    return { message: 'User Availability updated successfully' };
   }
 
   async createAvailability(
@@ -100,7 +100,7 @@ export class UserAvailabilityService {
       const currentUser = await this.userRepository.findOne({
         where: { id: currentUserId },
       });
-      
+
       if (!currentUser || currentUser.level > 1) {
         throw new ForbiddenException('You can only delete your own availability');
       }
@@ -123,14 +123,14 @@ export class UserAvailabilityService {
     endTime: string,
   ): Promise<UserAvailability[]> {
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    
+
     const allTrainers = await this.getAllTrainerAvailabilities();
-    
+
     return allTrainers.filter(availability => {
       const daySchedule = availability.weeklySchedule[dayOfWeek];
-      
+
       if (!daySchedule?.enabled) return false;
-      
+
       // Check if the requested time slot fits within any of the trainer's time slots
       return daySchedule.timeSlots.some(slot => {
         return startTime >= slot.start && endTime <= slot.end;
@@ -146,27 +146,27 @@ export class UserAvailabilityService {
   ): Promise<boolean> {
     const availability = await this.findByUserId(userId);
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    
+
     const daySchedule = availability.weeklySchedule[dayOfWeek];
-    
+
     if (!daySchedule?.enabled) return false;
-    
+
     // Check if time slot is available
     const isWithinTimeSlots = daySchedule.timeSlots.some(slot => {
       return startTime >= slot.start && endTime <= slot.end;
     });
-    
+
     if (!isWithinTimeSlots) return false;
-    
+
     // Check if date is not in unavailable periods
     const isUnavailable = availability.unavailablePeriods.some(period => {
       const periodStart = new Date(period.startDate);
       const periodEnd = new Date(period.endDate);
       const checkDate = new Date(date);
-      
+
       return checkDate >= periodStart && checkDate <= periodEnd;
     });
-    
+
     return !isUnavailable;
   }
 
@@ -175,12 +175,15 @@ export class UserAvailabilityService {
     dateTime: Date,
     durationMinutes: number,
   ): Promise<boolean> {
-    const date = dateTime.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const startTime = dateTime.toTimeString().slice(0, 5); // HH:MM format
-    
-    const endDateTime = new Date(dateTime.getTime() + durationMinutes * 60 * 1000);
+
+    const sessionStart = new Date(dateTime);
+
+    const date = sessionStart.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const startTime = sessionStart.toTimeString().slice(0, 5); // HH:MM format
+
+    const endDateTime = new Date(sessionStart.getTime() + durationMinutes * 60 * 1000);
     const endTime = endDateTime.toTimeString().slice(0, 5); // HH:MM format
-    
+
     return this.checkAvailability(userId, date, startTime, endTime);
   }
 }

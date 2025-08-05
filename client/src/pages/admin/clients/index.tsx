@@ -1,100 +1,60 @@
-
-// External Libraries
-import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Types
-import { IUser, TUserData } from "@/@types/user.type";
-import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { IUser } from "@/@types/user.type";
 
 // Handlers
-import { ListHandler } from "@/handlers";
+import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { ClientFormModal, ClientTable, ClientView } from "@/components/admin";
+import { ClientTable } from "@/components/admin";
+import { ClientView } from "@/components/admin/clients";
+import { ClientForm, TrainerClientAssignForm } from "@/page-components";
 
 
 // API
-import { createUser, deleteUser, fetchUser, fetchUsers, updateUser } from "@/services/user.api";
+import { deleteUser, fetchUser, fetchUsers } from "@/services/user.api";
 
 // Types
-import { UserGender, UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
-import { AssignTrainerClientForm } from "@/page-components";
-
-
-
-// Schema
-export const ClientSchema = z.object({
-  // ─── Basic Info ─────────────────────
-  firstName: z.string().min(2, {
-    message: "First name must be at least 2 characters",
-  }),
-  lastName: z.string().min(2, {
-    message: "Last name must be at least 2 characters",
-  }),
-  email: z.string().email({
-    message: "Invalid email address",
-  }),
-  phoneNumber: z.string().min(10, {
-    message: "Phone number must be at least 10 characters",
-  }).optional(),
-
-  // ─── Optional Personal Info ─────────
-  gender: z.nativeEnum(UserGender).optional(),
-  address: z.string().optional(),
-  // ─── Client-Specific Info ──────────
-  bio: z.string().optional(),
-});
-
 
 
 
 export default function ClientsPage() {
 
+  const queryClient = useQueryClient();
 
-  const TRAINER_INITIAL_VALUES: TDefaultValue<TUserData> = {
-    firstName: { value: "" },
-    lastName: { value: "" },
-    email: { value: "" },
-    phoneNumber: { value: "" },
-    bio: { value: "" },
-    address: { value: "" },
-    gender: { value: UserGender.MALE },
-    level: { value: UserLevels[UserRole.USER], notInput: true },
-    isActive: { value: true },
-  };
-
-
+  const STORE_KEY = 'client';
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <ListHandler<IUser, Partial<TUserData>, IUser | IMessageResponse>
-        queryListFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
-        ListComponent={ClientTable}
-        storeKey="clientsList"
-        mutationFns={{
-          createFn: createUser,
-          updateFn: updateUser,
-          deleteFn: deleteUser
-        }}
+      <SingleHandler<IUser>
         queryFn={fetchUser}
-        FormComponent={ClientFormModal}
+        deleteFn={deleteUser}
+        storeKey={STORE_KEY}
+        onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
         SingleComponent={ClientView}
-        validationSchema={ClientSchema}
-        initialValues={TRAINER_INITIAL_VALUES}
-        validationMode={EVALIDATION_MODES.OnChange}
-        extraComponents={[
+        actionComponents={[
           {
-            triggerAction: 'assign',
-            comp: AssignTrainerClientForm
-          }
+            action: 'createOrUpdate',
+            comp: ClientForm
+          },
+          {
+            action: 'assignTrainer',
+            comp: TrainerClientAssignForm
+          },
         ]}
       />
 
+      <ListHandler<IUser>
+        queryFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
+        ListComponent={ClientTable}
+        storeKey={STORE_KEY}
+      />
     </PageInnerLayout>
   );
 }

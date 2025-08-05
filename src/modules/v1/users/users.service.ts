@@ -45,7 +45,7 @@ export class UsersService {
       relations?: string[];
     }
   ): Promise<User> {
-    const { select = ['id', 'email', 'level'], relations = ['profile'] } = options || {};
+    const { select = [], relations = ['profile'] } = options || {};
 
     const user = await this.userRepo.findOne({
       where,
@@ -88,7 +88,7 @@ export class UsersService {
         // Trainers can only see their clients
         query.where('trainer.id = :trainerId', { trainerId: currentUser.id });
         break;
-      case UserLevels[UserRole.ADMIN]:
+      case UserLevels[UserRole.TRAINER]:
         // Admins can see all except super admin
         query.where('user.level != :superAdminLevel', {
           superAdminLevel: UserLevels[UserRole.SUPER_ADMIN]

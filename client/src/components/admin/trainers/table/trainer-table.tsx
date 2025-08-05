@@ -25,7 +25,6 @@ import { CardTable } from "@/components/table-ui/card-table";
 import { columns } from "./trainer-columns";
 
 // Stores
-import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 // Utility
@@ -58,12 +57,9 @@ export default function TrainerTable({
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-  const { setAction } = useStore(singleStore);
-  const navigate = useNavigate();
-
-
-  const { setFilters: setListFilters } = useStore(listStore);
-
+  const setAction = singleStore(state => state.setAction);
+  const setListFilters = listStore(state => state.setFilters);
+    const navigate = useNavigate();
 
   const [filters, setFilters] = useState<Record<string, any>>({});
 

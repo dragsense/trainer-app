@@ -1,8 +1,9 @@
 // React & Hooks
 import { useMemo, useState } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // External libraries
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth } from "date-fns";
 
 // Types
@@ -12,11 +13,7 @@ import { ISession } from "@/@types/session.type";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// Components
-import { SessionViewModal } from "@/components/admin/sessions";
-
 // Stores
-import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface ISessionCalendarProps {
@@ -31,8 +28,6 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
   const singleStore = useRegisteredStore<TSingleHandlerStore<ISession>>(singleStoreKey);
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedSession, setSelectedSession] = useState<ISession | null>(null);
-  const [showViewModal, setShowViewModal] = useState(false);
 
   if (!listStore) {
     return `List store "${listStoreKey}" not found. Did you forget to register it?`;
@@ -42,8 +37,14 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
     return `Single store "${singleStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const { response: sessions, isLoading } = useStore(listStore);
-  const { setMode } = useStore(singleStore);
+  const setAction = singleStore(state => state.setAction);
+
+  const { response: sessions, isLoading, error } = listStore(useShallow(state => ({
+    response: state.response,
+    isLoading: state.isLoading,
+    error: state.error,
+
+  })));
 
   // Generate calendar days
   const monthStart = startOfMonth(currentDate);
@@ -53,7 +54,7 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
   // Group sessions by date
   const sessionsByDate = useMemo(() => {
     if (!sessions) return {};
-    
+
     return sessions.reduce((acc: Record<string, ISession[]>, session: ISession) => {
       const dateKey = format(new Date(session.dateTime), 'yyyy-MM-dd');
       if (!acc[dateKey]) {
@@ -73,13 +74,13 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
   };
 
   const handleCreate = () => {
-    setMode('create');
+    setAction('createOrUpdate');
   };
 
-  const handleSessionClick = (session: ISession) => {
-    setSelectedSession(session);
-    setShowViewModal(true);
+   const handleView = (id: number) => {
+    setAction('view', id);
   };
+
 
   const getSessionTypeColor = (type: string) => {
     switch (type) {
@@ -95,8 +96,15 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading calendar...</div>;
+    return <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
   }
+
+  if (error) {
+    return <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
+  }
+
 
   return (
     <div className="space-y-4">
@@ -141,22 +149,20 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[140px] md:min-h-[160px] p-2 border-r border-b last:border-r-0 ${
-                  !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-                } ${isToday ? 'bg-blue-50' : ''}`}
+                className={`min-h-[140px] md:min-h-[160px] p-2 border-r border-b last:border-r-0 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+                  } ${isToday ? 'bg-blue-50' : ''}`}
               >
-                <div className={`text-sm font-medium mb-2 ${
-                  isToday ? 'text-blue-600' : ''
-                }`}>
+                <div className={`text-sm font-medium mb-2 ${isToday ? 'text-blue-600' : ''
+                  }`}>
                   {format(day, 'd')}
                   {isToday && ' (Today)'}
                 </div>
-                
+
                 <div className="space-y-1">
                   {daySessions.slice(0, 2).map((session: ISession) => (
                     <div
                       key={session.id}
-                      onClick={() => handleSessionClick(session)}
+                      onClick={() => handleView(session.id)}
                       className="cursor-pointer"
                     >
                       <Badge
@@ -179,7 +185,7 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
                       </Badge>
                     </div>
                   ))}
-                  
+
                   {daySessions.length > 2 && (
                     <div className="text-xs text-gray-500 text-center py-1">
                       +{daySessions.length - 2} more
@@ -200,15 +206,6 @@ export default function SessionCalendar({ storeKey }: ISessionCalendarProps) {
         <Badge className="bg-purple-100 text-purple-800">Consultation</Badge>
       </div>
 
-      {/* View Modal */}
-      {selectedSession && (
-        <SessionViewModal
-          session={selectedSession}
-          open={showViewModal}
-          onOpenChange={setShowViewModal}
-          storeKey={storeKey}
-        />
-      )}
     </div>
   );
 }

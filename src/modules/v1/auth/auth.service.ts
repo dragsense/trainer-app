@@ -37,7 +37,7 @@ export class AuthService {
     registerDto: RegisterDto,
   ): Promise<MessageResponse> {
     return await this.userService.create({
-      ...registerDto, level: UserLevels[UserRole.ADMIN],
+      ...registerDto, level: UserLevels[UserRole.TRAINER],
     });
   }
 

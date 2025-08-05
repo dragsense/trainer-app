@@ -27,7 +27,7 @@ export class DashboardService {
   ) {}
 
   async getDashboardStats(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     
     // Get counts
     const [
@@ -102,7 +102,7 @@ export class DashboardService {
   }
 
   async getRevenueAnalytics(user: User, period = 'monthly', startDate?: string, endDate?: string) {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     
     let dateCondition = '';
     let groupBy = '';
@@ -196,7 +196,7 @@ export class DashboardService {
   async getPaymentMethodsOverview(user: User) {
     const paymentMethods = await this.paymentMethodRepository.find();
     
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
 
     const paymentStatsQuery = `
@@ -231,7 +231,7 @@ export class DashboardService {
   }
 
   async getSessionsAnalytics(user: User, period = 'monthly') {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     const userCondition = isAdmin ? '' : `AND s."trainerId" = ${user.id}`;
 
     let groupBy = "DATE_TRUNC('month', s.\"dateTime\")";
@@ -295,7 +295,7 @@ export class DashboardService {
   }
 
   async getClientsOverview(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     
     if (!isAdmin) {
       // For non-admin users, return limited client data
@@ -355,7 +355,7 @@ export class DashboardService {
   }
 
   async getRemindersAnalytics(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     const userCondition = isAdmin ? '' : `AND r."recipientUserId" = ${user.id}`;
 
     const reminderStatsQuery = `
@@ -406,7 +406,7 @@ export class DashboardService {
   }
 
   async getFinancialSummary(user: User, period = 'month') {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
 
     let dateInterval = '1 month';
@@ -466,7 +466,7 @@ export class DashboardService {
   }
 
   async getBillingAnalytics(user: User, period = 'monthly', startDate?: string, endDate?: string) {
-    const isAdmin = user.level === UserLevels[UserRole.ADMIN];
+    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
     const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
 
     let dateCondition = '';

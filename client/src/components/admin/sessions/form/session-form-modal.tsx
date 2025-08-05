@@ -1,35 +1,42 @@
 
 // External Libraries
 import { Loader2 } from "lucide-react";
+import React, { useMemo } from "react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
+import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { ISession, TSessionData } from "@/@types/session.type";
 import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
+import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { IUser } from "@/@types/user.type";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 
-// Hooks
-import { useStore } from "zustand";
-import { useUserListInput } from "@/hooks/use-user-list-input";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+
 
 export interface ISessionFormModalProps {
   storeKey: string;
+  open: boolean;
+  isEditing?: boolean;
+  onClose: () => void;
 }
 
 export default function SessionFormModal({
-  storeKey
+  storeKey,
+  open,
+  isEditing = false,
+  onClose,
 }: ISessionFormModalProps) {
 
   const formStoreKey = storeKey + "-form";
-  const singelStoreKey = storeKey + "-single";
 
   const formStore = useRegisteredStore<TFormHandlerStore<TSessionData, ISession>>(formStoreKey);
 
@@ -37,31 +44,25 @@ export default function SessionFormModal({
     return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const singleStore = useRegisteredStore<TSingleHandlerStore<ISession>>(singelStoreKey);
 
-  if (!singleStore) {
-    return `Single store "${singleStore}" not found. Did you forget to register it?`;
-  }
+  const isSubmitting = formStore(state => state.isSubmitting);
 
-  const { isSubmitting } = useStore(formStore);
-  const { isEditing, isCreating, setResetActions } = useStore(singleStore);
 
-  const trainerInput = useUserListInput({
-    isSubmitting,
-    multiple: false,
-    level: UserLevels[UserRole.TRAINER],
-    prefix: "trainer",
-    valueType: "number"
-  });
-  const userInput = useUserListInput({
-    isSubmitting,
-    multiple: true,
-    level: UserLevels[UserRole.USER],
-    prefix: "client",
-    valueType: "number"
-  });
+  const UserSelect = React.memo(
+    ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
+        multiple={multiple}
+        useSearchable={() => useSearchableUsers({ level })}
+        getLabel={(item) => item.email}
+        getKey={(item) => item.id.toString()}
+        shouldFilter={false}
+      />
+    )
+  );
 
-  const fields: TFieldConfig[] = [
+  const fields = useMemo<TFieldConfig[]>(() => [
     // ─── Session Basic Info ──────────────
     {
       id: "title",
@@ -126,8 +127,32 @@ export default function SessionFormModal({
       options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
       required: false,
     },
-    ...trainerInput,
-    ...userInput,
+    {
+      id: "trainerId",
+      name: "trainerId",
+      label: "Trainer",
+      placeholder: "Select Trainer",
+      type: "custom",
+      required: true,
+      valueType: "number",
+      Component: (props) => (
+        <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
+
+      ),
+    },
+    {
+      id: "clientIds",
+      name: "clientIds",
+      label: "Client",
+      placeholder: "Select Client",
+      type: "custom",
+      required: true,
+      valueType: "number",
+      Component: (props) => (
+        <UserSelect props={props} multiple={true} level={UserLevels[UserRole.USER]} />
+
+      ),
+    },
     {
       id: "location",
       name: "location",
@@ -163,8 +188,7 @@ export default function SessionFormModal({
       min: 1,
       required: false,
     },
-  ];
-
+  ], []);
 
 
   const { inputs } = useInput({
@@ -173,7 +197,7 @@ export default function SessionFormModal({
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) setResetActions();
+    if (state === false) onClose();
   };
 
   const formButtons = (
@@ -183,7 +207,7 @@ export default function SessionFormModal({
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          setResetActions();
+          onClose();
         }}
       >
         Cancel
@@ -200,14 +224,47 @@ export default function SessionFormModal({
     <ModalForm<TSessionData, ISession>
       title={`${isEditing ? "Edit" : "Add"} Session`}
       description={`${isEditing ? "Edit" : "Add a new"} session`}
-      open={isEditing || isCreating}
+      open={open}
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}
       width="3xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {inputs}
+      <div className="space-y-8">
+
+        {/* Session Info */}
+        <div>
+          <h3 className="text-sm font-semibold mb-4">Session Info</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {inputs.slice(0, 4) /* title → dateTime */}
+          </div>
+        </div>
+
+        {/* Pricing */}
+        <div>
+          <h3 className="text-sm font-semibold mb-4">Pricing</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {inputs.slice(4, 6) /* duration → pricePerClient */}
+            {inputs.slice(6, 7) /* currency */}
+          </div>
+        </div>
+
+        {/* Participants */}
+        <div>
+          <h3 className="text-sm font-semibold mb-4">Trainer & Client</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {inputs.slice(7, 9) /* trainerId → clientId */}
+          </div>
+        </div>
+
+        {/* Additional Settings */}
+        <div>
+          <h3 className="text-sm font-semibold mb-4">Additional Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {inputs.slice(9) /* location → cancellationDeadline */}
+          </div>
+        </div>
+
       </div>
     </ModalForm>
 

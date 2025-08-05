@@ -93,11 +93,10 @@ export class UsersController {
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
-    @AuthUser() currentUser: any
   ) {
     return this.usersService.findOne(
       { id },
-      { select: ['id', 'email', 'level'], relations: ['profile'] }
+      { relations: ['profile'] }
     );
   }
 
@@ -136,7 +135,7 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.ADMIN])
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,

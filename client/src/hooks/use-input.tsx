@@ -1,7 +1,7 @@
 
 
-import { useState, type SyntheticEvent } from "react";
-import { ChevronDownIcon, Star, X } from "lucide-react";
+import { useState } from "react";
+import { ChevronDownIcon, Star } from "lucide-react";
 
 
 // UI Components
@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
 
 // Utilities
 import { cn } from "@/lib/utils";
@@ -37,9 +39,10 @@ import { cn } from "@/lib/utils";
 // Types
 import type { TFieldConfig } from "@/@types/form/field.type";
 import { EORDER_CLASSES } from "@/enums/general.enum";
-import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-import { MultiSelect } from "@/components/custom-ui/multi-select";
+
+// App Layout Components
+import { AppSelect } from "@/components/layout-ui/app-select";
+
 
 
 interface UseInputProps {
@@ -137,9 +140,9 @@ export function useInput({
                 );
               case "multiSelect":
                 return (
-                  <MultiSelect
+                  <AppSelect
                     value={controllerField.value || []}
-                    onChange={controllerField.onChange}
+                    onChange={onChangeHandler}
                     options={field.options || []}
 
                   />
@@ -226,7 +229,7 @@ export function useInput({
                         className="w-32 justify-between font-normal"
                       >
                         {controllerField.value
-                          ? controllerField.value.toLocaleDateString()
+                          ? new Date(controllerField.value).toLocaleDateString()
                           : "Select date"}
                         <ChevronDownIcon />
                       </Button>

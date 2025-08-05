@@ -88,7 +88,7 @@ export class UsersService {
         // Trainers can only see their clients
         query.where('trainer.id = :trainerId', { trainerId: currentUser.id });
         break;
-      case UserLevels[UserRole.ADMIN]:
+      case UserLevels[UserRole.TRAINER]:
         // Admins can see all except super admin
         query.where('user.level != :superAdminLevel', {
           superAdminLevel: UserLevels[UserRole.SUPER_ADMIN]
@@ -301,7 +301,7 @@ export class UsersService {
 
     // Only admins can delete users, and they cannot delete super admins
     if (
-      currentUser.level < UserLevels[UserRole.ADMIN] ||
+      currentUser.level < UserLevels[UserRole.TRAINER] ||
       user.level === UserLevels[UserRole.SUPER_ADMIN]
     ) {
       throw new ForbiddenException('Insufficient permissions to delete this user');

@@ -12,10 +12,10 @@ const SESSIONS_API_PATH = "/sessions";
 export const me = async () =>
   apiRequest<ISession>(`${SESSIONS_API_PATH}/me`, "GET");
 
-export const createSession = (data: Partial<TSessionData>) =>
-    apiRequest<ISession>(`${SESSIONS_API_PATH}`, "POST", data);
+export const createSession = (data: TSessionData) =>
+    apiRequest<IMessageResponse>(`${SESSIONS_API_PATH}`, "POST", data);
 
-export const updateSession = (id: number) => (data: Partial<TSessionData>) =>
+export const updateSession = (id: number) => (data: TSessionData) =>
     apiRequest<IMessageResponse>(
         `${SESSIONS_API_PATH}/${id}`,
         "PATCH",

@@ -25,6 +25,7 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 // Stores
 import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
+import { toast } from "sonner";
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
@@ -89,6 +90,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
         response,
       });
       onSuccess?.(response);
+      toast.success("Form submitted successfully!");
     },
     onError: (error) => {
       store.getState().syncWithMutation({
@@ -98,6 +100,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
         response: null,
       });
       onError?.(error);
+      toast.error(`Failed to submit form: ${error.message}`);
     }
 
   });
@@ -111,14 +114,30 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
     };
   }, [formStoreKey]);
 
-  const form = useForm<TFormData>({
+  const form = useManualForm ? undefined : useForm<TFormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: (values || {}) as DefaultValues<TFormData>,
     mode: validationMode,
   });
 
   useEffect(() => {
-    if (useManualForm) {
+    if (form) {
+      const submitHandler = form!.handleSubmit(async (data) => {
+        const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
+          if (!config.notIncluded) {
+            acc[key as keyof TFormData] = data[key as keyof TFormData] ?? initialValues[key].value;
+          }
+          return acc;
+        }, {} as TFormData);
+
+        try {
+          await mutation.mutateAsync(submissionData);
+        } finally {
+        }
+      });
+
+      store.getState().setOnSubmit(submitHandler);
+    } else {
       const manualSubmitHandler = async (e: React.BaseSyntheticEvent | undefined) => {
         if (e) {
           e.preventDefault();
@@ -143,28 +162,12 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
       };
 
       store.getState().setOnSubmit(manualSubmitHandler);
-    } else {
-      const submitHandler = form!.handleSubmit(async (data) => {
-        const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
-          if (!config.notIncluded) {
-            acc[key as keyof TFormData] = data[key as keyof TFormData] ?? initialValues[key].value;
-          }
-          return acc;
-        }, {} as TFormData);
-
-        try {
-          await mutation.mutateAsync(submissionData);
-        } finally {
-        }
-      });
-
-      store.getState().setOnSubmit(submitHandler);
     }
-  }, [form, initialValues, mutation, useManualForm, validationSchema]);
+  }, [form, initialValues, mutation, validationSchema]);
 
 
 
-  const FormWrapper = ({ children }: { children: ReactNode }) => <Form {...form}>{children}</Form>;
+  const FormWrapper = ({ children }: { children: ReactNode }) => form ? <Form {...form}>{children}</Form> : children;
 
   const MemoizedFormComponent = useMemo(() => <FormWrapper><FormComponent
     storeKey={storeKey}

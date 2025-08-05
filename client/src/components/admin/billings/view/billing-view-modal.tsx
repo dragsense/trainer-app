@@ -1,8 +1,9 @@
 // React & Hooks
 import { useState } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // External Libraries
-import { Edit2, MapPin, Clock, DollarSign, Users, Calendar, FileText } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { format } from "date-fns";
 
 // Types
@@ -10,7 +11,6 @@ import { IBilling } from "@/@types/billing.type";
 
 // UI Components
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,47 +18,47 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// Components
-import BillingFormModal from "../form/billing-form-modal";
+
 
 // Stores
-import { useStore } from "zustand";
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IBillingViewModalProps {
-  billing: IBilling;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   storeKey: string;
 }
 
-export default function BillingViewModal({ 
-  billing, 
-  open, 
-  onOpenChange,
-  storeKey 
+export default function BillingViewModal({
+  storeKey
 }: IBillingViewModalProps) {
-  const [showEditForm, setShowEditForm] = useState(false);
 
   const singleStoreKey = storeKey + "-single";
   const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling>>(singleStoreKey);
 
-  const { setMode } = useStore(singleStore!);
-
-  const handleEdit = () => {
-    setShowEditForm(true);
-    setMode("edit", billing.id);
-    onOpenChange(false);
-  };
-
-  if (showEditForm) {
-    return <BillingFormModal storeKey={storeKey} />;
+  if (!singleStore) {
+    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
   }
 
+
+  const { response: billing, action, reset } = singleStore(useShallow(state => ({
+    response: state.response,
+    action: state.action,
+    reset: state.reset,
+
+  })));
+
+  if (!billing) {
+    return null;
+  }
+
+  
+  const handleCloseView = () => {
+    reset();
+  };
+
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -66,10 +66,6 @@ export default function BillingViewModal({
               <DialogTitle className="text-xl">{billing.localInvoiceNumber}</DialogTitle>
               <DialogDescription>Billing Details</DialogDescription>
             </div>
-            <Button onClick={handleEdit} size="sm">
-              <Edit2 className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
           </div>
         </DialogHeader>
 

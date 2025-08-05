@@ -1,23 +1,24 @@
 // External Libraries
 import { Loader2 } from "lucide-react";
+import React, { useMemo } from "react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
+import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
-import {  TTrainerClientData } from "@/@types/trainer-client.type";
+import { TTrainerClientData } from "@/@types/trainer-client.type";
+import { IMessageResponse } from "@/@types/api/response.type";
+import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { IUser } from "@/@types/user.type";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 
-// Hooks
-import { useStore } from "zustand";
-import { useUserListInput } from "@/hooks/use-user-list-input";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
-import { IMessageResponse } from "@/@types/api/response.type";
 
 export interface ITrainerClientAssignFormModalProps {
     storeKey: string;
@@ -43,30 +44,53 @@ export default function TrainerClientAssignFormModal({
         return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
     }
 
-    const { isSubmitting } = useStore(formStore);
+    const isSubmitting = formStore(state => state.isSubmitting);
 
-    const trainerInput = useUserListInput({
-        isSubmitting,
-        multiple: false,
-        level: UserLevels[UserRole.TRAINER],
-        prefix: "trainer",
-        valueType: "number",
-        disabled: trainerId ? true : false,
-    });
+    const UserSelect = React.memo(
+        ({ props, level }: { props: any; level: number; }) => (
+            <SearchableInputWrapper<IUser>
+                {...props}
+                modal={true}
+                useSearchable={() => useSearchableUsers({ level })}
+                getLabel={(item) => item.email}
+                getKey={(item) => item.id.toString()}
+                shouldFilter={false}
+            />
+        )
+    );
 
-    const clientInput = useUserListInput({
-        isSubmitting,
-        multiple: false,
-        level: UserLevels[UserRole.USER],
-        prefix: "client",
-        valueType: "number",
-        disabled: clientId ? true : false,
-    });
+    const fields = useMemo<TFieldConfig[]>(() => [
+        {
+            id: "trainerId",
+            name: "trainerId",
+            label: "Trainer",
+            placeholder: "Select Trainer",
+            type: "custom",
+            required: true,
+            disabled: !!trainerId,
+            valueType: "number",
+            Component: (props) => (
+                <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
 
-    const fields: TFieldConfig[] = [
-        ...trainerInput,
-        ...clientInput,
-    ];
+            ),
+        },
+        {
+            id: "clientId",
+            name: "clientId",
+            label: "Client",
+            placeholder: "Select Client",
+            type: "custom",
+            required: true,
+            disabled: !!clientId,
+            valueType: "number",
+            Component: (props) => (
+                <UserSelect props={props} level={UserLevels[UserRole.USER]} />
+
+            ),
+        },
+    ], [trainerId, clientId]);
+
+
 
     const { inputs } = useInput({
         fields,
@@ -91,15 +115,15 @@ export default function TrainerClientAssignFormModal({
             </Button>
             <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {'Assign Trainer'}
+                {`Assign ${clientId ? 'Trainer' : 'Client'}`}
             </Button>
         </div>
     );
 
     return (
         <ModalForm<TTrainerClientData, IMessageResponse>
-            title={'Assign Trainer to Client'}
-            description={'Assign a trainer to a client'}
+            title={`Assign ${clientId ? 'Trainer to Client' : 'Client to Trainer'}`}
+            description={`Assign a ${clientId ? 'trainer to a client' : 'client to a trainer'}`}
             open={open}
             onOpenChange={onOpenChange}
             formStore={formStore}

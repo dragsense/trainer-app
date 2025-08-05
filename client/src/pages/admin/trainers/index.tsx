@@ -10,7 +10,7 @@ import { ListHandler, SingleHandler } from "@/handlers";
 // Custom UI Components
 import { TrainerTable } from "@/components/admin";
 import { TrainerView } from "@/components/admin/trainers";
-import { TrainerForm, AssignTrainerClientForm } from "@/page-components";
+import { TrainerForm, TrainerClientAssignForm } from "@/page-components";
 
 
 // API
@@ -32,15 +32,15 @@ export default function TrainersPage() {
 
   const queryClient = useQueryClient();
 
-  const TRAINER_STORE_KEY = 'trainer';
+  const STORE_KEY = 'trainer';
 
   return (
     <PageInnerLayout Header={<Header />}>
       <SingleHandler<IUser>
         queryFn={fetchUser}
         deleteFn={deleteUser}
-        storeKey={TRAINER_STORE_KEY}
-        onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [TRAINER_STORE_KEY + "-list"] })}
+        storeKey={STORE_KEY}
+        onDeleteSuccess={() => queryClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
         SingleComponent={TrainerView}
         actionComponents={[
           {
@@ -49,7 +49,7 @@ export default function TrainersPage() {
           },
           {
             action: 'assignClient',
-            comp: AssignTrainerClientForm
+            comp: TrainerClientAssignForm
           },
         ]}
       />
@@ -57,7 +57,7 @@ export default function TrainersPage() {
       <ListHandler<IUser>
         queryFn={(params) => fetchUsers(params, UserLevels[UserRole.TRAINER])}
         ListComponent={TrainerTable}
-        storeKey={TRAINER_STORE_KEY}
+        storeKey={STORE_KEY}
       />
     </PageInnerLayout>
   );

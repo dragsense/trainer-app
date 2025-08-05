@@ -1,8 +1,8 @@
 // React & Hooks
-import { useState } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // External Libraries
-import { Edit2, MapPin, Clock, DollarSign, Users, Calendar, FileText } from "lucide-react";
+import { MapPin, Clock, DollarSign, Users, Calendar, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 // Types
@@ -10,7 +10,6 @@ import { ISession } from "@/@types/session.type";
 
 // UI Components
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,32 +19,37 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-// Components
-import SessionFormModal from "../form/session-form-modal";
-
 // Stores
-import { useStore } from "zustand";
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface ISessionViewModalProps {
-  session: ISession;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   storeKey: string;
 }
 
-export default function SessionViewModal({ 
-  session, 
-  open, 
-  onOpenChange,
-  storeKey 
+export default function SessionViewModal({
+  storeKey
 }: ISessionViewModalProps) {
-  const [showEditForm, setShowEditForm] = useState(false);
 
   const singleStoreKey = storeKey + "-single";
   const singleStore = useRegisteredStore<TSingleHandlerStore<ISession>>(singleStoreKey);
 
-  const { setMode } = useStore(singleStore!);
+
+  if (!singleStore) {
+    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+  }
+
+
+
+  const { response: session, action, reset } = singleStore(useShallow(state => ({
+    response: state.response,
+    action: state.action,
+    reset: state.reset,
+
+  })));
+
+  if (!session) {
+    return null;
+  }
 
   const getSessionTypeColor = (type: string) => {
     switch (type) {
@@ -73,29 +77,19 @@ export default function SessionViewModal({
     }
   };
 
-  const handleEdit = () => {
-    setShowEditForm(true);
-    setMode('edit', session.id);
-    onOpenChange(false);
+
+  const handleCloseView = () => {
+    reset();
   };
 
-  if (showEditForm) {
-    return <SessionFormModal storeKey={storeKey} />;
-  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={action === 'view'} onOpenChange={handleCloseView}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <DialogTitle className="text-xl">{session.title}</DialogTitle>
-              <DialogDescription>Session Details</DialogDescription>
-            </div>
-            <Button onClick={handleEdit} size="sm">
-              <Edit2 className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+          <div className="space-y-1">
+            <DialogTitle className="text-xl">{session.title}</DialogTitle>
+            <DialogDescription>Session Details</DialogDescription>
           </div>
         </DialogHeader>
 
@@ -171,7 +165,7 @@ export default function SessionViewModal({
             <div className="space-y-2">
               <p className="font-medium">Total Clients</p>
               <div className="flex items-center gap-3">
-                
+
                 <div>
                   <p className="text-sm font-medium">
                     {session.clientCount}
@@ -193,15 +187,15 @@ export default function SessionViewModal({
           )}
 
           {/* Max Participants */}
-          {session.maxParticipants && session.maxParticipants > 1 && (
+          
             <div className="flex items-center gap-3">
               <Users className="h-5 w-5 text-gray-500" />
               <div>
                 <p className="font-medium">Max Participants</p>
-                <p className="text-sm text-gray-600">{session.maxParticipants} people</p>
+                <p className="text-sm text-gray-600">{session.maxParticipants || 'N/A'} people</p>
               </div>
             </div>
-          )}
+          
 
           {/* Description */}
           {session.description && (

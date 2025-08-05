@@ -32,7 +32,7 @@ export class UserEmailService {
       if (!createdBy) {
         // Self-registration (admin signup)
         await this.sendAdminWelcomeEmail(context);
-      } else if (createdBy.level === UserLevels[UserRole.ADMIN] || createdBy.level === UserLevels[UserRole.SUPER_ADMIN]) {
+      } else if (createdBy.level === UserLevels[UserRole.TRAINER] || createdBy.level === UserLevels[UserRole.SUPER_ADMIN]) {
         // Admin creating user
         if (user.level === UserLevels[UserRole.TRAINER]) {
           await this.sendTrainerWelcomeEmail(context);

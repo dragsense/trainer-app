@@ -68,7 +68,7 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
       notificationSetting.user = user;
       
       // Set default notification preferences based on user role
-      const isAdmin = user.level <= UserLevels[UserRole.ADMIN];
+      const isAdmin = user.level <= UserLevels[UserRole.TRAINER];
       const isTrainer = user.level === UserLevels[UserRole.TRAINER];
       
       // Admin and trainers get all notifications by default

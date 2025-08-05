@@ -56,7 +56,7 @@ export class BillingsController {
   @ApiOperation({ summary: 'Get paginated list of billing records' })
   @ApiResponse({ status: 200, description: 'Billings fetched successfully' })
   findAll(@Req() req: any, @Query() query: BillingListDto) {
-    const user = req.user.level === UserLevels[UserRole.ADMIN] ? null : req.user;
+    const user = req.user.level === UserLevels[UserRole.SUPER_ADMIN] ? null : req.user;
     return this.billingsService.findAll(query, user);
   }
 
@@ -122,7 +122,7 @@ export class BillingsController {
     @Query('limit') limit?: number,
   ) {
     const user = req.user;
-    if (!customerId && user.level !== UserLevels[UserRole.ADMIN]) {
+    if (!customerId && user.level !== UserLevels[UserRole.TRAINER]) {
       customerId = user.stripeCustomerId;
     }
     return await this.stripeInvoiceService.listInvoices(customerId, subscriptionId, status, limit || 100);
@@ -157,7 +157,7 @@ export class BillingsController {
     @Query('limit') limit?: number,
   ) {
     const user = req.user;
-    if (!customerId && user.level !== UserLevels[UserRole.ADMIN]) {
+    if (!customerId && user.level !== UserLevels[UserRole.TRAINER]) {
       customerId = user.stripeCustomerId;
     }
     return await this.stripeTransactionService.listCharges(customerId, paymentIntentId, limit || 100);

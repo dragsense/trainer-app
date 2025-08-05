@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -19,20 +19,21 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface AppComboBoxProps<T> {
-  value: T | T[] | string | string[] | number | number[] | undefined;
+  value: T;
   onChange: (value: any) => void;
   items: T[];
   loading?: boolean;
   error?: string | null;
   placeholder?: string;
-  searchPlaceholder?: string;
   getLabel: (item: T) => string;
   getKey: (item: T) => string;
-  onSearchChange?: (search: string) => void;
+  onSearchChange: (search: string) => void;
+  search: string;
   multiple?: boolean;
   searchType?: "local" | "api";
   disabled?: boolean;
   modal?: boolean;
+  shouldFilter?: boolean
 }
 
 export function AppComboBox<T>({
@@ -42,20 +43,18 @@ export function AppComboBox<T>({
   loading,
   error,
   placeholder = "Select...",
-  searchPlaceholder = "Search...",
   getLabel,
   getKey,
+  search,
   onSearchChange,
   multiple = false,
-  searchType = "local",
   disabled,
   modal = false,
+  shouldFilter = true
 }: AppComboBoxProps<T>) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  // For popover width
   const [popoverWidth, setPopoverWidth] = useState<number | undefined>(undefined);
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -63,25 +62,6 @@ export function AppComboBox<T>({
       setPopoverWidth(triggerRef.current.offsetWidth);
     }
   };
-
-  // Handle search
-  const handleSearchChange = useCallback(
-    (val: string) => {
-      setSearch(val);
-      if (searchType === "api" && onSearchChange) {
-        onSearchChange(val);
-      }
-    },
-    [searchType, onSearchChange]
-  );
-
-  // Local filtering
-  const filteredItems =
-    searchType === "local"
-      ? items.filter((item) =>
-          getLabel(item).toLowerCase().includes(search.toLowerCase())
-        )
-      : items;
 
   // Multi-select logic
   const selectedKeys = multiple
@@ -91,6 +71,8 @@ export function AppComboBox<T>({
   const selectedItems = multiple
     ? items.filter((item) => selectedKeys.includes(getKey(item)))
     : [];
+
+
 
   const maxTags = 5;
   const extraCount = multiple ? selectedItems.length - maxTags : 0;
@@ -147,13 +129,15 @@ export function AppComboBox<T>({
         style={popoverWidth ? { width: popoverWidth } : {}}
         align="start"
       >
-        <Command>
+        <Command shouldFilter={shouldFilter}>
           <CommandInput
-            placeholder={searchPlaceholder}
+            placeholder="Search..."
             value={search}
-            onValueChange={handleSearchChange}
+            onValueChange={onSearchChange}
             disabled={disabled}
           />
+
+
           <CommandList>
             {loading ? (
               <div className="flex items-center justify-center p-4">
@@ -163,12 +147,12 @@ export function AppComboBox<T>({
               <CommandEmpty className="py-6 text-center text-destructive">
                 {error}
               </CommandEmpty>
-            ) : filteredItems.length === 0 ? (
+            ) : items.length === 0 ? (
               <CommandEmpty>No results found</CommandEmpty>
             ) : (
               <div style={{ maxHeight: "300px", overflow: "auto" }}>
                 <CommandGroup>
-                  {filteredItems.map((item) => (
+                  {items.map((item) => (
                     <CommandItem
                       key={getKey(item)}
                       onSelect={() => {

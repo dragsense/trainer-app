@@ -56,7 +56,7 @@ export function SingleHandler<
   initialParams = {},
   initialId = 0,
   queryFn,
-  deleteFn,
+  deleteFn = () => Promise.resolve(),
   onDeleteSuccess,
   storeKey,
   SingleComponent,
@@ -66,6 +66,10 @@ export function SingleHandler<
   IData,
   TSingleExtraProps
 >) {
+
+  const { confirm, dialogProps } = useConfirm();
+
+
   const singleStoreKey = storeKey + "-single";
 
   let store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
@@ -91,6 +95,7 @@ export function SingleHandler<
       store.setState({ isLoading: true });
       try {
         const response = await queryFn(id, params);
+      
         store.setState({
           isLoading: false,
           error: null,
@@ -113,98 +118,66 @@ export function SingleHandler<
     },
     initialParams,
     {
-      enabled: !!id,
+      enabled: !!id && store.getState().action !== "delete",
     }
   );
 
 
-
-  const internalActionComponents: IActionComponent<TSingleExtraProps>[] = useMemo(() => {
-    if (!deleteFn) return actionComponents;
-
-    return [
-      ...actionComponents,
-      {
-        action: "delete",
-        comp: ({ action, storeKey }) => {
-          const { confirm, dialogProps } = useConfirm();
-
-          const singleStoreKey = storeKey + "-single";
-          const store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
-
-          if (!store) {
-            return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-          }
-
-          const { id, name, reset } = store(useShallow(state => ({
-            id: state.id,
-            name: state.name,
-            reset: state.reset
-          })));
-
-          const { mutate: deleteItem } = useApiMutation(
-            deleteFn,
-            {
-              onMutate: () => {
-                store.getState().syncWithQuery({
-                  isLoading: true,
-                  error: null,
-                  isSuccess: false,
-                });
-              },
-              onSuccess: () => {
-                store.getState().syncWithQuery({
-                  isLoading: false,
-                  error: null,
-                  isSuccess: true,
-                  response: null,
-                });
-                onDeleteSuccess?.();
-                toast.success(`${name} deleted successfully!`);
-              },
-              onError: (error: Error) => {
-                store.getState().syncWithQuery({
-                  isLoading: false,
-                  error,
-                  isSuccess: false,
-                });
-
-                toast.error(`Failed to delete ${name}: ${error.message}`);
-              },
-            }
-          );
-
-          const handleDeleteItem = useMemo(
-            () =>
-              () =>
-                confirm(
-                  "Delete Item",
-                  `Are you sure you want to delete this ${name}?`,
-                  async () => {
-                    await deleteItem(id);
-                    reset();
-                  },
-                  () => { reset() },
-
-                  "destructive"
-                ),
-            [deleteFn, id]
-          );
-
-          useEffect(() => {
-            if (action === "delete") {
-              handleDeleteItem();
-            }
-          }, [action, handleDeleteItem]);
-
-          return <ConfirmDialog {...dialogProps} />;
-        },
+  const { mutate: deleteItem } = useApiMutation(
+    deleteFn,
+    {
+      onMutate: () => {
+        store.getState().syncWithQuery({
+          isLoading: true,
+          error: null,
+          isSuccess: false,
+        });
       },
-    ];
-  }, [actionComponents, deleteFn]);
+      onSuccess: () => {
+        store.getState().syncWithQuery({
+          isLoading: false,
+          error: null,
+          isSuccess: true,
+          response: null,
+        });
+        onDeleteSuccess?.();
+        toast.success(`${name} deleted successfully!`);
+      },
+      onError: (error: Error) => {
+        store.getState().syncWithQuery({
+          isLoading: false,
+          error,
+          isSuccess: false,
+        });
 
+        toast.error(`Failed to delete ${name}: ${error.message}`);
+      },
+    },
 
+  );
 
+  const handleDeleteItem = useMemo(
+    () =>
+      () =>
+        confirm(
+          "Delete Item",
+          `Are you sure you want to delete this ${name}?`,
+          () => {
+            deleteItem(id);
+            store.getState().reset()
+          },
+          () => { store.getState().reset() },
+
+          "destructive"
+        ),
+    [deleteFn, id]
+  );
+
+  useEffect(() => {
+    if (store.getState().action === "delete") {
+      handleDeleteItem();
+    }
+  }, [id]);
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -217,10 +190,12 @@ export function SingleHandler<
         )}
 
         <ActionComponentHandler<IData, TSingleExtraProps>
-          extraComponents={internalActionComponents}
+          actionComponents={actionComponents}
           storeKey={storeKey}
           listProps={singleProps as TSingleExtraProps}
         />
+
+        <ConfirmDialog {...dialogProps} />;
 
       </>
     </ErrorBoundary>

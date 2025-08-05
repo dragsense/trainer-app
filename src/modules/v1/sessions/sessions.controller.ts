@@ -42,7 +42,7 @@ export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
-  @MinRoleLevel(UserLevels[UserRole.ADMIN])
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
     status: 201,
@@ -55,7 +55,7 @@ export class SessionsController {
   async create(
     @AuthUser() user: User,
     @Body() createSessionDto: CreateSessionDto
-  ): Promise<Session> {
+  ) {
     return this.sessionsService.create(user, createSessionDto);
   }
 
@@ -95,7 +95,7 @@ export class SessionsController {
   }
 
   @Patch(':id')
-  @MinRoleLevel(UserLevels[UserRole.ADMIN])
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Update a session' })
   @ApiResponse({
     status: 200,
@@ -135,7 +135,7 @@ export class SessionsController {
   }
 
   @Delete(':id')
-  @MinRoleLevel(UserLevels[UserRole.ADMIN])
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Cancel/delete a session' })
   @ApiResponse({
     status: 200,
