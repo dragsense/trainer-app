@@ -86,9 +86,6 @@ export const updatePaymentMethod = (id: number) => (data: TUpdatePaymentMethodDa
 export const toggleEnabledPaymentMethod = (id: number)  =>
   apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}/toggle`, "PATCH", {});
 
-export const deletePaymentMethod = (id: number) =>
-  apiRequest<IMessageResponse>(`${PAYMENT_METHODS_API_PATH}/${id}`, "DELETE");
-
 // Stripe Connect
 const STRIPE_CONNECT_API_PATH = `${SETTINGS_API_PATH}/stripe-connect`;
 

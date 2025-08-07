@@ -1,5 +1,6 @@
 // External Libraries
 import { ReactNode } from "react";
+import { useShallow } from "zustand/shallow";
 
 // Components
 import { CardForm } from "@/components/form-ui/card-form";
@@ -7,25 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Clock, CalendarDays } from "lucide-react";
 
-// Hooks
-// (no hooks needed for this component)
 
 // Types
-import { IUserAvailability, TUpdateUserAvailabilityData } from "@/@types/user.type";
+import { TUpdateUserAvailabilityData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { useStore } from "zustand";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IAvailabilityCardFormProps {
     storeKey: string;
 }
 
-const DAYS_OF_WEEK = [
+export const DAYS_OF_WEEK = [
     { key: 'monday', label: 'Monday' },
     { key: 'tuesday', label: 'Tuesday' },
     { key: 'wednesday', label: 'Wednesday' },
@@ -37,23 +34,23 @@ const DAYS_OF_WEEK = [
 
 export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardFormProps) {
     const formStoreKey = storeKey + "-form";
-    const singleStoreKey = storeKey + "-single";
 
     // Move store calls to top level - this fixes the hook rendering issue
     const formStore = useRegisteredStore<TFormHandlerStore<TUpdateUserAvailabilityData, IMessageResponse>>(formStoreKey);
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IUserAvailability>>(singleStoreKey);
 
     // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-    }
+    const { isSubmitting, values, setValues } = formStore(
+        useShallow((state) => ({
+            isSubmitting: state.isSubmitting,
+            values: state.values,
+            setValues: state.setValues,
+        }))
+    );
 
-    const { isSubmitting, values, setValues } = useStore(formStore);
-    const { response: availability } = useStore(singleStore);
 
     const weeklySchedule = values.weeklySchedule || {} as any;
     const unavailablePeriods = values.unavailablePeriods || [];
@@ -291,34 +288,7 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
                     </div>
                 </div>
 
-                {/* Current Status Section */}
-                {availability && (
-                    <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">Current Status</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label className="text-sm text-muted-foreground">Last Updated</Label>
-                                <p className="font-medium">
-                                    {new Date(availability.updatedAt).toLocaleDateString()}
-                                </p>
-                            </div>
-                            <div>
-                                <Label className="text-sm text-muted-foreground">Working Days</Label>
-                                <div className="flex gap-1 mt-1">
-                                    {DAYS_OF_WEEK.map(({ key, label }) => (
-                                        <Badge
-                                            key={key}
-                                            variant={weeklySchedule[key]?.enabled ? 'default' : 'secondary'}
-                                            className="text-xs"
-                                        >
-                                            {label.slice(0, 3)}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+              
             </div>
         </CardForm>
     );

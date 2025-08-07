@@ -10,12 +10,11 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { IAppSetting, TAppSettingData } from "@/@types/setting.type";
+import {  TAppSettingData } from "@/@types/setting.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { useStore } from "zustand";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IAppSettingCardFormProps {
     storeKey: string;
@@ -23,22 +22,17 @@ interface IAppSettingCardFormProps {
 
 export default function AppSettingCardForm({ storeKey }: IAppSettingCardFormProps) {
     const formStoreKey = storeKey + "-form";
-    const singleStoreKey = storeKey + "-single";
 
     // Move store calls to top level
     const formStore = useRegisteredStore<TFormHandlerStore<TAppSettingData, IMessageResponse>>(formStoreKey);
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IAppSetting>>(singleStoreKey);
 
     // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-    }
 
-    const { isSubmitting } = useStore(formStore);
+    const isSubmitting = formStore(state => state.isSubmitting);
 
     const fields: TFieldConfig[] = [
         // ─── General App Settings ──────────────

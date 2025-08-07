@@ -84,6 +84,7 @@ export const navItems: {
             urls: [
                 ADMIN_ROUTES.SETTINGS,
                 ADMIN_ROUTES.SETTINGS_PROFILE,
+                ADMIN_ROUTES.SETTINGS_AVAILABILITY,
                 ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
                 ADMIN_ROUTES.SETTINGS_APP,
                 ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
@@ -97,13 +98,18 @@ export const navItems: {
                     url: ADMIN_ROUTES.SETTINGS_PROFILE,
                 },
                 {
-                    title: "Notifications",
-                    url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+                    title: "Availability",
+                    url: ADMIN_ROUTES.SETTINGS_AVAILABILITY,
                 },
                 {
                     title: "App Settings",
                     url: ADMIN_ROUTES.SETTINGS_APP,
                 },
+                {
+                    title: "Notifications",
+                    url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+                },
+                
                 {
                     title: "Payment Methods",
                     url: ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,

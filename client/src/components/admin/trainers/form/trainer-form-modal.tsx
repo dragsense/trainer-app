@@ -28,8 +28,6 @@ export default function TrainerFormModal({
   onClose,
 }: ITrainerFormModalProps) {
 
-
-
   const formStoreKey = storeKey + "-form";
 
   const formStore = useRegisteredStore<TFormHandlerStore<TUserData, { user: IUser, message: string }>>(formStoreKey);
@@ -38,9 +36,7 @@ export default function TrainerFormModal({
     return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = formStore(state => state.isSubmitting);
-
-
+  //const isSubmitting = formStore(state => state.isSubmitting);
 
   const fields: TFieldConfig[] = [
     // ─── Basic Info ──────────────
@@ -188,12 +184,13 @@ export default function TrainerFormModal({
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" disabled={false}>
+        {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Update" : "Add"}
       </Button>
     </div>
   );
+
 
   return <>
     <ModalForm<TUserData, { user: IUser, message: string }>

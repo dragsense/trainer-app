@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { ReminderTable, ReminderView, ReminderViewModal } from "@/components/admin";
+import { ReminderTable, ReminderViewModal } from "@/components/admin";
 import { ReminderForm } from "@/page-components";
 
 
@@ -54,4 +54,4 @@ export default function RemindersPage() {
 
 
 
-const Header = () => null
+const Header = () => null;

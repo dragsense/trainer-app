@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Types
 import { TLoginData } from "@/@types/auth.type";
@@ -17,10 +18,6 @@ import { LoginForm } from "@/components/auth";
 // Services
 import { login } from "@/services/auth.api";
 
-// config
-import { ADMIN_ROUTES } from "@/config/routes.config";
-
-
 // Schema
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,7 +28,7 @@ const loginSchema = z.object({
 
 export default function Login() {
 
-  const navigate = useNavigate();
+  const queryReminder = useQueryClient();
 
   const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
     email: { value: "admin@trainer-app.com" },
@@ -48,7 +45,8 @@ export default function Login() {
       validationSchema={loginSchema}
       onSuccess={() => {
         toast.success('Login successful')
-        navigate(ADMIN_ROUTES.DASHBOARD)
+        queryReminder.invalidateQueries({ queryKey: ["me"] });
+
       }
       }
       onError={(error) => toast.error('Login failed: ' + error?.message)}

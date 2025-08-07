@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDownIcon, Star } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 
 
 // UI Components
@@ -57,6 +58,9 @@ export function useInput({
   layout = "vertical",
 }: UseInputProps) {
 
+  const { getValues } = useFormContext(); 
+
+  
 
   const convertValue = (input: unknown, type?: string): any => {
     const getValue = (val: any) => {
@@ -71,6 +75,7 @@ export function useInput({
       input && typeof input === "object" && "target" in input
         ? (input as any).target.value
         : input;
+        
 
     return Array.isArray(rawValue)
       ? rawValue.map(getValue)
@@ -79,6 +84,13 @@ export function useInput({
 
 
   const inputs = fields.map((field) => {
+    const values = getValues();
+    const isVisible = typeof field.visible === "function"
+      ? field.visible({ values })
+      : true;
+
+    if (!isVisible) return null;
+
     const fieldLayout = field.layout || layout;
     const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
     const inputFlex = labelOrderClass === EORDER_CLASSES.First ? "flex-1" : "";
@@ -88,17 +100,13 @@ export function useInput({
       <FormField
         key={field.id}
         name={field.name}
+        
         render={({ field: controllerField }) => {
           const onChangeHandler = (value: any) => {
             const parsed = convertValue(value, field.valueType);
-
             // Trigger RHF control
             controllerField.onChange(parsed);
-
-            // Trigger custom listener if provided
-            if (field.listeners?.onChange) {
-              field.listeners.onChange(parsed);
-            }
+            field.listeners?.onChange?.(parsed, { values: getValues() });
           };
           const commonClass = cn(
             field.startAdornment && "pl-10",

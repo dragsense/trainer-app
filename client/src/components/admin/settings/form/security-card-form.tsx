@@ -12,8 +12,7 @@ import { useInput } from "@/hooks/use-input";
 import { TFieldConfig } from "@/@types/form/field.type";
 
 // Stores
-import { useStore } from "zustand";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 interface PasswordChangeData {
     currentPassword: string;
@@ -36,8 +35,7 @@ export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-
-    const { isSubmitting } = useStore(formStore);
+    const isSubmitting = formStore(state => state.isSubmitting);
 
     const fields: TFieldConfig[] = [
         // ─── Password Change Fields ──────────────

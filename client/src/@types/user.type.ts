@@ -22,7 +22,7 @@ export interface IProfile extends Profile, GeneralBaseEntity {}
 
 export type TUserData = CreateUserDto;
 export type TProfileData = CreateProfileDto;
-export type TResetPasswordDto = ResetPasswordDto;
+export type TResetPasswordData = ResetPasswordDto;
 
 // Availability Types - using proper backend types
 export type TTimeSlot = TimeSlotDto;

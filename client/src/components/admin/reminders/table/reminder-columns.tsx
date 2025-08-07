@@ -53,8 +53,8 @@ const getTypeColor = (type: string) => {
 
 export const columns = ({
   handleEdit,
+  handleView,
   handleDelete,
-  handleView
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;

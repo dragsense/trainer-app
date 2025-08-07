@@ -38,7 +38,8 @@ export type TFieldConfig = {
   min?: number;
   max?: number;
   step?: number;
-  required: boolean;
+  required: boolean | ((ctx: { values: Record<string, any> }) => boolean);
+  visible?: (ctx: { values: Record<string, any> }) => boolean;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   bottomAdornment?: ReactNode;

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { FormHandler } from "@/handlers";
 
 // Page Components
-import SecurityCardForm from "@/components/admin/settings/form/security-card-form";
+import { SecurityCardForm } from "@/components/admin";
 
 // Services
 import { changePassword } from "@/services/user.api";
@@ -13,12 +13,8 @@ import { changePassword } from "@/services/user.api";
 // Types
 import { TDefaultValue } from "@/@types/form/field.type";
 import { IMessageResponse } from "@/@types/api/response.type";
+import { TResetPasswordData } from "@/@types/user.type";
 
-interface PasswordChangeData {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
-}
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -33,13 +29,13 @@ const passwordSchema = z.object({
 
 export default function SecurityPage() {
 
-    const INITIAL_VALUES: TDefaultValue<PasswordChangeData> = {
+    const INITIAL_VALUES: TDefaultValue<TResetPasswordData & { confirmPassword: string }> = {
         currentPassword: { value: "" },
         newPassword: { value: "" },
         confirmPassword: { value: "", notIncluded: true },
     };
 
-    return (<FormHandler<PasswordChangeData, PasswordChangeData, IMessageResponse>
+    return (<FormHandler<Omit<TResetPasswordData, 'currentPassword'>, IMessageResponse>
         storeKey={'securitySettings'}
         FormComponent={SecurityCardForm}
         validationSchema={passwordSchema}
@@ -48,3 +44,6 @@ export default function SecurityPage() {
     />
     );
 }
+
+
+

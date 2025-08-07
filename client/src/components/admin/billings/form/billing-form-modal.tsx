@@ -47,20 +47,6 @@ export default function BillingFormModal({
   const isSubmitting = formStore(state => state.isSubmitting);
 
 
-  const UserSelect = React.memo(
-    ({ props, }: { props: any; }) => (
-      <SearchableInputWrapper<IUser>
-        {...props}
-        modal={true}
-
-        useSearchable={() => useSearchableUsers({})}
-        getLabel={(item) => item.email}
-        getKey={(item) => item.id.toString()}
-        shouldFilter={false}
-      />
-    )
-  );
-
   const fields = useMemo<TFieldConfig[]>(() => [
     {
       id: "userId",
@@ -71,7 +57,15 @@ export default function BillingFormModal({
       required: true,
       valueType: "number",
       Component: (props) => (
-        <UserSelect props={props} />
+        <SearchableInputWrapper<IUser>
+          {...props}
+          modal={true}
+
+          useSearchable={() => useSearchableUsers({})}
+          getLabel={(item) => item.email}
+          getKey={(item) => item.id.toString()}
+          shouldFilter={false}
+        />
 
       ),
     },

@@ -1,44 +1,68 @@
-import { Button } from "@/components/ui/button";
-import { TExtraComponentProps } from "@/@types/handler-types";
-import { useInput } from "@/hooks/use-input";
+// External Libraries
 import { z } from "zod";
-import { ModalForm } from "@/components/form-ui/modal-form";
-import { TFormHandlerStore, TListHandlerStore, useRegisteredStore } from "@/stores";
-import { useStore } from "zustand";
-import { TDefaultValue, TFieldConfig } from "@/@types/form/field.type";
+import { useShallow } from 'zustand/shallow';
+import { Loader2 } from "lucide-react";
+
+// Handlers
 import { FormHandler } from "@/handlers";
-import { IPaymentMethod, TUpdatePaymentMethodData } from "@/@types/setting.type";
+
+// Types
 import { IMessageResponse } from "@/@types/api/response.type";
+import { TDefaultValue } from "@/@types/form/field.type";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { TActionComponentProps } from "@/@types/handler-types";
+import { IPaymentMethod, TUpdatePaymentMethodData } from "@/@types/setting.type";
+
+// Store
+import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+
+// Components
+import { PaymentMethodConfigFormModal } from "@/components/admin";
+
+// Services
 import { updatePaymentMethod } from "@/services/setting.api";
 
-interface IPaymentMethodConfigFormModalProps extends TExtraComponentProps<any> {
-  storeKey: string;
+
+interface IPaymentMethodConfigFormProps extends TActionComponentProps<any> {
 }
 
-export default function PaymentMethodConfigFormModal({
+interface IPaymentMethodConfigFormExtraProps {
+  properties: any,
+  open: boolean,
+  onClose: () => void,
+}
+
+export default function PaymentMethodConfigForm({
   storeKey
-}: IPaymentMethodConfigFormModalProps) {
+}: IPaymentMethodConfigFormProps) {
 
+  const singleStoreKey = storeKey + "-single";
+  const singleStore = useRegisteredStore<TSingleHandlerStore<IPaymentMethod[]>>(singleStoreKey);
 
-  const listStoreKey = storeKey + "-list";
-
-  const listStore = useRegisteredStore<TListHandlerStore<IPaymentMethod>>(listStoreKey);
-
-  if (!listStore) {
-    return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
+  if (!singleStore) {
+    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
   }
 
-  const { response: data, itemAction, setItemAction } = useStore(listStore);
+  const { response: paymentMethods, action, setAction, id, isLoading } = singleStore(useShallow(state => ({
+    action: state.action,
+    id: state.id,
+    response: state.response,
+    isLoading: state.isLoading,
+    setAction: state.setAction
+  })));
 
-  const values = data?.find((item) => item.id === itemAction?.id);
-  if (!values) {
-    return null;
-  }
+  const paymentMethod = paymentMethods?.find(pm => pm.id === id);
 
-  const ConfigSchema = values?.configSchema
+  if (!paymentMethod)
+    return <div>Payment Method not found</div>
+
+
+  const properties = paymentMethod.configSchema?.properties;
+
+  const ConfigSchema = paymentMethod.configSchema
     ? z.object(
-      Object.keys(values.configSchema.properties || {}).reduce((acc, key) => {
-        const prop = values.configSchema!.properties![key];
+      Object.keys(properties || {}).reduce((acc, key) => {
+        const prop = properties![key];
         if (prop.type === 'string') {
           acc[key] = z.string().min(1, `${prop.title || key} is required`);
         } else if (prop.type === 'number') {
@@ -51,38 +75,8 @@ export default function PaymentMethodConfigFormModal({
     )
     : z.object({});
 
-  function renderFields(): TFieldConfig[] {
-    if (!values?.configSchema?.properties) return [];
 
-    return Object.keys(values.configSchema.properties).map((key) => {
-      const prop = values!.configSchema!.properties![key];
-
-      const baseField: TFieldConfig = {
-        id: key,
-        name: key,
-        label: prop.title || key,
-        type: prop.type as any,
-        required: prop.required || false,
-        placeholder: prop.description || `Enter ${prop.title || key}`,
-        disabled: false,
-      };
-
-      if (prop.type === 'select' && prop.enum) {
-        return {
-          ...baseField,
-          type: 'select',
-          options: prop.enum.map((option: string) => ({
-            label: option,
-            value: option,
-          })),
-        };
-      }
-
-      return baseField;
-    });
-  }
-
-  const defaultValues = Object.keys(values?.configSchema?.properties || {}).reduce(
+  const defaultValues = Object.keys(properties || {}).reduce(
     (acc, key) => {
       acc[key] = { value: "" };
       return acc;
@@ -90,60 +84,35 @@ export default function PaymentMethodConfigFormModal({
     {} as Record<string, { value: any }>
   );
 
-  const INITIAL_VALUES: TDefaultValue<any> = defaultValues;
 
-  const handleCancel = () => {
-    setItemAction(null);
+
+  const initialValues: TDefaultValue<any> = defaultValues;
+
+  if (isLoading) {
+    return (
+      <div className="absolute inset-0 z-30 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
 
-  return (
-    <FormHandler<any, IMessageResponse>
-      storeKey="paymentMethodConfigForm"
-      mutationFn={(data: any) => updatePaymentMethod(values.id)({ config: data })}
+
+  return <>
+    <FormHandler<TUpdatePaymentMethodData, IMessageResponse, IPaymentMethodConfigFormExtraProps>
+      mutationFn={updatePaymentMethod(paymentMethod.id)}
+      FormComponent={PaymentMethodConfigFormModal}
+      storeKey={storeKey}
+      initialValues={initialValues}
       validationSchema={ConfigSchema}
-      initialValues={INITIAL_VALUES}
-      FormComponent={({ storeKey }: { storeKey: string }) => {
-
-        const formStoreKey = storeKey + "-form";
-        const formStore = useRegisteredStore<TFormHandlerStore<any, IMessageResponse>>(formStoreKey);
-
-        if (!formStore) {
-          return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
-        }
-
-        const { isSubmitting } = useStore(formStore);
-
-        const { inputs } = useInput({
-          fields: renderFields(),
-        });
-
-        return <ModalForm<any, IMessageResponse>
-          title="Payment Method Configuration"
-          description="Configure the settings for this payment method."
-          open={itemAction?.action === "configurePaymentMethod"}
-          onOpenChange={(open) => {
-            if (!open)
-              handleCancel();
-          }}
-          footerContent={
-            <>
-              <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="ml-2">
-                {isSubmitting ? "Saving..." : "Save"}
-              </Button>
-            </>
-          }
-          width="md"
-          formStore={formStore}
-        >
-          {inputs}
-        </ModalForm>
-      }
-      }
+      validationMode={EVALIDATION_MODES.OnSubmit}
+      formProps={{
+        properties,
+        open: !!action,
+        onClose: () => setAction('none'),
+      }}
     />
 
-  );
-} 
+  </>
+
+}

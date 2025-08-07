@@ -1,7 +1,7 @@
 // External Libraries
 import { z } from "zod";
-import { useSearchParams } from "react-router-dom";
-import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // Types
 import { TSignupData } from "@/@types/auth.type";
@@ -14,10 +14,13 @@ import { FormHandler } from "@/handlers";
 
 // Custom UI Components
 import { SignupForm } from "@/components/auth";
-import { toast } from "sonner";
 
 // Services
-import { signup, signupWithReferral } from "@/services/auth.api";
+import { signup } from "@/services/auth.api";
+
+
+// Config
+import { PUBLIC_ROUTES } from "@/config/routes.config";
 
 // Schema
 const signupSchema = z.object({
@@ -38,8 +41,7 @@ const signupSchema = z.object({
 });
 
 export default function Signup() {
-  const [searchParams] = useSearchParams();
-  const referralCode = searchParams.get('ref');
+  const navigate= useNavigate();
 
   const SIGNUP_INITIAL_VALUES: TDefaultValue<TSignupData> = {
     firstName: { value: "" },
@@ -49,37 +51,21 @@ export default function Signup() {
     confirmPassword: { notIncluded: true, value: "" }
   };
 
-  // Choose the mutation function based on whether we have a referral code
-  const mutationFn = useMemo(() => {
-    return referralCode 
-      ? (data: TSignupData) => signupWithReferral(data, referralCode)
-      : signup;
-  }, [referralCode]);
+ 
 
-  const successMessage = referralCode 
-    ? 'Signup successful! Welcome to our referral program.' 
-    : 'Signup successful';
-
-  return (
-    <div className="space-y-4">
-      {referralCode && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-800 text-sm">
-            🎉 You're signing up via a referral link! You and your referrer will both benefit from this partnership.
-          </p>
-        </div>
-      )}
-      
-      <FormHandler<TSignupData, IMessageResponse>
-        mutationFn={mutationFn}
+  return (<FormHandler<TSignupData, IMessageResponse>
+        mutationFn={signup}
         FormComponent={SignupForm}
         initialValues={SIGNUP_INITIAL_VALUES}
         validationMode={EVALIDATION_MODES.OnChange}
         validationSchema={signupSchema}
-        onSuccess={() => toast.success(successMessage)}
+        onSuccess={() => {
+          toast.success('Signup successful')
+          navigate(PUBLIC_ROUTES.LOGIN)
+        }
+        }
         onError={(error) => toast.error('Signup failed: ' + error?.message)}
         storeKey="signupForm"
       />
-    </div>
   );
 }

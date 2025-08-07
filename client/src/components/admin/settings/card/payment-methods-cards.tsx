@@ -1,13 +1,21 @@
+import { useShallow } from "zustand/shallow";
+import { CreditCard, DollarSign, Settings } from "lucide-react";
+
+// Components
 import { Switch } from "@/components/ui/switch";
 import { CardTitle } from "@/components/ui/card";
-import { CreditCard, DollarSign, Settings } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
-import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
-import { IPaymentMethod } from "@/@types/setting.type";
-import { useStore } from "zustand";
-import { AppCard } from "@/components/layout-ui/app-card";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+
+import { AppCard } from "@/components/layout-ui/app-card";
+
+// Types
+import { IPaymentMethod } from "@/@types/setting.type";
+import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+
+// Stores
+import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+
 
 interface PaymentMethodsCardsProps {
   storeKey: string;
@@ -29,39 +37,29 @@ export default function PaymentMethodsCards({
 }: PaymentMethodsCardsProps) {
 
 
-  const listStoreKey = storeKey + "-list";
   const singelStoreKey = storeKey + "-single";
 
-  const listStore = useRegisteredStore<TListHandlerStore<IPaymentMethod>>(listStoreKey);
-
-  if (!listStore) {
-    return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
-  }
-
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IPaymentMethod>>(singelStoreKey);
+  const singleStore = useRegisteredStore<TSingleHandlerStore<IPaymentMethod[]>>(singelStoreKey);
 
   if (!singleStore) {
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
-
-  const { response: data, isLoading, error, setItemAction } = useStore(listStore);
-
+  const { response: paymentMethods, setAction, isLoading, error } = singleStore(
+    useShallow((state) => ({
+      response: state.response,
+      setAction: state.setAction,
+      isLoading: state.isLoading,
+      error: state.error,
+    }))
+  );
 
   const handleConfigureMethod = (method: IPaymentMethod) => {
-    setItemAction({
-      itemName: "PaymentMethod",
-      action: "configurePaymentMethod",
-      id: method.id,
-    });
+    setAction('configurePaymentMethod', method.id);
   };
 
   const handleToggleMethod = (method: IPaymentMethod) => {
-    setItemAction({
-      itemName: "PaymentMethod",
-      action: "togglePaymentMethod",
-      id: method.id,
-    });
+    setAction('togglePaymentMethod', method.id);
   };
 
   const extraActions = (method: IPaymentMethod) => {
@@ -103,7 +101,7 @@ export default function PaymentMethodsCards({
   return (
     <div className="space-y-6">
       <div className="grid gap-6">
-        {data?.map((method) => (
+        {paymentMethods?.map((method) => (
           <AppCard key={method.id} className="overflow-hidden"
 
             header={
@@ -140,7 +138,7 @@ export default function PaymentMethodsCards({
         ))}
       </div>
 
-      {data?.length === 0 && (
+      {paymentMethods?.length === 0 && (
         <div className="text-center py-12">
           <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No payment methods found</h3>

@@ -53,9 +53,8 @@ export function ModalForm<TFormData, TResponse>({
 }: IModalFormProps<TFormData, TResponse>) {
 
 
-    const { isSubmitting, error, onSubmit } = formStore(useShallow(state => ({
-      isSubmitting: state.isSubmitting,
-      error: state.error,
+    const { onSubmit } = formStore(useShallow(state => ({
+     
       onSubmit: state.onSubmit
     })));
 
@@ -74,14 +73,14 @@ export function ModalForm<TFormData, TResponse>({
               <div>
                 {footerContent}
 
-                {error && (
-                  <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
+                {false && (
+                  <p className="text-sm font-medium text-red-500 my-2">{"error.message"}</p>
                 )}
               </div>
             }
           >
 
-            {isSubmitting && (
+            {false && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>

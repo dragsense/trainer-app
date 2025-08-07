@@ -112,11 +112,11 @@ export default function TrainerForm({
         return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, reset } = singleStore(useShallow(state => ({
+    const { action, response, isLoading, setAction } = singleStore(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        reset: state.reset
+        setAction: state.setAction
     })));
 
     const isEditing = !!response;
@@ -164,13 +164,11 @@ export default function TrainerForm({
     }
 
     const handleClose = () => {
-        reset();
+        setAction('none');
         setCredentialModalContent({ open: false, email: "", password: "" });
     };
 
     return <>
-
-
         <FormHandler<TUserData, { user: IUser, message: string } | IMessageResponse, ITrainerFormExtraProps>
             mutationFn={isEditing ? updateUser(response.id) : createUser}
             FormComponent={TrainerFormModal}
@@ -179,7 +177,7 @@ export default function TrainerForm({
             validationSchema={TrainerSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
-                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                //queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
 
                 if (!isEditing && response && response.user) {
@@ -193,7 +191,7 @@ export default function TrainerForm({
             }}
             formProps={{
                 open: !!action,
-                onClose: reset,
+                onClose: () => setAction('none'),
                 isEditing,
             }}
         />

@@ -10,36 +10,31 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { INotificationSetting } from "@/@types/setting.type";
+import {  TNotificationSettingData } from "@/@types/setting.type";
+import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { useStore } from "zustand";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
-interface INotificationCardFormProps {
+interface INotificationSettingCardFormProps {
     storeKey: string;
 }
 
-export default function NotificationCardForm({ storeKey }: INotificationCardFormProps) {
+export default function NotificationSettingCardForm({ storeKey }: INotificationSettingCardFormProps) {
     const formStoreKey = storeKey + "-form";
-    const singleStoreKey = storeKey + "-single";
 
     // Move store calls to top level
-    const formStore = useRegisteredStore<TFormHandlerStore<Partial<INotificationSetting>, INotificationSetting>>(formStoreKey);
-    const singleStore = useRegisteredStore<TSingleHandlerStore<INotificationSetting>>(singleStoreKey);
+    const formStore = useRegisteredStore<TFormHandlerStore<TNotificationSettingData, IMessageResponse>>(formStoreKey);
 
     // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-    }
 
-    const { isSubmitting } = useStore(formStore);
+    const isSubmitting = formStore(state => state.isSubmitting);
 
-    const fields: TFieldConfig[] = [
+     const fields: TFieldConfig[] = [
         {
             id: "emailNotifications",
             name: "emailNotifications",
@@ -85,19 +80,19 @@ export default function NotificationCardForm({ storeKey }: INotificationCardForm
     const footerContent: ReactNode = (
         <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Preferences"}
+                {isSubmitting ? "Saving..." : "Save Settings"}
             </Button>
         </div>
     );
 
     return (
         <CardForm
-            title="Notification Preferences"
-            description="Configure how and when you want to receive notifications"
+            title="Notificationlication Settings"
+            description="Configure general notificationlication preferences"
             footerContent={footerContent}
             formStore={formStore}
         >
-            <div className="space-y-6">
+             <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                     <div className="space-y-3">
                         {inputs[0]}

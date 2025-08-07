@@ -40,7 +40,7 @@ export default function ResetPassword() {
   if (!token)
     return <Navigate to={ROOT_ROUTE} replace />
 
-  const RESET_PASSWORD_INITIAL_VALUES: TDefaultValue<TResetPasswordData> = {
+  const RESET_PASSWORD_INITIAL_VALUES: TDefaultValue<TResetPasswordData & { confirmPassword: string }> = {
     newPassword: { value: "" },
     confirmPassword: { notIncluded: true, value: "" },
     token: { value: token },

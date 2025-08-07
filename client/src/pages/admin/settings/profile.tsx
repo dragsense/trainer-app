@@ -1,61 +1,38 @@
-// External Libraries
-import { z } from "zod";
-
-// Types
-import { IProfile, TProfileData } from "@/@types/user.type";
-import { EVALIDATION_MODES } from "@/enums/form.enums";
-
 // Handlers
 import { SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { ProfileCardForm } from "@/components/admin/settings";
+import { ProfileForm } from "@/page-components";
+
 
 // API
-import { fetchProfile, updateProfile } from "@/services/user.api";
+import { fetchProfile } from "@/services/user.api";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TDefaultValue } from "@/@types/form/field.type";
-import { UserGender } from "#/modules/v1/users/enums/user.enum";
+import { IProfile } from "@/@types/user.type";
 
-// Schema
-export const ProfileSchema = z.object({
-    firstName: z.string().min(2, {
-        message: "First name must be at least 2 characters",
-    }),
-    lastName: z.string().min(2, {
-        message: "Last name must be at least 2 characters",
-    }),
-    phoneNumber: z.string().optional(),
-    address: z.string().optional(),
-    bio: z.string().optional(),
-    gender: z.nativeEnum(UserGender).optional(),
-    fitnessGoals: z.array(z.string()).optional(),
-});
+// Layouts
+import { PageInnerLayout } from "@/layouts";
+
+
 
 export default function ProfilePage() {
-    const PROFILE_INITIAL_VALUES: TDefaultValue<Partial<TProfileData>> = {
-        firstName: { value: "" },
-        lastName: { value: "" },
-        phoneNumber: { value: "" },
-        address: { value: "" },
-        bio: { value: "" },
-        gender: { value: UserGender.MALE },
-        fitnessGoals: { value: [] },
-    };
 
-    return (<SingleHandler<IProfile, Partial<TProfileData>, IMessageResponse>
-        queryFn={fetchProfile}
-        storeKey="profileSettings"
-        mutationFns={{
-            updateFn: () => updateProfile
-        }}
-        id={1}
-        FormComponent={ProfileCardForm}
-        validationSchema={ProfileSchema}
-        initialValues={PROFILE_INITIAL_VALUES}
-        validationMode={EVALIDATION_MODES.OnChange}
-    />
+
+    const STORE_KEY = 'profile';
+
+    return (
+        <PageInnerLayout Header={<Header />}>
+            <SingleHandler<IProfile>
+                queryFn={fetchProfile}
+                storeKey={STORE_KEY}
+                SingleComponent={ProfileForm}
+                enabled={true}
+            />
+        </PageInnerLayout>
     );
 }
+
+
+
+const Header = () => null;

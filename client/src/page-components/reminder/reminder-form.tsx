@@ -14,7 +14,7 @@ import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderCurrency, ReminderStatus, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderActions, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -24,6 +24,7 @@ import { ReminderFormModal } from "@/components/admin";
 
 // Services
 import { createReminder, updateReminder } from "@/services/reminder.api";
+import { ReminderFrequency } from "@/enums/reminder.enum";
 
 
 
@@ -46,9 +47,9 @@ export const ReminderSchema = z.object({
     actions: z
         .array(z.nativeEnum(ReminderActions))
         .min(1, "At least one delivery method is required"),
-    recipientId: z.number().min(1, "Recipient ID must be a positive number"),
-    sessionId: z.number().min(0, "Session ID must be a non-negative number").optional(),
-    reminderId: z.number().min(0, "Reminder ID must be a non-negative number").optional(),
+    recipientId: z.number().optional(),
+    sessionId: z.number().optional(),
+    reminderId: z.number().optional(),
     priority: z.number().min(1).max(5).optional(),
     maxAttempts: z.number().min(1).max(10).optional(),
     retryInterval: z.number().min(1).optional(),
@@ -116,9 +117,7 @@ export default function ReminderForm({
         }
 
         const flatResponse = {
-            ...(response || {}),
-            ...(response?.session ? { sessionId: response.session.id } : {}),
-            ...(response?.user ? { userId: response.user.id } : {}),
+            ...(response || {})
         };
 
 

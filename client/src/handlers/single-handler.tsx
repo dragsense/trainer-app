@@ -28,7 +28,6 @@ import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore
 
 // Hooks
 import { useApiQuery } from "@/hooks/use-api-query";
-import { useShallow } from "zustand/shallow";
 
 
 export interface ISingleHandlerProps<
@@ -37,7 +36,7 @@ export interface ISingleHandlerProps<
 > {
   storeKey: string;
   listStoreKey?: string;
-  initialId?: number;
+  enabled?: boolean;
   name?: string;
   initialParams?: TQueryParams;
   queryFn: (id: number, queryParams: TQueryParams) => Promise<IData>;
@@ -54,7 +53,7 @@ export function SingleHandler<
 >({
   name = "Item",
   initialParams = {},
-  initialId = 0,
+  enabled,
   queryFn,
   deleteFn = () => Promise.resolve(),
   onDeleteSuccess,
@@ -74,7 +73,7 @@ export function SingleHandler<
 
   let store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
   if (!store) {
-    store = useSingleHandlerStore<IData>(name, initialId, initialParams);
+    store = useSingleHandlerStore<IData>(name, initialParams);
     registerStore<TSingleHandlerStore<IData>>(singleStoreKey, store);
   }
 
@@ -84,7 +83,7 @@ export function SingleHandler<
   }, [singleStoreKey, store]);
 
 
-  const id = store((state) => state.id);
+  const id = enabled ? 0 : store((state) => state.id);
 
   const queryKey = [singleStoreKey, id];
 
@@ -95,7 +94,7 @@ export function SingleHandler<
       store.setState({ isLoading: true });
       try {
         const response = await queryFn(id, params);
-      
+
         store.setState({
           isLoading: false,
           error: null,
@@ -118,7 +117,7 @@ export function SingleHandler<
     },
     initialParams,
     {
-      enabled: !!id && store.getState().action !== "delete",
+      enabled: !!id || enabled,
     }
   );
 
@@ -195,7 +194,7 @@ export function SingleHandler<
           listProps={singleProps as TSingleExtraProps}
         />
 
-        <ConfirmDialog {...dialogProps} />;
+        <ConfirmDialog {...dialogProps} />
 
       </>
     </ErrorBoundary>

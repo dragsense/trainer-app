@@ -5,7 +5,6 @@ import { PaymentMethod } from './entities/payment-method.entity';
 import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { PaymentMethodListDto } from './dto/payment-method-list.dto';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { PAYMENT_METHOD_CONFIGS, PaymentMethodType } from './enums/payment-method-type.enum';
 import { MessageResponse } from '@/interfaces/general.interface';
 
@@ -37,7 +36,7 @@ export class PaymentMethodsService {
     return this.paymentMethodRepo.save(paymentMethod);
   }
 
-  async findAll(queryDto: PaymentMethodListDto): Promise<PaginationResponse<PaymentMethod>> {
+  async findAll(queryDto: PaymentMethodListDto): Promise<PaymentMethod[]> {
     const {
       page = 1,
       limit = 10,
@@ -88,21 +87,10 @@ export class PaymentMethodsService {
 
     query
       .orderBy(`paymentMethod.${sortBy}`, sortOrder as 'ASC' | 'DESC')
-      .take(limit)
-      .skip((page - 1) * limit);
 
     const data = await query.getMany();
-    const total = await query.getCount();
 
-    return {
-      data,
-      total,
-      page,
-      limit,
-      lastPage: Math.ceil(total / limit),
-      hasNextPage: page < Math.ceil(total / limit),
-      hasPrevPage: page > 1,
-    };
+    return data;
   }
 
   async findOne(id: number): Promise<PaymentMethod> {

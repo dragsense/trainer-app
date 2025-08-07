@@ -121,6 +121,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   });
 
   useEffect(() => {
+    
     if (form) {
       const submitHandler = form!.handleSubmit(async (data) => {
         const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
@@ -176,7 +177,10 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      {MemoizedFormComponent}
+      <FormWrapper key={storeKey}><FormComponent
+        storeKey={storeKey}
+        {...(formProps ?? {} as TFormExtraProps)} />
+      </FormWrapper>
     </ErrorBoundary >
   );
 }

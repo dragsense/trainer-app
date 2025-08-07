@@ -10,12 +10,11 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { IProfile, TProfileData } from "@/@types/user.type";
+import { TProfileData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { useStore } from "zustand";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IProfileCardFormProps {
     storeKey: string;
@@ -23,22 +22,15 @@ interface IProfileCardFormProps {
 
 export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
     const formStoreKey = storeKey + "-form";
-    const singleStoreKey = storeKey + "-single";
 
-    // Move store calls to top level - this fixes the hook rendering issue
     const formStore = useRegisteredStore<TFormHandlerStore<TProfileData, IMessageResponse>>(formStoreKey);
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IProfile>>(singleStoreKey);
 
-    // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-    }
 
-    const { isSubmitting, values } = useStore(formStore);
+    const isSubmitting = formStore(state => state.isSubmitting)
 
     const fields: TFieldConfig[] = [
         // ─── Basic Info ──────────────

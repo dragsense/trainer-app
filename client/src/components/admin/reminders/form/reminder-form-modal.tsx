@@ -4,29 +4,36 @@ import { Loader2 } from "lucide-react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
+import { useSearchableBillings, useSearchableSessions, useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
 import { ReminderType, ReminderFrequency, ReminderActions } from "#/modules/v1/reminders/enums/reminder.enum";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { IBilling } from "@/@types/billing.type";
+import { IUser } from "@/@types/user.type";
+import { ISession } from "@/@types/session.type";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
-import { useStore } from "zustand";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { useSearchableUsers } from "@/hooks/use-searchable";
 
 export interface IReminderFormModalProps {
   storeKey: string;
+  open: boolean;
+  isEditing?: boolean;
+  onClose: () => void;
 }
 
 export default function ReminderFormModal({
-  storeKey
+  storeKey,
+  open,
+  isEditing = false,
+  onClose,
 }: IReminderFormModalProps) {
 
   const formStoreKey = storeKey + "-form";
@@ -44,46 +51,9 @@ export default function ReminderFormModal({
   if (!singleStore) {
     return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
   }
-const isSubmitting = formStore(state => state.isSubmitting);
 
+  const isSubmitting = formStore(state => state.isSubmitting);
 
-  const UserSelect = React.memo(
-    ({ props, }: { props: any; }) => (
-      <SearchableInputWrapper<IUser>
-        {...props}
-        modal={true}
-
-        useSearchable={() => useSearchableUsers({})}
-        getLabel={(item) => item.email}
-        getKey={(item) => item.id.toString()}
-        shouldFilter={false}
-      />
-    )
-  );
-
-
-  const userInput = useUserListInput({
-    isSubmitting,
-    multiple: false,
-    level: UserLevels[UserRole.USER],
-    prefix: "recipient",
-    valueType: "number"
-  });
-
-
-  const sessionInput = useSessionListInput({
-    isSubmitting,
-    multiple: false,
-    prefix: "session",
-    valueType: "number"
-  });
-
-  const billingInput = useBillingListInput({
-    isSubmitting,
-    multiple: false,
-    prefix: "billing",
-    valueType: "number"
-  });
 
   // Base fields
   const categorizedFields: { category: string; fields: TFieldConfig[] }[] = [
@@ -101,8 +71,9 @@ const isSubmitting = formStore(state => state.isSubmitting);
             { value: ReminderType.CUSTOM, label: "Custom Reminder" },
           ],
           required: true,
+
         },
-       
+
         {
           id: "message",
           name: "message",
@@ -130,10 +101,71 @@ const isSubmitting = formStore(state => state.isSubmitting);
     {
       category: "Recipient & Session",
       fields: [
-         ...userInput,
-        ...sessionInput,
-        ...billingInput,
-        
+        {
+          id: "recipientId",
+          name: "recipientId",
+          label: "Recipient",
+          placeholder: "Select Recipient",
+          type: "custom",
+          valueType: "number",
+          visible: ({ values }) => values.type === ReminderType.CUSTOM,
+          required: ({ values }) => values.type === ReminderType.CUSTOM,
+          Component: (props) => (
+            <SearchableInputWrapper<IUser>
+              {...props}
+              modal={true}
+
+              useSearchable={() => useSearchableUsers({})}
+              getLabel={(item) => item.email}
+              getKey={(item) => item.id.toString()}
+              shouldFilter={false}
+            />
+
+          ),
+        },
+        {
+          id: "sessionId",
+          name: "sessionId",
+          label: "Session",
+          placeholder: "Select Session",
+          type: "custom",
+          valueType: "number",
+          visible: ({ values }) => values.type === ReminderType.SESSION,
+          required: ({ values }) => values.type === ReminderType.SESSION,
+          Component: (props) => (
+            <SearchableInputWrapper<ISession>
+              {...props}
+              modal={true}
+              useSearchable={() => useSearchableSessions({})}
+              getLabel={(item) => item.title}
+              getKey={(item) => item.id.toString()}
+              shouldFilter={false}
+            />
+
+          ),
+        },
+        {
+          id: "billingId",
+          name: "billingId",
+          label: "Billing",
+          placeholder: "Select Billing",
+          type: "custom",
+         visible: ({ values }) => values.type === ReminderType.BILLING,
+          required: ({ values }) => values.type === ReminderType.BILLING,
+          valueType: "number",
+          Component: (props) => (
+            <SearchableInputWrapper<IBilling>
+              {...props}
+              modal={true}
+              useSearchable={() => useSearchableBillings({})}
+              getLabel={(item) => item.localInvoiceNumber}
+              getKey={(item) => item.id.toString()}
+              shouldFilter={false}
+            />
+
+          ),
+        },
+
       ],
     },
     {
@@ -169,7 +201,7 @@ const isSubmitting = formStore(state => state.isSubmitting);
             { value: "4", label: "Thursday" },
             { value: "5", label: "Friday" },
             { value: "6", label: "Saturday" },
-            
+
           ],
           placeholder: "Select days of the week...",
           required: true,
@@ -296,7 +328,7 @@ const isSubmitting = formStore(state => state.isSubmitting);
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) setResetActions();
+    if (state === false) onClose();
   };
 
   const formButtons = (
@@ -306,7 +338,7 @@ const isSubmitting = formStore(state => state.isSubmitting);
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          setResetActions();
+          onClose();
         }}
       >
         Cancel
@@ -342,7 +374,7 @@ const isSubmitting = formStore(state => state.isSubmitting);
     <ModalForm<TReminderData, IReminder>
       title={`${isEditing ? "Edit" : "Create"} Reminder`}
       description={`${isEditing ? "Edit existing" : "Create a new"} reminder with custom frequency settings`}
-      open={isEditing || isCreating}
+      open={open}
       onOpenChange={onOpenChange}
       formStore={formStore}
       footerContent={formButtons}

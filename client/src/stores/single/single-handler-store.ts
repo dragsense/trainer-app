@@ -9,18 +9,18 @@ import { TQueryParams } from '@/@types/api/param.type';
 // Config
 import { config } from '@/config';
 
-export const useSingleHandlerStore = <TResponse>(name: string, id: number = 0, initialParams: TQueryParams = {}) => {
+export const useSingleHandlerStore = <TResponse>(name: string, initialParams: TQueryParams = {}) => {
     return create<ISingleHandlerState<TResponse>>()(
         devtools(
             (set) => ({
                 name,
-                id,
+                id: 0,
                 params: initialParams,
                 isLoading: false,
                 error: null,
                 response: null,
                 action: '',
-           
+
                 // State setters
                 setIsLoading: (isLoading) => set({ isLoading }),
                 setError: (error) => set({ error }),
@@ -31,6 +31,7 @@ export const useSingleHandlerStore = <TResponse>(name: string, id: number = 0, i
                     set({ id, action });
                 },
 
+        
 
                 syncWithQuery: ({ isLoading, error, isSuccess, response }) => {
                     set({

@@ -16,7 +16,6 @@ import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
 import { PaymentMethodListDto } from './dto/payment-method-list.dto';
 import { PaymentMethod } from './entities/payment-method.entity';
-import { PaymentMethodPaginatedDto } from './dto/payment-method-responses.dto';
 import { PaymentMethodsSeeder } from './payment-methods.seeder';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 
@@ -43,8 +42,11 @@ export class PaymentMethodsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all payment methods with pagination' })
-  @ApiResponse({ status: 200, description: 'Payment methods retrieved successfully', type: PaymentMethodPaginatedDto })
-  findAll(@Query() query: PaymentMethodListDto): Promise<PaymentMethodPaginatedDto> {
+  @ApiResponse({
+    status: 200, description: 'Payment methods retrieved successfully', type: PaymentMethod,
+    isArray: true,
+  })
+  findAll(@Query() query: PaymentMethodListDto) {
     return this.paymentMethodsService.findAll(query);
   }
 
