@@ -2,20 +2,12 @@
 
 import { useState } from "react";
 import { ChevronDownIcon, Star } from "lucide-react";
-import { useFormContext } from "react-hook-form";
 
 
 // UI Components
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import {
   FormField,
   FormItem,
@@ -43,8 +35,7 @@ import { EORDER_CLASSES } from "@/enums/general.enum";
 
 // App Layout Components
 import { AppSelect } from "@/components/layout-ui/app-select";
-
-
+import { useWatch } from "react-hook-form";
 
 interface UseInputProps {
   fields: TFieldConfig[];
@@ -58,9 +49,6 @@ export function useInput({
   layout = "vertical",
 }: UseInputProps) {
 
-  const { getValues } = useFormContext(); 
-
-  
 
   const convertValue = (input: unknown, type?: string): any => {
     const getValue = (val: any) => {
@@ -75,7 +63,7 @@ export function useInput({
       input && typeof input === "object" && "target" in input
         ? (input as any).target.value
         : input;
-        
+
 
     return Array.isArray(rawValue)
       ? rawValue.map(getValue)
@@ -83,30 +71,31 @@ export function useInput({
   };
 
 
-  const inputs = fields.map((field) => {
-    const values = getValues();
-    const isVisible = typeof field.visible === "function"
-      ? field.visible({ values })
-      : true;
 
-    if (!isVisible) return null;
+  const inputs = fields.map((field, index) => {
 
     const fieldLayout = field.layout || layout;
     const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
     const inputFlex = labelOrderClass === EORDER_CLASSES.First ? "flex-1" : "";
-    const [open, setOpen] = useState(false)
 
     return (
       <FormField
         key={field.id}
         name={field.name}
-        
+
         render={({ field: controllerField }) => {
+
+          const [open, setOpen] = useState<boolean>(false);
+          const values = useWatch();
+
+          const isVisible = field.visible ? field.visible({ values }) : true;
+          const isDisabled = typeof field.disabled === "function" ? field.disabled({ values }) : field.disabled;
+
           const onChangeHandler = (value: any) => {
             const parsed = convertValue(value, field.valueType);
             // Trigger RHF control
             controllerField.onChange(parsed);
-            field.listeners?.onChange?.(parsed, { values: getValues() });
+            field?.onChange?.(parsed);
           };
           const commonClass = cn(
             field.startAdornment && "pl-10",
@@ -122,29 +111,18 @@ export function useInput({
                     {...controllerField}
                     onChange={onChangeHandler}
                     placeholder={field.placeholder}
-                    disabled={field.disabled}
+                    disabled={isDisabled}
                     className={commonClass}
                   />
                 );
 
               case "select":
                 return (
-                  <Select
-                    disabled={field.disabled}
-                    onValueChange={onChangeHandler}
-                    value={controllerField.value?.toString() || ""} // Ensure value is a string for Select
-                  >
-                    <SelectTrigger className={commonClass}>
-                      <SelectValue placeholder={field.placeholder || "Select..."} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {field.options?.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <AppSelect
+                    value={controllerField.value || []}
+                    onChange={onChangeHandler}
+                    options={field.options || []}
+                  />
                 );
               case "multiSelect":
                 return (
@@ -152,7 +130,7 @@ export function useInput({
                     value={controllerField.value || []}
                     onChange={onChangeHandler}
                     options={field.options || []}
-
+                    multiple={true}
                   />
                 );
 
@@ -160,8 +138,8 @@ export function useInput({
                 return (
                   <Switch
                     checked={controllerField.value}
-                    onCheckedChange={controllerField.onChange}
-                    disabled={field.disabled}
+                    onCheckedChange={onChangeHandler}
+                    disabled={isDisabled}
                   />
                 );
               case "rating":
@@ -195,7 +173,7 @@ export function useInput({
                         const file = e.target.files?.[0];
                         if (file) controllerField.onChange(file);
                       }}
-                      disabled={field.disabled}
+                      disabled={isDisabled}
                       className="hidden"
                       id={`file-input-${field.id}`}
                     />
@@ -220,7 +198,7 @@ export function useInput({
                       min={field.min ?? 0}
                       max={field.max ?? 100}
                       step={field.step ?? 1}
-                      disabled={field.disabled}
+                      disabled={isDisabled}
                     />
                     <div className="text-sm text-muted-foreground text-right">
                       {controllerField.value ?? 0}
@@ -318,7 +296,7 @@ export function useInput({
                   <field.Component
                     value={controllerField.value}
                     onChange={onChangeHandler}
-                    disabled={field.disabled}
+                    disabled={isDisabled}
                   />
                 ) : null;
 
@@ -330,7 +308,7 @@ export function useInput({
                     type={field.type}
                     onChange={onChangeHandler}
                     placeholder={field.placeholder}
-                    disabled={field.disabled}
+                    disabled={isDisabled}
                     className={commonClass}
                   />
                 );
@@ -342,7 +320,8 @@ export function useInput({
               <div
                 className={cn(
                   "gap-2 flex",
-                  fieldLayout === "vertical" ? "flex-col justify-center" : "items-center"
+                  fieldLayout === "vertical" ? "flex-col justify-center" : "items-center",
+                  isVisible ? "" : "hidden"
                 )}
               >
                 {field.label && (

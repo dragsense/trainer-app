@@ -14,9 +14,9 @@ import { AuthUser } from '@/decorators/user.decorator';
 @ApiTags('Reminders')
 @Controller('reminders')
 export class RemindersController {
-  constructor(private readonly remindersService: RemindersService) {}
+  constructor(private readonly remindersService: RemindersService) { }
 
-  @MinRoleLevel(UserLevels.TRAINER)
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Create a new reminder' })
   @ApiResponse({ status: 201, description: 'Reminder created successfully' })
   @Post()
@@ -27,7 +27,7 @@ export class RemindersController {
     return this.remindersService.create(user, createReminderDto);
   }
 
-  @MinRoleLevel(UserLevels.TRAINER)
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Get all reminders' })
   @ApiResponse({ status: 200, description: 'Reminders retrieved successfully' })
   @Get()
@@ -38,7 +38,7 @@ export class RemindersController {
     return this.remindersService.findAll(user, query);
   }
 
-  @MinRoleLevel(UserLevels.TRAINER)
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @ApiOperation({ summary: 'Get a specific reminder' })
   @ApiResponse({ status: 200, description: 'Reminder retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Reminder not found' })
@@ -50,9 +50,7 @@ export class RemindersController {
     return this.remindersService.findOne(user, id);
   }
 
-
-
-  @MinRoleLevel(UserLevels.TRAINER)
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @ApiOperation({ summary: 'Update a reminder' })
   @ApiResponse({ status: 200, description: 'Reminder updated successfully' })
   @ApiResponse({ status: 404, description: 'Reminder not found' })
@@ -65,7 +63,7 @@ export class RemindersController {
     return this.remindersService.update(user, id, updateReminderDto);
   }
 
-  @MinRoleLevel(UserLevels.TRAINER)
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @ApiOperation({ summary: 'Delete a reminder' })
   @ApiResponse({ status: 200, description: 'Reminder deleted successfully' })
   @ApiResponse({ status: 404, description: 'Reminder not found' })

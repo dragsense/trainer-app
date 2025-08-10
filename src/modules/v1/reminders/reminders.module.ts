@@ -14,7 +14,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { ReminderBillingService } from './services/reminder-billing.service';
 import { Billing } from '../billings/entities/billing.entity';
 import { BillingsModule } from '../billings/billings.module';
-import { StripeModule } from '../stripe/stripe.module';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { StripeModule } from '../stripe/stripe.module';
     }),
     NotificationsModule,
     BillingsModule,
-    StripeModule
   ],
   controllers: [RemindersController],
   providers: [

@@ -16,37 +16,7 @@ export const navItems: {
             icon: LayoutDashboard,
             urls: [
                 ADMIN_ROUTES.DASHBOARD,
-                ADMIN_ROUTES.DASHBOARD_REVENUE,
-                ADMIN_ROUTES.DASHBOARD_SESSIONS,
-                ADMIN_ROUTES.DASHBOARD_PAYMENTS,
-                ADMIN_ROUTES.DASHBOARD_BILLING,
             ],
-            children: [
-                {
-                    title: "Overview",
-                    url: ADMIN_ROUTES.DASHBOARD,
-                },
-                {
-                    title: "Revenue Analytics",
-                    icon: TrendingUp,
-                    url: ADMIN_ROUTES.DASHBOARD_REVENUE,
-                },
-                {
-                    title: "Session Analytics",
-                    icon: Calendar,
-                    url: ADMIN_ROUTES.DASHBOARD_SESSIONS,
-                },
-                {
-                    title: "Payment Analytics",
-                    icon: CreditCard,
-                    url: ADMIN_ROUTES.DASHBOARD_PAYMENTS,
-                },
-                {
-                    title: "Billing Analytics",
-                    icon: Banknote,
-                    url: ADMIN_ROUTES.DASHBOARD_BILLING,
-                }
-            ]
         },
         {
             title: "Trainers",

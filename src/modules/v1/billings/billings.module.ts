@@ -13,6 +13,7 @@ import { StripeModule } from '../stripe/stripe.module';
 import { SettingsModule } from '../settings/settings.module';
 import { SessionsService } from '../sessions/sessions.service';
 import { Session } from '../sessions/entities/session.entity';
+import { PaymentMethodsModule } from '../settings/payment-methods/payment-methods.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { Session } from '../sessions/entities/session.entity';
     UsersModule,
     MailerModule,
     SettingsModule,
-    forwardRef(() => StripeModule),
+    StripeModule,
+    PaymentMethodsModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],

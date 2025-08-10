@@ -18,6 +18,14 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
       ...updated[index],
       [key]: val,
     };
+
+    // Auto-calculate amount whenever quantity or unitPrice changes
+    if (key === "quantity" || key === "unitPrice") {
+      const qty = updated[index].quantity || 0;
+      const price = updated[index].unitPrice || 0;
+      updated[index].amount = qty * price;
+    }
+
     onChange(updated);
   };
 
@@ -78,11 +86,7 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 type="number"
                 value={item.quantity}
                 onChange={(e) =>
-                  updateItem(
-                    index,
-                    "quantity",
-                    parseInt(e.target.value || "0")
-                  )
+                  updateItem(index, "quantity", parseInt(e.target.value || "0"))
                 }
                 min={1}
                 disabled={disabled}
@@ -107,19 +111,12 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
             </div>
 
             <div>
-              <Label>Amount (quantity × unit price)</Label>
+              <Label>Amount (auto-calculated)</Label>
               <Input
                 type="number"
                 value={item.amount}
-                onChange={(e) =>
-                  updateItem(
-                    index,
-                    "amount",
-                    parseInt(e.target.value || "0")
-                  )
-                }
-                min={0}
-                disabled={disabled}
+                readOnly
+                disabled={true} // always disabled since it's auto-calculated
               />
             </div>
 

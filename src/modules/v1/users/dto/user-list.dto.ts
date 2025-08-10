@@ -15,5 +15,14 @@ export class UserListDto extends ListQueryDto {
     @Type(() => Number)
     level?: number;
 
+    @ApiPropertyOptional({
+        description: 'Filter by trainer ID',
+        example: 1
+    })
+    @IsOptional()
+    @IsNumber()
+    @Type(() => Number)
+    trainerId?: number;
+
 }
 

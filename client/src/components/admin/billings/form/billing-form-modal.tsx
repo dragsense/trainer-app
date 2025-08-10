@@ -12,6 +12,7 @@ import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { IBilling, TBillingData } from "@/@types/billing.type";
 import { BillingCurrency, BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
 import { IUser } from "@/@types/user.type";
+import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,14 @@ export default function BillingFormModal({
       type: "select",
       required: false,
       options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
+    },
+     {
+      id: "paymentMethodType",
+      name: "paymentMethodType",
+      label: "Payment Method",
+      type: "select",
+      required: false,
+      options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
     },
     {
       id: "totalAmount",

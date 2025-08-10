@@ -22,6 +22,8 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
 import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 import { UserEmailService } from './services/user-email.service';
+import { UserListDto } from './dto/user-list.dto';
+import { TrainerClientsService } from '../trainer-clients/trainer-clients.service';
 
 @Injectable()
 export class UsersService {
@@ -36,6 +38,7 @@ export class UsersService {
     @InjectRepository(NotificationSetting)
     private readonly notificationSettingRepo: Repository<NotificationSetting>,
     private readonly userEmailService: UserEmailService,
+    private readonly trianerClientService: TrainerClientsService
   ) { }
 
   async findOne(
@@ -68,39 +71,39 @@ export class UsersService {
     });
   }
 
+
   async findAll(
-    {
+    queryDto: UserListDto,
+    currentUser: User
+  ): Promise<PaginationResponse<User>> {
+    const {
       page = 1,
       limit = 10,
       search,
       level,
       trainerId,
-    }: ListQueryDto & { level?: number; trainerId?: number },
-    currentUser: User
-  ): Promise<PaginationResponse<User>> {
+      ...filters
+    } = queryDto;
+
     const skip = (page - 1) * limit;
     const query = this.userRepo.createQueryBuilder('user')
       .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('user.owner', 'owner');
 
     // Role-based filtering
-    switch (currentUser.level) {
-      case UserLevels[UserRole.TRAINER]:
-        // Trainers can only see their clients
-        query.where('trainer.id = :trainerId', { trainerId: currentUser.id });
-        break;
-      case UserLevels[UserRole.TRAINER]:
-        // Admins can see all except super admin
-        query.where('user.level != :superAdminLevel', {
-          superAdminLevel: UserLevels[UserRole.SUPER_ADMIN]
-        });
-        break;
-      case UserLevels[UserRole.SUPER_ADMIN]:
-        // Super admins can see everyone
-        break;
-      default:
-        throw new ForbiddenException('Invalid role');
+    const userLevel = currentUser.level;
+    if (userLevel === UserLevels[UserRole.TRAINER]) {
+      query.where('owner.id = :userId', { userId: currentUser.id });
+    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
+      query.where('user.level != :superAdminLevel', {
+        superAdminLevel: UserLevels[UserRole.SUPER_ADMIN],
+      });
+    }
+    else {
+      throw new ForbiddenException('Invalid role');
     }
 
+    // Apply filters
     if (search) {
       query.andWhere(
         '(user.email ILIKE :search OR profile.firstName ILIKE :search OR profile.lastName ILIKE :search)',
@@ -113,8 +116,18 @@ export class UsersService {
     }
 
     if (trainerId) {
-      query.andWhere('user.createdBy.id = :trainerId', { trainerId });
+      query.andWhere('createdBy.id = :trainerId', { trainerId });
     }
+
+    // (Optional) Apply extra filters dynamically if needed
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined) {
+        query.andWhere(`user.${key} = :${key}`, { [key]: value });
+      }
+    });
+
+    // Sorting (could be enhanced if queryDto includes sort options)
+    query.orderBy('user.createdAt', 'DESC');
 
     const [data, total] = await query
       .skip(skip)
@@ -132,6 +145,7 @@ export class UsersService {
       hasNextPage: page < lastPage,
       hasPrevPage: page > 1,
     };
+
   }
 
   private generateStrongPassword(length: number): string {
@@ -171,6 +185,11 @@ export class UsersService {
     const existingUser = await this.userRepo.findOne({
       where: { email: createUserDto.email },
     });
+
+
+    if (createUserDto.level !== UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+      throw new ForbiddenException('Trainers can only create clients');
+    }
 
     if (existingUser) {
       throw new ConflictException('Email already exists');
@@ -238,6 +257,14 @@ export class UsersService {
           console.error('Onboarding email failed', error),
         );
         user.password = tempPassword;
+      }
+
+
+      if (user.level === UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+        this.trianerClientService.assignTrainerToClient({
+          trainerId: currentUser.id,
+          clientId: user.id,
+        });
       }
 
       return { message: 'User created successfully.', user };

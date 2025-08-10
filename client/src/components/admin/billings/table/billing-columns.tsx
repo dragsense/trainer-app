@@ -1,6 +1,6 @@
 // External Libraries
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Download, MoreHorizontal, RefreshCw, Send } from "lucide-react";
 import { format } from "date-fns";
 
 // UI Components
@@ -15,18 +15,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Types
-import { IBilling } from "@/@types/billing.type";
+import { IBilling, IStripeInvoice, IStripeTransaction } from "@/@types/billing.type";
 import { Badge } from "@/components/ui/badge";
+import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
 
 
 export const columns = ({
   handleEdit,
   handleView,
-  handleDelete
+  handleDelete,
+  updateStatus
 }: {
   handleEdit?: (id: number) => void;
   handleView?: (id: number) => void;
   handleDelete?: (id: number) => void;
+  updateStatus?: (id: number) => void;
 }
 ): ColumnDef<IBilling>[] => [
     {
@@ -109,12 +112,31 @@ export const columns = ({
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue<string>("status");
-        return (
-          <Badge variant={status === "COMPLETED" ? "default" : "secondary"}>
-            {status?.replace("_", " ")}
-          </Badge>
-        );
+        const status = row.getValue<BillingStatus>("status");
+
+        const statusConfig: Record<BillingStatus, { color: string; label: string }> = {
+          [BillingStatus.PAID]: {
+            color: "bg-green-100 text-green-800",
+            label: "Paid",
+          },
+          [BillingStatus.PENDING]: {
+            color: "bg-yellow-100 text-yellow-800",
+            label: "Pending",
+          },
+          [BillingStatus.FAILED]: {
+            color: "bg-red-100 text-red-800",
+            label: "Failed",
+          },
+          [BillingStatus.OVERDUE]: {
+            color: "bg-orange-100 text-orange-800",
+            label: "Overdue",
+          },
+        };
+
+        const config =
+          statusConfig[status as BillingStatus] || statusConfig[BillingStatus.PENDING];
+
+        return <Badge onClick={updateStatus && (() => updateStatus(row.original.id))} className={config.color}>{config.label}</Badge>;
       },
     },
     {
@@ -133,7 +155,7 @@ export const columns = ({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-                {handleView && (
+              {handleView && (
                 <DropdownMenuItem onClick={() => handleView(billing.id)}>
                   View
                 </DropdownMenuItem>
@@ -157,3 +179,217 @@ export const columns = ({
       },
     },
   ];
+
+
+
+export const invoiceColumns: ColumnDef<IStripeInvoice>[] = [
+  {
+    accessorKey: "number",
+    header: "Invoice",
+    cell: ({ row }) => (
+      <div>
+        <div className="font-medium">{row.original.number}</div>
+        <div className="text-sm text-muted-foreground">{row.original.id}</div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "customer_name",
+    header: "Customer",
+    cell: ({ row }) => {
+
+      if (!row.original.customer_name || !row.original.customer_email) {
+        return null;
+      }
+      return (
+        <div>
+          <div className="font-medium">{row.original.customer_name}</div>
+          <div className="text-sm text-muted-foreground">{row.original.customer_email}</div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "description",
+    header: "Description",
+    cell: ({ row }) => (
+      <div className="max-w-xs truncate">
+        {row.original.description}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ getValue }) => {
+      const status = getValue() as string;
+      const statusConfig = {
+        paid: { color: "bg-green-100 text-green-800", label: "Paid" },
+        open: { color: "bg-yellow-100 text-yellow-800", label: "Open" },
+        void: { color: "bg-red-100 text-red-800", label: "Void" },
+        draft: { color: "bg-gray-100 text-gray-800", label: "Draft" },
+        uncollectible: { color: "bg-red-100 text-red-800", label: "Uncollectible" },
+      };
+      const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+      return <Badge className={config.color}>{config.label}</Badge>;
+    },
+  },
+  {
+    accessorKey: "amount_due",
+    header: "Amount",
+    cell: ({ row }) => `$${row.original.amount_due} ${row.original.currency.toUpperCase()}`,
+  },
+  {
+    accessorKey: "due_date",
+    header: "Due Date",
+    cell: ({ row }) => (
+      <div className="text-sm">
+        <div>{row.original?.due_date && new Date(row.original.due_date).toLocaleDateString()}</div>
+        {/* {row.original?.paid_date && (
+            <div className="text-muted-foreground">
+              Paid: {new Date(row.original.paid_date).toLocaleDateString()}
+            </div>
+          )} */}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        {/* <Button variant="outline" size="sm">
+            <Eye className="h-4 w-4" />
+          </Button> */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (row.original.invoice_pdf) {
+              window.open(row.original.invoice_pdf, "_self");
+            }
+          }}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (row.original.hosted_invoice_url) {
+              window.open(row.original.hosted_invoice_url, "_blank");
+            }
+          }}
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+        {/* <Button variant="outline" size="sm">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button> */}
+      </div>
+    ),
+  },
+];
+
+
+export const transactionColumns: ColumnDef<IStripeTransaction>[] = [
+  {
+    accessorKey: "id",
+    header: "Transaction",
+    cell: ({ row }) => (
+      <div>
+        <div className="font-medium">{row.original.id}</div>
+        {row.original.paymentIntentId && (
+          <div className="text-sm text-muted-foreground">
+            {row.original.paymentIntentId}
+          </div>
+        )}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "customerName",
+    header: "Customer",
+    cell: ({ row }) => (
+      <div>
+        <div className="font-medium">{row.original.customerName}</div>
+        <div className="text-sm text-muted-foreground">{row.original.customerEmail}</div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        {row.original.type === "refund" ? (
+          <ArrowDownLeft className="h-4 w-4 text-red-600" />
+        ) : (
+          <ArrowUpRight className="h-4 w-4 text-green-600" />
+        )}
+        <span className="capitalize">{row.original.type}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status;
+      const statusConfig = {
+        succeeded: { color: "bg-green-100 text-green-800", label: "Succeeded" },
+        failed: { color: "bg-red-100 text-red-800", label: "Failed" },
+        pending: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
+        canceled: { color: "bg-gray-100 text-gray-800", label: "Canceled" },
+      };
+      const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+      return <Badge className={config.color}>{config.label}</Badge>;
+    },
+  },
+  {
+    accessorKey: "amount",
+    header: "Amount",
+    cell: ({ row }) => (
+      <div className={`font-medium ${row.original.type === "refund" ? "text-red-600" : "text-green-600"}`}>
+        {row.original.type === "refund" ? "-" : "+"}${row.original.amount.toFixed(2)} {row.original.currency.toUpperCase()}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "description",
+    header: "Description",
+    cell: ({ row }) => (
+      <div className="max-w-xs truncate text-muted-foreground">
+        {row.original.description || "—"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "created",
+    header: "Date",
+    cell: ({ row }) => new Date(row.original.created).toLocaleDateString(),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+      <div className="flex gap-2">
+        {/* <Button variant="outline" size="sm">
+          <Eye className="h-4 w-4" />
+        </Button> */}
+        {row.original.receiptUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(row.original.receiptUrl, "_blank")}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        )}
+        {/* <Button variant="outline" size="sm">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button> */}
+      </div>
+    ),
+  },
+];

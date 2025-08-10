@@ -468,7 +468,7 @@ export class StripeBillingService {
       );
 
       // Check for pending invoices
-      const invoices = await this.stripeInvoiceService.listInvoices(customerId, undefined, 'open');
+      const invoices = await this.stripeInvoiceService.listInvoices(customerId, 'open');
       const hasPendingInvoices = invoices.data.length > 0;
 
 

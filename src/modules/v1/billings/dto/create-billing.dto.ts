@@ -8,9 +8,11 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
+  MinDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BillingStatus, BillingType, BillingCurrency } from '../enums/billing.enum';
+import { PaymentMethodType } from '../../settings/payment-methods/enums/payment-method-type.enum';
 
 class LineItemDto {
   @ApiProperty({ example: 'Consulting Session', description: 'Description of the line item' })
@@ -34,6 +36,7 @@ class LineItemDto {
   @IsNumber()
   tax?: number;
 }
+
 
 export class CreateBillingDto {
   @ApiProperty({ example: 'in_1234567890', description: 'Stripe Invoice ID' })
@@ -116,4 +119,12 @@ export class CreateBillingDto {
   @IsOptional()
   @IsString()
   terms?: string;
+
+  @ApiProperty({
+    enum: PaymentMethodType,
+    example: PaymentMethodType.STRIPE,
+    description: 'Payment method type'
+  })
+  @IsEnum(PaymentMethodType)
+  paymentMethodType: PaymentMethodType;
 }

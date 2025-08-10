@@ -1,5 +1,4 @@
 import React from 'react';
-import { z } from 'zod';
 
 // Handlers
 import { SingleHandler } from '@/handlers';
@@ -15,14 +14,11 @@ import { ICombinedDashboardData } from '@/@types/dashboard.type';
 
 const DashboardOverview: React.FC = () => {
   return (
-    <SingleHandler<ICombinedDashboardData, Record<string, never>, ICombinedDashboardData>
+    <SingleHandler<ICombinedDashboardData, ICombinedDashboardData>
       queryFn={() => fetchCombinedDashboardData()}
       storeKey="dashboardOverview"
       SingleComponent={DashboardView}
-      FormComponent={() => <div></div>}
-      initialValues={{} as Record<string, never>}
-      validationSchema={z.object({})}
-      id={1}
+      enabled={true}
     />
   );
 };

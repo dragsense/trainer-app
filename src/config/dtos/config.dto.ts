@@ -17,7 +17,7 @@ export class EnvironmentVariables {
   APP_NAME: string;
 
   @IsString()
-  FRONTEND_URL: string;
+  APP_URL: string;
 
   @IsString()
   HOST: string;

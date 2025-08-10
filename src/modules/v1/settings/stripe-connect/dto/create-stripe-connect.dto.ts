@@ -1,23 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsEnum, IsString, Length } from 'class-validator';
 
 export class CreateStripeConnectDto {
-    @ApiProperty({ 
-        example: 'US', 
-        description: 'Country code for the Connect account',
-        default: 'US'
-    })
-    @IsString()
-    @IsOptional()
-    country?: string = 'US';
 
-    @ApiProperty({ 
-        example: 'express', 
-        description: 'Type of Stripe Connect account',
-        enum: ['express', 'standard'],
-        default: 'express'
-    })
-    @IsEnum(['express', 'standard'])
-    @IsOptional()
-    type?: 'express' | 'standard' = 'express';
+  @ApiProperty({ example: 'express', description: 'Account type' })
+  @IsEnum(['express', 'standard'], { message: 'type must be either express or standard' })
+  type: 'express' | 'standard';
+
+  @ApiProperty({ example: 'US', description: 'Account country' })
+  @IsString()
+  @Length(2, 2, { message: 'country must be a 2-letter ISO code' })
+  country: string;
+
 }

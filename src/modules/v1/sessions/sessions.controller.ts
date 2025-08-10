@@ -41,8 +41,8 @@ import { SessionStatus } from './enums/session.enum';
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
-  @Post()
   @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @Post()
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
     status: 201,
@@ -59,8 +59,9 @@ export class SessionsController {
     return this.sessionsService.create(user, createSessionDto);
   }
 
-  @Get()
+
   @MinRoleLevel(UserLevels[UserRole.USER])
+  @Get()
   @ApiOperation({ summary: 'Get all sessions with pagination and filters' })
   @ApiResponse({
     status: 200,
@@ -76,8 +77,8 @@ export class SessionsController {
     return this.sessionsService.findAll(queryDto, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get(':id')
-  @MinRoleLevel(UserLevels[UserRole.USER])
   @ApiOperation({ summary: 'Get a specific session' })
   @ApiResponse({
     status: 200,
@@ -94,8 +95,8 @@ export class SessionsController {
     return this.sessionsService.findOne(id, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Patch(':id')
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Update a session' })
   @ApiResponse({
     status: 200,
@@ -114,8 +115,8 @@ export class SessionsController {
     return this.sessionsService.update(id, updateSessionDto, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Patch(':id/status')
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Update session status' })
   @ApiResponse({
     status: 200,
@@ -134,8 +135,8 @@ export class SessionsController {
     return this.sessionsService.updateStatus(id, status, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Delete(':id')
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @ApiOperation({ summary: 'Cancel/delete a session' })
   @ApiResponse({
     status: 200,

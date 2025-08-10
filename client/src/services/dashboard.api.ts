@@ -2,7 +2,7 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IDashboardStats, IDashboardRevenue, IPaymentMethodsOverview, ISessionsAnalytics, IClientsOverview, IRemindersAnalytics, IFinancialSummary, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
+import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IFinancialSummary, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
 
 // Constants
 const DASHBOARD_API_PATH = "/dashboard";
@@ -10,24 +10,6 @@ const DASHBOARD_API_PATH = "/dashboard";
 // Dashboard Statistics
 export const fetchDashboardStats = (): Promise<IDashboardStats> =>
   apiRequest(`${DASHBOARD_API_PATH}/stats`, "GET");
-
-// Revenue Analytics
-export const fetchRevenueAnalytics = (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-  date?: string;
-}): Promise<IDashboardRevenue> => {
-  const queryParams = new URLSearchParams();
-  
-  if (params?.period) queryParams.append("period", params.period);
-  if (params?.date) queryParams.append("date", params.date);
-
-  const queryString = queryParams.toString();
-  return apiRequest(`${DASHBOARD_API_PATH}/revenue${queryString ? `?${queryString}` : ''}`, "GET");
-};
-
-// Payment Methods Overview
-export const fetchPaymentMethodsOverview = (): Promise<IPaymentMethodsOverview> =>
-  apiRequest(`${DASHBOARD_API_PATH}/payments/overview`, "GET");
 
 // Sessions Analytics
 export const fetchSessionsAnalytics = (params?: {
@@ -37,13 +19,6 @@ export const fetchSessionsAnalytics = (params?: {
   return apiRequest(`${DASHBOARD_API_PATH}/sessions/analytics${queryParams}`, "GET");
 };
 
-// Clients Overview
-export const fetchClientsOverview = (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-}): Promise<IClientsOverview> => {
-  const queryParams = params?.period ? `?period=${params.period}` : '';
-  return apiRequest(`${DASHBOARD_API_PATH}/clients/overview${queryParams}`, "GET");
-};
 
 // Reminders Analytics
 export const fetchRemindersAnalytics = (params?: {
@@ -68,7 +43,7 @@ export const fetchBillingAnalytics = (params?: {
   endDate?: string;
 }): Promise<IBillingAnalytics> => {
   const queryParams = new URLSearchParams();
-  
+
   if (params?.period) queryParams.append("period", params.period);
   if (params?.startDate) queryParams.append("startDate", params.startDate);
   if (params?.endDate) queryParams.append("endDate", params.endDate);
@@ -82,37 +57,28 @@ export const fetchCombinedDashboardData = async (params?: {
   period?: 'day' | 'week' | 'month' | 'year';
   date?: string;
 }): Promise<ICombinedDashboardData> => {
-  const { period = 'month', date } = params || {};
+  const { period = 'month' } = params || {};
 
   const [
     stats,
-    revenue,
-    paymentMethods,
-    sessions,
-    clients,
     reminders,
+    sessions,
     financial,
     billing
   ] = await Promise.all([
     fetchDashboardStats(),
-    fetchRevenueAnalytics({ period, date }),
-    fetchPaymentMethodsOverview(),
-    fetchSessionsAnalytics({ period }),
-    fetchClientsOverview({ period }),
     fetchRemindersAnalytics({ period }),
+    fetchSessionsAnalytics({ period }),
     fetchFinancialSummary({ period }),
-    fetchBillingAnalytics({ 
-      period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly' 
+    fetchBillingAnalytics({
+      period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'
     })
   ]);
 
   return {
     stats,
-    revenue,
-    paymentMethods,
-    sessions,
-    clients,
     reminders,
+    sessions,
     financial,
     billing
   };
@@ -122,10 +88,7 @@ export const fetchCombinedDashboardData = async (params?: {
 // Export dashboard API object for easier imports
 export const dashboardApi = {
   getStats: fetchDashboardStats,
-  getRevenueAnalytics: fetchRevenueAnalytics,
-  getPaymentMethodsOverview: fetchPaymentMethodsOverview,
   getSessionsAnalytics: fetchSessionsAnalytics,
-  getClientsOverview: fetchClientsOverview,
   getRemindersAnalytics: fetchRemindersAnalytics,
   getFinancialSummary: fetchFinancialSummary,
   getBillingAnalytics: fetchBillingAnalytics,

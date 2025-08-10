@@ -8,8 +8,6 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Session } from '../entities/session.entity';
-import { StripeBillingService } from '@/modules/v1/stripe/services/stripe-billing.service';
-import { StripeInvoiceService } from '@/modules/v1/stripe/services/stripe-invoice.service';
 import { BillingsService } from '@/modules/v1/billings/billings.service';
 import { BillingCurrency, BillingStatus, BillingType } from '../../billings/enums/billing.enum';
 import { CreateBillingDto } from '../../billings/dto/create-billing.dto';
@@ -24,8 +22,6 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
   constructor(
     private readonly dataSource: DataSource,
     @InjectRepository(Session)
-    private readonly stripeBillingService: StripeBillingService,
-    private readonly stripeInvoiceService: StripeInvoiceService,
     private readonly billingsService: BillingsService,
   ) {
     this.dataSource.subscribers.push(this);
@@ -60,6 +56,8 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
         return;
       }
 
+      console.log(`Session with all relations: ${JSON.stringify(sessionWithRelations, null, 2)}`);
+
       // Use setTimeout to ensure the session is fully saved
       setTimeout(() => {
         this.generateSessionInvoices(sessionWithRelations);
@@ -72,41 +70,19 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
   }
 
   private async generateSessionInvoices(session: Session): Promise<void> {
-    const { trainer, clients } = session;
+    const { clients } = session;
 
     if (!clients || clients.length === 0) {
       this.logger.warn(`No clients found for session ${session.id}`);
       return;
     }
 
-    // Ensure trainer has Stripe customer
-    if (trainer && trainer.profile) {
-      this.logger.log(`Creating/getting Stripe customer for trainer: ${trainer.profile.firstName} ${trainer.profile.lastName} (${trainer.email})`);
-      const trainerStripeCustomerId = await this.stripeBillingService.createOrGetStripeCustomer(trainer);
-      this.logger.log(`Trainer Stripe customer ID: ${trainerStripeCustomerId}`);
-    }
-
-    // Ensure all clients have Stripe customers and collect their IDs
-    const clientStripeCustomerIds = new Map<number, string>();
-
-    for (const client of clients) {
-      if (client.profile) {
-        this.logger.log(`Creating/getting Stripe customer for client: ${client.profile.firstName} ${client.profile.lastName} (${client.email})`);
-        const clientStripeCustomerId = await this.stripeBillingService.createOrGetStripeCustomer(client);
-        clientStripeCustomerIds.set(client.id, clientStripeCustomerId);
-        this.logger.log(`Client ${client.profile.firstName} ${client.profile.lastName} Stripe customer ID: ${clientStripeCustomerId}`);
-      } else {
-        this.logger.error(`Client ${client.id} has no profile, skipping Stripe customer creation`);
-      }
-    }
-
-
-    await this.generateSingleSessionInvoice(session, clientStripeCustomerIds);
+    await this.generateSingleSessionInvoice(session);
 
   }
 
-  private async generateSingleSessionInvoice(session: Session, clientStripeCustomerIds: Map<number, string>): Promise<void> {
-    const { clients, trainer, pricePerClient, currency = 'USD' } = session;
+  private async generateSingleSessionInvoice(session: Session): Promise<void> {
+    const { clients } = session;
 
     for (const client of clients) {
       try {
@@ -116,8 +92,6 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
         }
         this.logger.log(`Processing invoice for client: ${client.profile.firstName} ${client.profile.lastName} (${client.email})`);
 
-
-
         // Calculate due date (30 days from now)
         const dueDate = new Date(session.dateTime);
         dueDate.setDate(dueDate.getDate() + 30);
@@ -125,64 +99,19 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
 
 
         const billing = await this.createBillingRecord(session, dueDate, client);
-
-
-        const clientStripeCustomerId = clientStripeCustomerIds.get(client.id);
-        if (!clientStripeCustomerId) {
-          this.logger.error(`No Stripe customer ID found for client ${client.id}, skipping invoice generation`);
-          continue;
-        }
-
-        this.logger.log(`Generating invoice for client: ${client.profile.firstName} ${client.profile.lastName} (${client.email})`);
-
-
-
-        const price = pricePerClient || 0;
-        if (price <= 0) {
-          this.logger.warn(`No valid price found for session ${session.id}, client ${client.profile.firstName} ${client.profile.lastName}`);
-          continue;
-        }
-
-        this.logger.log(`Creating invoice with price: ${price} ${currency} for session: ${session.title}`);
-
-
-        // Create invoice using StripeInvoiceService
-        const invoice = await this.stripeInvoiceService.createInvoice(
-          clientStripeCustomerId,
-          [{
-            amount: price,
-            currency: currency,
-            quantity: 1,
-            description: `${session.title} - ${session.dateTime.toLocaleDateString()} ${session.dateTime.toLocaleTimeString()}`
-          }],
-          {
-            billingId: billing.id.toString(),
-            sessionId: session.id.toString(),
-            clientId: client.id.toString(),
-            trainerId: trainer?.id?.toString() || '',
-            sessionType: session.type,
-            pricePerClient: price.toString(),
-            currency: currency,
-            type: BillingType.SESSION,
-          },
-          Math.floor(dueDate.getTime() / 1000),
-          false,
-        );
-
-        this.logger.log(`✅ Successfully created invoice ${invoice.id} for session ${session.id}, client ${client.profile.firstName} ${client.profile.lastName}`);
-
+        console.log(billing);
 
       } catch (error) {
         this.logger.error(`❌ Failed to generate invoice for session ${session.id}, client ${client.profile?.firstName || client.id}: ${error.message}`);
         // Continue with other clients even if one fails
       }
     }
+
+
+
   }
 
   private async createBillingRecord(session: Session, dueDate, user: User): Promise<Billing> {
-
-
-
 
     const createBillingDto: CreateBillingDto = {
       userId: user.id,
@@ -193,6 +122,7 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
       currency: session.currency as BillingCurrency || BillingCurrency.USD,
       issueDate: new Date(),
       dueDate,
+      paymentMethodType: session.paymentMethodType,
       lineItems: [
         {
           description: session.description || '',

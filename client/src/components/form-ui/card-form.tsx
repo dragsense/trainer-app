@@ -1,5 +1,6 @@
 // React
 import { ReactNode } from 'react';
+import { useShallow } from 'zustand/shallow';
 
 // External Libraries
 import { Loader2 } from 'lucide-react';
@@ -7,12 +8,12 @@ import { Loader2 } from 'lucide-react';
 // Components
 import { AppCard } from '@/components/layout-ui/app-card';
 
-// Types
-import { IFormStoreApi } from '@/@types/handler-types';
 
 // Utils
 import { cn } from '@/lib/utils';
-import { useStore } from 'zustand';
+
+// Stores
+import { TFormHandlerStore } from '@/stores';
 
 
 interface ICardFormProps<TFormData, TResponse> {
@@ -21,7 +22,7 @@ interface ICardFormProps<TFormData, TResponse> {
   description?: string;
   footerContent?: ReactNode;
   children: ReactNode;
-  formStore: IFormStoreApi<TFormData, TResponse>;
+  formStore: TFormHandlerStore<TFormData, TResponse>;
 }
 
 export function CardForm<TFormData, TResponse>({
@@ -33,8 +34,11 @@ export function CardForm<TFormData, TResponse>({
   formStore
 }: ICardFormProps<TFormData, TResponse>) {
 
-  const { isSubmitting, error, onSubmit } = useStore(formStore);
-
+  const { isSubmitting, error, onSubmit } = formStore(useShallow(state => ({
+    onSubmit: state.onSubmit,
+    isSubmitting: state.isSubmitting,
+    error: state.error
+  })));
   return (
     <form onSubmit={onSubmit}>
       <div className={cn('relative', className)}>

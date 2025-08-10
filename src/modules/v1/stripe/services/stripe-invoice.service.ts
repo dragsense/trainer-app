@@ -51,7 +51,9 @@ export class StripeInvoiceService {
     }>,
     metadata?: Record<string, string>,
     dueDate?: number,
-    auto_payment?: boolean
+    auto_payment?: boolean,
+    payData: Stripe.InvoicePayParams = {},
+
   ): Promise<Stripe.Invoice> {
     await this.ensureStripeInitialized();
 
@@ -62,43 +64,31 @@ export class StripeInvoiceService {
         customer: customerId,
         metadata,
         expand: ['payment_intent'],
-        auto_advance: true, // Automatically finalize and attempt payment
+        auto_advance: true
       };
 
- 
-        // Otherwise use 'charge_automatically' for immediate payment
-        invoiceData.collection_method = auto_payment ? 'charge_automatically': 'send_invoice';
-               invoiceData.due_date = dueDate;
-        invoiceData.payment_settings = {
-          payment_method_types: ['card'],
-          payment_method_options: {
-            card: {
-              request_three_d_secure: 'automatic',
-            },
+
+      invoiceData.collection_method = 'send_invoice';
+      invoiceData.due_date = dueDate;
+      invoiceData.payment_settings = {
+        payment_method_types: ['card'],
+        payment_method_options: {
+          card: {
+            request_three_d_secure: 'automatic',
           },
-        };
-        this.logger.log(`Using charge_automatically collection method`);
-      
-      // Create the invoice first
+        },
+      };
+      this.logger.log(`Using charge_automatically collection method`);
+
       const invoice = await this.stripe!.invoices.create(invoiceData);
       this.logger.log(`Created invoice ${invoice.id} for customer ${customerId} with collection method: ${invoiceData.collection_method}`);
 
-      // Add invoice items to the invoice
       for (const item of items) {
-        if (item.priceId) {
-          // Use existing price
-          await this.createInvoiceItem(customerId, item.priceId, item.quantity, item.description, metadata, invoice.id);
-        } else if (item.amount && item.currency) {
-          // Create item with direct amount
-          await this.createInvoiceItemWithAmount(customerId, item.amount, item.currency, item.description, metadata, invoice.id);
-        } else {
-          this.logger.error(`Invalid item configuration: missing priceId or amount/currency`);
-          throw new BadRequestException(`Invalid item configuration: missing priceId or amount/currency`);
-        }
+        await this.createInvoiceItemWithAmount(customerId, item.amount || 0, item.currency || 'usd', item.description, metadata, invoice.id);
       }
 
       // Finalize the invoice to calculate the total
-      const finalizedInvoice = await this.stripe!.invoices.finalizeInvoice(invoice.id as string);
+      await this.stripe!.invoices.finalizeInvoice(invoice.id as string, payData);
       this.logger.log(`Finalized invoice ${invoice.id} with items`);
 
       // Retrieve the invoice with payment intent
@@ -178,22 +168,25 @@ export class StripeInvoiceService {
     }
   }
 
-  async payInvoice(invoiceId: string, paymentMethodId?: string): Promise<Stripe.Invoice> {
+  async payInvoice(
+    invoiceId: string,
+    payData: Stripe.InvoicePayParams = {},
+    paymentMethodId?: string
+  ): Promise<Stripe.Invoice> {
     await this.ensureStripeInitialized();
 
     try {
-      const payData: Stripe.InvoicePayParams = {};
-
+      // Merge payment method into the provided payData
       if (paymentMethodId) {
         payData.payment_method = paymentMethodId;
       }
 
       const invoice = await this.stripe!.invoices.pay(invoiceId, payData);
-      this.logger.log(`Paid invoice ${invoiceId}`);
+      this.logger.log(`Paid invoice ${invoiceId} successfully`);
 
       return invoice;
     } catch (error) {
-      this.logger.error(`Error paying invoice ${invoiceId}:`, error.message);
+      this.logger.error(`Error paying invoice ${invoiceId}: ${error.message}`);
       throw new BadRequestException(`Failed to pay invoice: ${error.message}`);
     }
   }
@@ -228,7 +221,6 @@ export class StripeInvoiceService {
 
   async listInvoices(
     customerId?: string,
-    subscriptionId?: string,
     status?: string,
     limit: number = 100,
   ): Promise<Stripe.ApiList<Stripe.Invoice>> {
@@ -242,10 +234,6 @@ export class StripeInvoiceService {
 
       if (customerId) {
         params.customer = customerId;
-      }
-
-      if (subscriptionId) {
-        params.subscription = subscriptionId;
       }
 
       if (status) {
@@ -288,7 +276,7 @@ export class StripeInvoiceService {
     try {
       // Get the price to get the amount and currency
       const price = await this.stripe!.prices.retrieve(priceId);
-      
+
       const invoiceItemData: any = {
         customer: customerId,
         amount: (price.unit_amount || 0) * (quantity || 1), // Calculate total amount including quantity
@@ -376,7 +364,7 @@ export class StripeInvoiceService {
     try {
       // First, finalize the invoice if it's not already finalized
       const invoice = await this.stripe!.invoices.retrieve(invoiceId);
-      
+
       if (invoice.status === 'draft') {
         await this.stripe!.invoices.finalizeInvoice(invoiceId);
         this.logger.log(`Finalized invoice ${invoiceId} for checkout`);
@@ -386,7 +374,7 @@ export class StripeInvoiceService {
       if ((invoice as any).payment_intent) {
         this.logger.log(`Invoice ${invoiceId} already has payment intent, using hosted URL`);
         const hostedInvoiceUrl = invoice.hosted_invoice_url;
-        
+
         if (hostedInvoiceUrl) {
           return { url: hostedInvoiceUrl };
         }

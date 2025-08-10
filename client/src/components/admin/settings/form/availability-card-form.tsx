@@ -1,294 +1,264 @@
-// External Libraries
-import { ReactNode } from "react";
+import { ReactNode, useState, useMemo } from "react";
 import { useShallow } from "zustand/shallow";
+import { Plus, Trash2 } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 
-// Components
+// UI Components
 import { CardForm } from "@/components/form-ui/card-form";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Clock, CalendarDays } from "lucide-react";
 
+// Hooks
+import { useInput } from "@/hooks/use-input";
 
 // Types
-import { TUpdateUserAvailabilityData } from "@/@types/user.type";
+import { TFieldConfig } from "@/@types/form/field.type";
+import { TDayKey, TUpdateUserAvailabilityData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
+export const DAYS_OF_WEEK: { key: TDayKey; label: string }[] = [
+    { key: "monday", label: "Monday" },
+    { key: "tuesday", label: "Tuesday" },
+    { key: "wednesday", label: "Wednesday" },
+    { key: "thursday", label: "Thursday" },
+    { key: "friday", label: "Friday" },
+    { key: "saturday", label: "Saturday" },
+    { key: "sunday", label: "Sunday" },
+];
+
+const MAX_SLOTS = 5;
+const MAX_UNAVAILABLE = 5;
+
 interface IAvailabilityCardFormProps {
     storeKey: string;
 }
 
-export const DAYS_OF_WEEK = [
-    { key: 'monday', label: 'Monday' },
-    { key: 'tuesday', label: 'Tuesday' },
-    { key: 'wednesday', label: 'Wednesday' },
-    { key: 'thursday', label: 'Thursday' },
-    { key: 'friday', label: 'Friday' },
-    { key: 'saturday', label: 'Saturday' },
-    { key: 'sunday', label: 'Sunday' },
-] as const;
-
 export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardFormProps) {
-    const formStoreKey = storeKey + "-form";
 
-    // Move store calls to top level - this fixes the hook rendering issue
+    const { getValues, setValue } = useFormContext();
+
+    const formStoreKey = storeKey + "-form";
     const formStore = useRegisteredStore<TFormHandlerStore<TUpdateUserAvailabilityData, IMessageResponse>>(formStoreKey);
 
-    // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { isSubmitting, values, setValues } = formStore(
-        useShallow((state) => ({
-            isSubmitting: state.isSubmitting,
-            values: state.values,
-            setValues: state.setValues,
-        }))
-    );
+    const { values, isSubmitting } = formStore(useShallow(state => ({
+        values: state.values,
+        isSubmitting: state.isSubmitting,
+    })));
 
-
-    const weeklySchedule = values.weeklySchedule || {} as any;
+    const weeklySchedule = values.weeklySchedule || {} as Record<TDayKey, any>;
     const unavailablePeriods = values.unavailablePeriods || [];
 
-    const updateDaySchedule = (day: string, updates: any) => {
-        const currentSchedule = values.weeklySchedule || {} as any;
-        setValues({
-            ...values,
-            weeklySchedule: {
-                ...currentSchedule,
-                [day]: {
-                    ...currentSchedule[day],
-                    ...updates,
-                },
-            },
+
+    const [timeSlotCounts, setTimeSlotCounts] = useState<Record<TDayKey, number>>(
+        DAYS_OF_WEEK.reduce((acc, day) => {
+            acc[day.key] = weeklySchedule[day.key]?.timeSlots?.length ?? 1;
+            return acc;
+        }, {} as Record<TDayKey, number>)
+    );
+
+        console.log('Weekly schedule:', timeSlotCounts);
+
+    const [unavailableCount, setUnavailableCount] = useState(unavailablePeriods?.length || 1);
+
+    const dynamicFields = useMemo(() => {
+        const fields: TFieldConfig[] = [];
+
+        DAYS_OF_WEEK.forEach((day) => {
+            fields.push({
+                id: `${day.key}.enabled`,
+                name: `weeklySchedule.${day.key}.enabled`,
+                label: `${day.label} Available`,
+                type: "switch",
+                required: true
+            });
+
+            for (let i = 0; i < timeSlotCounts[day.key]; i++) {
+                fields.push({
+                    id: `${day.key}.timeSlots[${i}].start`,
+                    name: `weeklySchedule.${day.key}.timeSlots[${i}].start`,
+                    label: `Start Time #${i + 1}`,
+                    type: "time",
+                    required: true,
+                    disabled: ({ values }) => !values.weeklySchedule[day.key].enabled
+                });
+                fields.push({
+                    id: `${day.key}.timeSlots[${i}].end`,
+                    name: `weeklySchedule.${day.key}.timeSlots[${i}].end`,
+                    label: `End Time #${i + 1}`,
+                    type: "time",
+                    required: true,
+                    disabled: ({ values }) => !values.weeklySchedule[day.key].enabled
+                });
+            }
         });
+
+        for (let i = 0; i < unavailableCount; i++) {
+            fields.push({
+                id: `unavailablePeriods[${i}].startDate`,
+                name: `unavailablePeriods[${i}].startDate`,
+                label: `Start Date`,
+                type: "date",
+                required: true,
+            });
+            fields.push({
+                id: `unavailablePeriods[${i}].endDate`,
+                name: `unavailablePeriods[${i}].endDate`,
+                label: `End Date`,
+                type: "date",
+                required: true,
+            });
+            fields.push({
+                id: `unavailablePeriods[${i}].reason`,
+                name: `unavailablePeriods[${i}].reason`,
+                label: `Reason`,
+                type: "text",
+                required: true,
+            });
+        }
+
+        return fields;
+    }, [timeSlotCounts, unavailableCount]);
+
+    const { inputs } = useInput({
+        fields: dynamicFields,
+        showRequiredAsterisk: true,
+    });
+
+    const addTimeSlot = (dayKey: TDayKey) => {
+
+
+        const currentSlots = getValues(`weeklySchedule.${dayKey}.timeSlots`) || [];
+        const newSlots = [...currentSlots, { start: '', end: '' }];
+        setValue(`weeklySchedule.${dayKey}.timeSlots`, newSlots);
+        const newSlotCount = newSlots.length;
+
+        setTimeSlotCounts((prev) => ({
+            ...prev,
+            [dayKey]: Math.min(MAX_SLOTS, newSlotCount),
+        }));
     };
 
-    const addTimeSlot = (day: string) => {
-        const currentSchedule = values.weeklySchedule || {} as any;
-        const daySchedule = currentSchedule[day] || { enabled: true, timeSlots: [] };
-        const newTimeSlot = { start: '09:00', end: '17:00' };
+    const removeTimeSlot = (dayKey: TDayKey, index: number) => {
 
-        updateDaySchedule(day, {
-            timeSlots: [...daySchedule.timeSlots, newTimeSlot],
-        });
-    };
+        const currentSlots = getValues(`weeklySchedule.${dayKey}.timeSlots`) || [];
+        const newSlots = currentSlots.filter((_: any, i: number) => i !== index);
+        setValue(`weeklySchedule.${dayKey}.timeSlots`, newSlots.length ? newSlots : [{ start: '', end: '' }]);
+        const newSlotCount = newSlots.length;
 
-    const updateTimeSlot = (day: string, index: number, updates: any) => {
-        const currentSchedule = values.weeklySchedule || {} as any;
-        const daySchedule = currentSchedule[day] || { enabled: true, timeSlots: [] };
-        const updatedTimeSlots = daySchedule.timeSlots.map((slot: any, i: number) =>
-            i === index ? { ...slot, ...updates } : slot
-        );
-        updateDaySchedule(day, { timeSlots: updatedTimeSlots });
-    };
-
-    const removeTimeSlot = (day: string, index: number) => {
-        const currentSchedule = values.weeklySchedule || {} as any;
-        const daySchedule = currentSchedule[day] || { enabled: true, timeSlots: [] };
-        const updatedTimeSlots = daySchedule.timeSlots.filter((_: any, i: number) => i !== index);
-        updateDaySchedule(day, { timeSlots: updatedTimeSlots });
+        setTimeSlotCounts((prev) => ({
+            ...prev,
+            [dayKey]: Math.max(1, newSlotCount),
+        }));
     };
 
     const addUnavailablePeriod = () => {
-        const currentPeriods = values.unavailablePeriods || [];
-        const newPeriod = {
-            startDate: new Date().toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0],
-            reason: 'Personal',
-        };
-        setValues({
-            ...values,
-            unavailablePeriods: [...currentPeriods, newPeriod],
-        });
-    };
-
-    const updateUnavailablePeriod = (index: number, updates: any) => {
-        const currentPeriods = values.unavailablePeriods || [];
-        const updatedPeriods = currentPeriods.map((period: any, i: number) =>
-            i === index ? { ...period, ...updates } : period
-        );
-        setValues({
-            ...values,
-            unavailablePeriods: updatedPeriods,
-        });
+        setUnavailableCount((prev) => Math.min(MAX_UNAVAILABLE, prev + 1));
     };
 
     const removeUnavailablePeriod = (index: number) => {
-        const currentPeriods = values.unavailablePeriods || [];
-        const updatedPeriods = currentPeriods.filter((_: any, i: number) => i !== index);
-        setValues({
-            ...values,
-            unavailablePeriods: updatedPeriods,
-        });
+        setUnavailableCount((prev) => Math.max(1, prev - 1));
     };
 
     const footerContent: ReactNode = (
         <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
+
+
         </div>
     );
 
     return (
         <CardForm
-            title="Availability Settings"
-            description="Manage your weekly schedule and unavailable periods"
+            title="Update Availability"
+            description="Set your weekly schedule and unavailable periods"
             footerContent={footerContent}
             formStore={formStore}
         >
-            <input type="text" id="weeklySchedule" name="weeklySchedule" />
-            <input type="text" id="unavailablePeriods" name="unavailablePeriods" />
-
             <div className="space-y-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Clock className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Weekly Schedule</h3>
+                {DAYS_OF_WEEK.map((day) => {
+                    return (
+                        <div key={day.key} className="border p-4 rounded-md">
+                            <h4 className="font-medium mb-2">{day.label}</h4>
+                            {inputs.find((i) => i.props.name === `weeklySchedule.${day.key}.enabled`)}
 
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-6">
-                        Set your available hours for each day of the week
-                    </p>
-
-                    <div className="space-y-4">
-                        {DAYS_OF_WEEK.map(({ key, label }) => {
-                            const daySchedule = weeklySchedule[key] || { enabled: false, timeSlots: [] };
-
-                            return (
-                                <div key={key} className="border rounded-lg p-4 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-base font-medium">{label}</Label>
-                                        <Switch
-                                            checked={daySchedule.enabled}
-                                            onCheckedChange={(enabled) => updateDaySchedule(key, { enabled })}
-                                        />
-                                    </div>
-
-                                    {daySchedule.enabled && (
-                                        <div className="space-y-2">
-                                            {daySchedule.timeSlots?.map((slot: any, index: number) => (
-                                                <div key={index} className="flex items-center gap-2">
-                                                    <Input
-                                                        type="time"
-                                                        value={slot.start}
-                                                        onChange={(e) => updateTimeSlot(key, index, { start: e.target.value })}
-                                                        className="w-32"
-                                                    />
-                                                    <span className="text-muted-foreground">to</span>
-                                                    <Input
-                                                        type="time"
-                                                        value={slot.end}
-                                                        onChange={(e) => updateTimeSlot(key, index, { end: e.target.value })}
-                                                        className="w-32"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => removeTimeSlot(key, index)}
-                                                        disabled={daySchedule.timeSlots.length === 1}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
+                           
+                                <>
+                                    {Array.from({ length: timeSlotCounts[day.key] }).map((_, idx) => (
+                                        <div key={idx} className="grid grid-cols-3 gap-2 items-end mt-2">
+                                            {inputs.find(
+                                                (i) =>
+                                                    i.props.name ===
+                                                    `weeklySchedule.${day.key}.timeSlots[${idx}].start`
+                                            )}
+                                            {inputs.find(
+                                                (i) =>
+                                                    i.props.name ===
+                                                    `weeklySchedule.${day.key}.timeSlots[${idx}].end`
+                                            )}
                                             <Button
                                                 type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => addTimeSlot(key)}
-                                                className="mt-2"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeTimeSlot(day.key, idx)}
+                                                disabled={timeSlotCounts[day.key] === 1}
                                             >
-                                                <Plus className="w-4 h-4 mr-2" />
-                                                Add Time Slot
+                                                <Trash2 className="w-4 h-4 text-red-500" />
                                             </Button>
                                         </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                    ))}
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2"
+                                        onClick={() => addTimeSlot(day.key)}
+                                        disabled={timeSlotCounts[day.key] >= MAX_SLOTS}
+                                    >
+                                        <Plus className="w-4 h-4 mr-1" /> Add Time Slot
+                                    </Button>
+                                </>
+                           
+                        </div>
+                    );
+                })}
+
+                <div className="border p-4 rounded-md">
+                    <h4 className="font-medium mb-2">Unavailable Periods</h4>
+                    {Array.from({ length: unavailableCount }).map((_, idx) => (
+                        <div key={idx} className="grid grid-cols-4 gap-2 items-end mt-2">
+                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].startDate`)}
+                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].endDate`)}
+                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].reason`)}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeUnavailablePeriod(idx)}
+                                disabled={unavailableCount === 1}
+                            >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                        </div>
+                    ))}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={addUnavailablePeriod}
+                        disabled={unavailableCount >= MAX_UNAVAILABLE}
+                    >
+                        <Plus className="w-4 h-4 mr-1" /> Add Period
+                    </Button>
                 </div>
-
-                {/* Unavailable Periods Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-4">
-                        <CalendarDays className="w-5 h-5" />
-                        <h3 className="text-lg font-semibold">Unavailable Periods</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-6">
-                        Block out specific dates when you're not available
-                    </p>
-
-                    <div className="space-y-4">
-                        {unavailablePeriods.length === 0 ? (
-                            <p className="text-muted-foreground text-center py-4">
-                                No unavailable periods set
-                            </p>
-                        ) : (
-                            unavailablePeriods.map((period: any, index: number) => (
-                                <div key={index} className="border rounded-lg p-4 space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1 grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label>Start Date</Label>
-                                                <Input
-                                                    type="date"
-                                                    value={period.startDate}
-                                                    onChange={(e) => updateUnavailablePeriod(index, { startDate: e.target.value })}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label>End Date</Label>
-                                                <Input
-                                                    type="date"
-                                                    value={period.endDate}
-                                                    onChange={(e) => updateUnavailablePeriod(index, { endDate: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => removeUnavailablePeriod(index)}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                    <div>
-                                        <Label>Reason</Label>
-                                        <Input
-                                            placeholder="e.g., Vacation, Conference, etc."
-                                            value={period.reason || ''}
-                                            onChange={(e) => updateUnavailablePeriod(index, { reason: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                            ))
-                        )}
-
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addUnavailablePeriod}
-                            className="w-full"
-                        >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Unavailable Period
-                        </Button>
-                    </div>
-                </div>
-
-              
             </div>
         </CardForm>
     );

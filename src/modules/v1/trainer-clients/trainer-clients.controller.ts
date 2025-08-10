@@ -1,9 +1,15 @@
-import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe, Query, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, ParseIntPipe, Query, HttpCode, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TrainerClientsService } from './trainer-clients.service';
 import { CreateTrainerClientDto } from './dto/create-trainer-client.dto';
 import { TrainerClientListDto } from './dto/trainer-client-list.dto';
+import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
+import { RoleLevelGuard } from '@/guards/level.guard';
+import { MinRoleLevel } from '@/decorators/level.decorator';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
+@UseGuards(JwtAuthGuard, RoleLevelGuard)
+@MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
 @ApiTags('Trainer-Clients')
 @Controller('trainer-clients')
 export class TrainerClientsController {

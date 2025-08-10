@@ -17,6 +17,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SessionType } from '../enums/session.enum';
 import { BillingCurrency } from '../../billings/enums/billing.enum';
+import { PaymentMethodType } from '../../settings/payment-methods/enums/payment-method-type.enum';
 
 export class CreateSessionDto {
   @ApiProperty({
@@ -106,6 +107,15 @@ export class CreateSessionDto {
   @IsBoolean()
   @Type(() => Boolean)
   requirePrepayment?: boolean = true;
+
+
+  @ApiProperty({
+    enum: PaymentMethodType,
+    example: PaymentMethodType.STRIPE,
+    description: 'Payment method type'
+  })
+  @IsEnum(PaymentMethodType)
+  paymentMethodType: PaymentMethodType;
 
   @ApiProperty({
     description: 'Cancellation deadline in hours before session',

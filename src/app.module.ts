@@ -29,6 +29,7 @@ import { FileUploadModule } from './modules/v1/file-upload/file-upload.module';
 import { SettingsModule } from './modules/v1/settings/settings.module';
 import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
 import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
+import { NotificationGateway } from './gateways/notification.gateway';
 
 
 @Module({
@@ -87,6 +88,7 @@ import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clien
   providers: [
     AppService,
     SuperAdminSeeder,
+    NotificationGateway,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

@@ -14,6 +14,7 @@ import { User } from '@/modules/v1/users/entities/user.entity';
 import { BillingCurrency, BillingStatus, BillingType } from '../enums/billing.enum';
 import { Session } from '@/modules/v1/sessions/entities/session.entity';
 import { Reminder } from '../../reminders/entities/reminder.entity';
+import { PaymentMethod } from '../../settings/payment-methods/entities/payment-method.entity';
 
 @Entity('billings')
 export class Billing {
@@ -37,6 +38,10 @@ export class Billing {
     @Column({ type: 'integer', nullable: true })
     invoiceAmount: number;
 
+    @ApiProperty({ example: 1000, description: 'Invoice amount in cents' })
+    @Column({ type: 'integer', nullable: true })
+    dueAmount: number;
+
     @ApiProperty({ example: 'usd', description: 'Currency of the invoice' })
     @Column({ type: 'enum', enum: BillingCurrency, default: BillingCurrency.USD })
     currency: BillingCurrency;
@@ -56,11 +61,11 @@ export class Billing {
     localInvoiceNumber: string;
 
     @ApiProperty({ example: '2025-06-23', description: 'Local Invoice Issue Date' })
-    @Column({ type: 'date', nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     issueDate: Date;
 
     @ApiProperty({ example: '2025-07-07', description: 'Invoice due date' })
-    @Column({ type: 'date', nullable: true })
+    @Column({ type: 'timestamp', nullable: true })
     dueDate: Date;
 
     @ApiProperty({
@@ -108,9 +113,23 @@ export class Billing {
     @OneToMany(() => Reminder, (reminder: Reminder) => reminder.session)
     @ApiProperty({
         type: () => [Reminder],
-        description: 'Reminders set for this session'
+        description: 'Reminders set for this billing'
     })
     reminders: Reminder[];
+
+    @ManyToOne(() => PaymentMethod, (paymentMethod: PaymentMethod) => paymentMethod.billings, { nullable: true })
+    @ApiProperty({
+        type: () => PaymentMethod,
+        description: 'billing set for payment Method'
+    })
+    paymentMethod: PaymentMethod;
+
+    @ManyToOne(() => User)
+    @ApiProperty({
+        type: () => User,
+        description: 'User who created the billing'
+    })
+    creator: User;
 
     @ApiProperty({ example: '2025-06-23T10:00:00Z', description: 'When the billing record was created' })
     @CreateDateColumn()

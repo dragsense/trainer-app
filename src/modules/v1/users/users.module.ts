@@ -13,9 +13,13 @@ import { ProfilesModule } from './profiles/profiles.module';
 import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
 import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 import { UserAvailability } from './entities/user-availability.entity';
+import { TrainerClientsModule } from '../trainer-clients/trainer-clients.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profile, AppSetting, NotificationSetting, UserAvailability]), ProfilesModule],
+  imports: [TypeOrmModule.forFeature([User, Profile, AppSetting, NotificationSetting, UserAvailability]),
+   ProfilesModule,
+  TrainerClientsModule
+  ],
   exports: [UsersService, UserAvailabilityService, UserEmailService],
   controllers: [UsersController, UserAvailabilityController],
   providers: [UsersService, UserAvailabilityService, UserEmailService, UserSubscriber],

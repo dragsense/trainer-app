@@ -13,7 +13,7 @@ import { CreateProfileDto } from "#/modules/v1/users/profiles/dto/create-profile
 
 // Stripe Connect Types
 import { CreateStripeConnectDto } from "#/modules/v1/settings/stripe-connect/dto/create-stripe-connect.dto";
-import { StripeConnectStatusDto, StripeConnectCreateResponseDto, StripeConnectDeleteResponseDto } from "#/modules/v1/settings/stripe-connect/dto/stripe-connect-responses.dto";
+import { StripeConnectStatusDto, StripeConnectCreateResponseDto } from "#/modules/v1/settings/stripe-connect/dto/stripe-connect-responses.dto";
 
 
 
@@ -28,7 +28,6 @@ export interface IPaymentMethod extends PaymentMethod, GeneralBaseEntity {}
 export type IStripeConnectStatus = StripeConnectStatusDto;
 export type TCreateStripeConnectData = CreateStripeConnectDto;
 export type IStripeConnectCreateResponse = StripeConnectCreateResponseDto;
-export type IStripeConnectDeleteResponse = StripeConnectDeleteResponseDto;
 
 
 

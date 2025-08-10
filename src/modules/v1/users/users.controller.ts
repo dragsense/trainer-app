@@ -56,7 +56,7 @@ export class UsersController {
     description: 'Returns paginated list of users',
     type: UserPaginatedDto,
   })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(UserLevels[UserRole.USER])
   @Get()
   findAll(
     @Query() query: UserListDto,
@@ -65,6 +65,7 @@ export class UsersController {
     return this.usersService.findAll(query, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.USER])
   @ApiOperation({ summary: 'Get authenticated user' })
   @ApiResponse({
     status: 200,
@@ -151,7 +152,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Put('me/reset-password')
   resetPassword(
     @AuthUser() user: any,

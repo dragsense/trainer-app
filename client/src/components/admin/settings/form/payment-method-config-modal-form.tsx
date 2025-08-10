@@ -48,7 +48,7 @@ export default function PaymentMethodConfigFormModal({ storeKey, open, onClose, 
 
             const baseField: TFieldConfig = {
                 id: key,
-                name: key,
+                name: `config.${key}`,
                 label: prop.title || key,
                 type: prop.type as any,
                 required: prop.required || false,

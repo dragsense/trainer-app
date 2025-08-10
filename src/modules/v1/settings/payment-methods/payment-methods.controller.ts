@@ -18,8 +18,12 @@ import { PaymentMethodListDto } from './dto/payment-method-list.dto';
 import { PaymentMethod } from './entities/payment-method.entity';
 import { PaymentMethodsSeeder } from './payment-methods.seeder';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
+import { RoleLevelGuard } from '@/guards/level.guard';
+import { MinRoleLevel } from '@/decorators/level.decorator';
+import { UserLevels, UserRole } from '../../users/enums/user.enum';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RoleLevelGuard)
+@MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
 @ApiTags('Payment Methods')
 @Controller('settings/payment-methods')
 export class PaymentMethodsController {

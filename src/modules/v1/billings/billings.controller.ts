@@ -11,7 +11,8 @@ import {
   ParseIntPipe,
   Query,
   Req,
-  UseGuards
+  UseGuards,
+  BadRequestException
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,22 +27,27 @@ import { StripeBillingService } from '../stripe/services/stripe-billing.service'
 import { StripeInvoiceService } from '../stripe/services/stripe-invoice.service';
 import { StripeTransactionService } from '../stripe/services/stripe-transaction.service';
 import { CreateBillingDto } from './dto/create-billing.dto';
-import { UpdateBillingDto } from './dto/update-billing.dto';
+import { UpdateBillingDto, UpdateBillingStatusDto } from './dto/update-billing.dto';
 import { BillingListDto } from './dto/billing-list.dto';
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
 import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { RoleLevelGuard } from '@/guards/level.guard';
+import { MinRoleLevel } from '@/decorators/level.decorator';
+import { UsersService } from '../users/users.service';
 
 @ApiTags('Billings')
 @Controller('billings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RoleLevelGuard)
 export class BillingsController {
   constructor(
     private readonly billingsService: BillingsService,
     private readonly stripeBillingService: StripeBillingService,
     private readonly stripeInvoiceService: StripeInvoiceService,
     private readonly stripeTransactionService: StripeTransactionService,
+    private readonly userService: UsersService
   ) { }
 
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Post()
   @ApiOperation({ summary: 'Create a new billing record for a member' })
   @ApiResponse({ status: 201, description: 'Billing created successfully' })
@@ -52,6 +58,7 @@ export class BillingsController {
     return this.billingsService.create(createBillingDto, req.user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.USER])
   @Get()
   @ApiOperation({ summary: 'Get paginated list of billing records' })
   @ApiResponse({ status: 200, description: 'Billings fetched successfully' })
@@ -60,6 +67,7 @@ export class BillingsController {
     return this.billingsService.findAll(query, user);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get(':id')
   @ApiOperation({ summary: 'Get billing details by ID' })
   @ApiResponse({ status: 200, description: 'Billing found' })
@@ -69,7 +77,7 @@ export class BillingsController {
     return this.billingsService.findOne(id);
   }
 
-
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Patch(':id')
   @ApiOperation({ summary: 'Update billing details' })
   @ApiResponse({ status: 200, description: 'Billing updated successfully' })
@@ -84,6 +92,21 @@ export class BillingsController {
     return this.billingsService.update(id, updateBillingDto);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Update billing status only' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Billing ID' })
+  @ApiBody({ type: UpdateBillingStatusDto })
+  @ApiResponse({ status: 200, description: 'Billing status updated successfully' })
+  @ApiResponse({ status: 404, description: 'Billing not found' })
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateBillingStatusDto,
+  ) {
+    return this.billingsService.updateStatus(id, dto.status);
+  }
+
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a billing record by ID' })
   @ApiResponse({ status: 204, description: 'Billing deleted successfully' })
@@ -95,6 +118,7 @@ export class BillingsController {
   }
 
   // Stripe Direct API Endpoints
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/customers')
   @ApiOperation({ summary: 'Get all Stripe customers' })
   @ApiResponse({ status: 200, description: 'Stripe customers fetched successfully' })
@@ -102,6 +126,7 @@ export class BillingsController {
     return await this.stripeBillingService.listCustomers(limit || 100);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/customers/:customerId')
   @ApiOperation({ summary: 'Get Stripe customer by ID' })
   @ApiResponse({ status: 200, description: 'Stripe customer found' })
@@ -111,23 +136,26 @@ export class BillingsController {
     return await this.stripeBillingService.getCustomer(customerId);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.USER])
   @Get('stripe/invoices')
   @ApiOperation({ summary: 'Get Stripe invoices' })
   @ApiResponse({ status: 200, description: 'Stripe invoices fetched successfully' })
   async getStripeInvoices(
     @Req() req: any,
-    @Query('customerId') customerId?: string,
-    @Query('subscriptionId') subscriptionId?: string,
     @Query('status') status?: string,
     @Query('limit') limit?: number,
   ) {
+    let customerId = '';
     const user = req.user;
-    if (!customerId && user.level !== UserLevels[UserRole.TRAINER]) {
-      customerId = user.stripeCustomerId;
+    if (user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+      const loggedInUser = await this.userService.findOne({ id: user.id });
+      customerId = loggedInUser.stripeCustomerId;
     }
-    return await this.stripeInvoiceService.listInvoices(customerId, subscriptionId, status, limit || 100);
+
+    return await this.stripeInvoiceService.listInvoices(customerId, status, limit || 100);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/invoices/:invoiceId')
   @ApiOperation({ summary: 'Get Stripe invoice by ID' })
   @ApiResponse({ status: 200, description: 'Stripe invoice found' })
@@ -137,6 +165,7 @@ export class BillingsController {
     return await this.stripeInvoiceService.getInvoice(invoiceId);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/invoices/:invoiceId/pdf')
   @ApiOperation({ summary: 'Get Stripe invoice PDF URL' })
   @ApiResponse({ status: 200, description: 'Stripe invoice PDF URL fetched successfully' })
@@ -147,22 +176,25 @@ export class BillingsController {
   }
 
 
+  @MinRoleLevel(UserLevels[UserRole.USER])
   @Get('stripe/transactions/charges')
   @ApiOperation({ summary: 'Get Stripe charges' })
   @ApiResponse({ status: 200, description: 'Stripe charges fetched successfully' })
   async getStripeCharges(
     @Req() req: any,
-    @Query('customerId') customerId?: string,
     @Query('paymentIntentId') paymentIntentId?: string,
     @Query('limit') limit?: number,
   ) {
+    let customerId = '';
     const user = req.user;
-    if (!customerId && user.level !== UserLevels[UserRole.TRAINER]) {
-      customerId = user.stripeCustomerId;
+    if (user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+      const loggedInUser = await this.userService.findOne({ id: user.id });
+      customerId = loggedInUser.stripeCustomerId;
     }
     return await this.stripeTransactionService.listCharges(customerId, paymentIntentId, limit || 100);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/transactions/charges/:chargeId')
   @ApiOperation({ summary: 'Get Stripe charge by ID' })
   @ApiResponse({ status: 200, description: 'Stripe charge found' })
@@ -172,6 +204,7 @@ export class BillingsController {
     return await this.stripeTransactionService.getCharge(chargeId);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/transactions/payment-intents/:paymentIntentId')
   @ApiOperation({ summary: 'Get Stripe payment intent by ID' })
   @ApiResponse({ status: 200, description: 'Stripe payment intent found' })
@@ -181,6 +214,7 @@ export class BillingsController {
     return await this.stripeTransactionService.getPaymentIntent(paymentIntentId);
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/balance')
   @ApiOperation({ summary: 'Get Stripe account balance' })
   @ApiResponse({ status: 200, description: 'Stripe balance fetched successfully' })
@@ -188,6 +222,7 @@ export class BillingsController {
     return await this.stripeTransactionService.getBalance();
   }
 
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/balance/transactions')
   @ApiOperation({ summary: 'Get Stripe balance transactions' })
   @ApiResponse({ status: 200, description: 'Stripe balance transactions fetched successfully' })
@@ -197,7 +232,7 @@ export class BillingsController {
 
 
 
-
+  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Get('stripe/customers/:customerId/pending-billings')
   @ApiOperation({ summary: 'Check for pending billings for a customer' })
   @ApiResponse({ status: 200, description: 'Pending billings check completed' })
@@ -210,10 +245,5 @@ export class BillingsController {
       message: hasPending ? 'Customer has pending billings' : 'No pending billings found'
     };
   }
-
-
-
-
-
 
 }

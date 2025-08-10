@@ -16,6 +16,7 @@ import { SessionStatus, SessionType } from '../enums/session.enum';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { Billing } from '../../billings/entities/billing.entity';
 import { BillingCurrency } from '../../billings/enums/billing.enum';
+import { PaymentMethodType } from '../../settings/payment-methods/enums/payment-method-type.enum';
 
 @Entity('sessions')
 export class Session extends GeneralBaseEntity {
@@ -27,6 +28,19 @@ export class Session extends GeneralBaseEntity {
   @Column({ type: 'enum', enum: SessionType })
   type: SessionType;
 
+  @ApiProperty({
+    enum: PaymentMethodType,
+    example: PaymentMethodType.STRIPE,
+    description: 'Payment method type'
+  })
+  @Column({
+    type: 'enum',
+    enum: PaymentMethodType,
+    unique: true
+  })
+  paymentMethodType: PaymentMethodType;
+
+
   @ApiProperty({ description: 'Date and time of the session' })
   @Column({ type: 'timestamp' })
   dateTime: Date;
@@ -36,7 +50,7 @@ export class Session extends GeneralBaseEntity {
   duration: number;
 
   @ApiProperty({ description: 'Price of the session' })
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'int' })
   pricePerClient: number;
 
   @ApiProperty({ example: 'usd', description: 'Currency of the session invoice' })
@@ -76,15 +90,13 @@ export class Session extends GeneralBaseEntity {
   cancellationDeadline: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'created_by_id' })
   @ApiProperty({
     type: () => User,
     description: 'Admin who created the session'
   })
-  createdBy: User;
+  creator: User;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'trainer_id' })
   @ApiProperty({
     type: () => User,
     description: 'Trainer assigned to the session'

@@ -12,6 +12,7 @@ import { User } from '@/modules/v1/users/entities/user.entity';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { MessageResponse } from '@/interfaces/general.interface';
 import { ReminderCreatedEvent, ReminderUpdatedEvent, ReminderDeletedEvent } from './events/reminder.events';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
 @Injectable()
 export class RemindersService {
@@ -87,7 +88,7 @@ export class RemindersService {
     }
   }
 
-  async findAll(user: Pick<User, 'id'>, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
+  async findAll(user: User, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
     const {
       page = 1,
       limit = 10,
@@ -104,7 +105,7 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.recipient', 'recipient')
       .leftJoinAndSelect('reminder.session', 'session')
 
-    if (user) {
+    if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
     }
 

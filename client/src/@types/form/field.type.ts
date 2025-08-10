@@ -29,7 +29,7 @@ export type TFieldConfig = {
   name: string;
   type: TFieldType;
   valueType?: "string" | "number" | "boolean" | "date" | "object";
-  disabled?: boolean;
+  disabled?: boolean | ((ctx: { values: Record<string, any> }) => boolean);
   layout?: "horizontal" | "vertical";
   lableOrder?: EORDER_CLASSES;
   placeholder?: string;
@@ -44,7 +44,8 @@ export type TFieldConfig = {
   endAdornment?: ReactNode;
   bottomAdornment?: ReactNode;
   className?: string;
-  listeners?: any;
+  onChange?: (value: any) => void;
+
   Component?: React.ComponentType<TCustomInputWrapper>;
 };
 

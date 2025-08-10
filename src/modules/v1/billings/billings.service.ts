@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Billing } from './entities/billing.entity';
@@ -11,6 +11,8 @@ import { UsersService } from '../users/users.service';
 import { BillingCurrency, BillingStatus } from './enums/billing.enum';
 import { SessionsService } from '../sessions/sessions.service';
 import { Session } from '../sessions/entities/session.entity';
+import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
 @Injectable()
 export class BillingsService {
@@ -19,62 +21,75 @@ export class BillingsService {
     private readonly billingRepo: Repository<Billing>,
     private readonly userService: UsersService,
     private readonly sessionService: SessionsService,
+    private readonly paymentMethodService: PaymentMethodsService
   ) { }
 
   async create(createDto: CreateBillingDto, authUser: User): Promise<Billing> {
-  const {
-    userId,
-    sessionId,
-    stripeInvoiceId,
-    status,
-    currency,
-    lineItems,
-    totalTax = 0,
-    discount = 0,
-    totalAmount,
-    ...rest
-  } = createDto;
+    const {
+      userId,
+      sessionId,
+      stripeInvoiceId,
+      status,
+      currency,
+      lineItems,
+      totalTax = 0,
+      discount = 0,
+      totalAmount,
+      paymentMethodType,
+      ...rest
+    } = createDto;
 
-  // Fetch required relations
-  const user = await this.userService.findOne({ id: userId });
-  let session: Session | undefined = undefined;
+    // Fetch required relations
+    const user = await this.userService.findOne({ id: userId });
+    let session: Session | undefined = undefined;
 
-  if (sessionId) {
-    session = await this.sessionService.findOne(sessionId, authUser);
-  }
-
-  // Auto-calculate totalAmount if not provided but line items exist
-  let calculatedTotal = totalAmount;
-  if (!totalAmount && Array.isArray(lineItems)) {
-    const subtotal = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-    calculatedTotal = subtotal + totalTax - discount;
-  }
-
-  const localInvoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000000)}`;
-
-  const billing = this.billingRepo.create({
-    ...rest,
-    localInvoiceNumber,
-    user,
-    session,
-    stripeInvoiceId,
-    status: status || BillingStatus.PENDING,
-    currency: currency || BillingCurrency.USD,
-    lineItems,
-    totalTax,
-    discount,
-    totalAmount: calculatedTotal,
-  });
-
-  try {
-    return await this.billingRepo.save(billing);
-  } catch (error) {
-    if (error.code === '23505' && error.detail?.includes('stripeInvoiceId')) {
-      throw new ConflictException('Stripe invoice ID must be unique');
+    if (sessionId) {
+      session = await this.sessionService.findOneById(sessionId);
     }
-    throw error;
+
+
+    const paymentMethod = await this.paymentMethodService.findByKey(paymentMethodType);
+
+    if (!paymentMethod)
+      throw new NotFoundException(`Payment Method Not Found.`);
+
+
+    // Auto-calculate totalAmount if not provided but line items exist
+    let calculatedTotal = totalAmount;
+    if (!totalAmount && Array.isArray(lineItems)) {
+      const subtotal = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+      calculatedTotal = subtotal + totalTax - discount;
+    }
+
+    const localInvoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000000)}`;
+
+    const billing = this.billingRepo.create({
+      ...rest,
+      invoiceAmount: calculatedTotal,
+      dueAmount: calculatedTotal,
+      localInvoiceNumber,
+      user,
+      session,
+      stripeInvoiceId,
+      status: status || BillingStatus.PENDING,
+      currency: currency || BillingCurrency.USD,
+      lineItems,
+      totalTax,
+      discount,
+      totalAmount: calculatedTotal,
+      paymentMethod,
+      creator: authUser
+    });
+
+    try {
+      return await this.billingRepo.save(billing);
+    } catch (error) {
+      if (error.code === '23505' && error.detail?.includes('stripeInvoiceId')) {
+        throw new ConflictException('Stripe invoice ID must be unique');
+      }
+      throw error;
+    }
   }
-}
 
   async findAll(queryDto: BillingListDto, user: User): Promise<PaginationResponse<Billing>> {
     const {
@@ -88,14 +103,16 @@ export class BillingsService {
       ...filters
     } = queryDto;
 
+
     const query = this.billingRepo
       .createQueryBuilder('billing')
       .leftJoinAndSelect('billing.user', 'user')
-      .leftJoinAndSelect('user.profile', 'profile');
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoin('billing.creator', 'creator');
 
 
-    if (user) {
-      query.where('billing.userId = :userId', { userId: user.id });
+    if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+      query.where('creator.id = :userId', { userId: user.id });
     }
 
     query
@@ -174,6 +191,27 @@ export class BillingsService {
       }
       throw error;
     }
+  }
+
+  async updateStatus(id: number, status: BillingStatus): Promise<Billing> {
+    const billing = await this.billingRepo.findOne({ where: { id } });
+
+    if (!billing) {
+      throw new NotFoundException(`Billing with ID ${id} not found`);
+    }
+
+    if (billing.status === BillingStatus.PAID && status === BillingStatus.PAID) {
+      throw new BadRequestException(`Billing with ID ${id} is already marked as paid`);
+    }
+
+    // Optional: prevent downgrading from PAID unless explicitly allowed
+    if (billing.status === BillingStatus.PAID && status !== BillingStatus.PAID) {
+      throw new BadRequestException(`Cannot change status from paid to ${status}`);
+    }
+
+
+    billing.status = status;
+    return await this.billingRepo.save(billing);
   }
 
   async remove(id: number): Promise<Billing> {

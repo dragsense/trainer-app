@@ -59,34 +59,41 @@ export default function PaymentMethodConfigForm({
 
   const properties = paymentMethod.configSchema?.properties;
 
-  const ConfigSchema = paymentMethod.configSchema
-    ? z.object(
-      Object.keys(properties || {}).reduce((acc, key) => {
-        const prop = properties![key];
-        if (prop.type === 'string') {
-          acc[key] = z.string().min(1, `${prop.title || key} is required`);
-        } else if (prop.type === 'number') {
-          acc[key] = z.number().min(1, `${prop.title || key} is required`);
-        } else if (prop.type === 'boolean') {
-          acc[key] = z.boolean();
-        }
-        return acc;
-      }, {} as Record<string, any>)
-    )
-    : z.object({});
+  const ConfigSchema = z.object({
+    config: paymentMethod.configSchema
+      ? z.object(
+        Object.keys(properties || {}).reduce((acc, key) => {
+          const prop = properties![key];
+          if (prop.type === 'string') {
+            acc[key] = z.string().min(1, `${prop.title || key} is required`);
+          } else if (prop.type === 'number') {
+            acc[key] = z.number().min(1, `${prop.title || key} is required`);
+          } else if (prop.type === 'boolean') {
+            acc[key] = z.boolean();
+          }
+          return acc;
+        }, {} as Record<string, any>)
+      )
+      : z.object({})
+  });
 
 
-  const defaultValues = Object.keys(properties || {}).reduce(
-    (acc, key) => {
-      acc[key] = { value: "" };
-      return acc;
-    },
-    {} as Record<string, { value: any }>
-  );
+  const defaultValues = {
+    config: {
+      value: Object.keys(properties || {}).reduce<Record<string, string>>(
+        (acc, key) => {
+          acc[key] = "";
+          return acc;
+        },
+        {}
+      )
+    }
+  };
+
+  console.log(defaultValues);
 
 
-
-  const initialValues: TDefaultValue<any> = defaultValues;
+  const initialValues: TDefaultValue<{ config: any }> = defaultValues;
 
   if (isLoading) {
     return (

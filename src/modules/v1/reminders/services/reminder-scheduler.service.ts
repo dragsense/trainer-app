@@ -27,7 +27,7 @@ export class ReminderSchedulerService {
         status: ReminderStatus.SCHEDULED,
         scheduledAt: LessThan(now),
       },
-      relations: ['creator', 'recipient', 'session'],
+      relations: ['creator', 'recipient', 'session', 'billing'],
     });
 
     for (const reminder of pendingReminders) {
@@ -37,19 +37,6 @@ export class ReminderSchedulerService {
 
   private async sendReminder(reminder: Reminder): Promise<void> {
     try {
-
-      if (!reminder.recipient) {
-        throw new NotFoundException('Recipient not found');
-      }
-
-      const recipient = await this.usersService.findOne({ id: reminder.recipient.id });
-      if (!recipient) {
-        throw new Error('Recipient not found');
-      }
-
-      // Build reminder message
-      let message = reminder.message || this.getDefaultMessage(reminder);
-
       // Send via configured delivery methods
       for (const method of reminder.actions) {
         switch (method.toLowerCase()) {

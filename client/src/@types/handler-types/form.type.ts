@@ -16,6 +16,7 @@ export interface IFormHandlerBaseState<TResponse> {
 
 export interface IFormHandlerState<TFormData, TResponse> extends IFormHandlerBaseState<TResponse> {
   values: TFormData;
+
   setIsSubmitting: (isSubmitting: boolean) => void;
   setError: (error: Error | null) => void;
   onSubmit: (e: React.BaseSyntheticEvent | undefined) => void;

@@ -14,6 +14,7 @@ import { ISession, TSessionData } from "@/@types/session.type";
 import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
 import { IUser } from "@/@types/user.type";
+import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export interface ISessionFormModalProps {
   open: boolean;
   isEditing?: boolean;
   onClose: () => void;
+  trainerId?: number;
 }
 
 export default function SessionFormModal({
@@ -34,6 +36,7 @@ export default function SessionFormModal({
   open,
   isEditing = false,
   onClose,
+  trainerId
 }: ISessionFormModalProps) {
 
   const formStoreKey = storeKey + "-form";
@@ -128,6 +131,14 @@ export default function SessionFormModal({
       required: false,
     },
     {
+      id: "paymentMethodType",
+      name: "paymentMethodType",
+      label: "Payment Method",
+      type: "select",
+      required: false,
+      options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
+    },
+    {
       id: "trainerId",
       name: "trainerId",
       label: "Trainer",
@@ -135,6 +146,7 @@ export default function SessionFormModal({
       type: "custom",
       required: true,
       valueType: "number",
+      disabled: trainerId !== undefined,
       Component: (props) => (
         <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
 
@@ -245,7 +257,7 @@ export default function SessionFormModal({
           <h3 className="text-sm font-semibold mb-4">Pricing</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {inputs.slice(4, 6) /* duration → pricePerClient */}
-            {inputs.slice(6, 7) /* currency */}
+            {inputs.slice(6, 8) /* currency */}
           </div>
         </div>
 
@@ -253,7 +265,7 @@ export default function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-4">Trainer & Client</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(7, 9) /* trainerId → clientId */}
+            {inputs.slice(8, 10) /* trainerId → clientId */}
           </div>
         </div>
 
@@ -261,7 +273,7 @@ export default function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-4">Additional Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(9) /* location → cancellationDeadline */}
+            {inputs.slice(10) /* location → cancellationDeadline */}
           </div>
         </div>
 

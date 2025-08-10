@@ -150,12 +150,14 @@ export class PaymentMethodsService {
 
   async findByKey(key: PaymentMethodType): Promise<PaymentMethod | null> {
     return this.paymentMethodRepo.findOne({
-      where: { key, isEnabled: true }
+      where: { key, isEnabled: true },
+      select: ['id', 'name', 'key', 'config']
     });
   }
 
   async getStripeConfig(): Promise<{ secretKey: string; webhookSecret?: string; publishableKey: string } | null> {
     const stripeMethod = await this.findByKey(PaymentMethodType.STRIPE);
+
 
     if (!stripeMethod || !stripeMethod.config) {
       return null;

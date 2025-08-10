@@ -8,6 +8,7 @@ import { Injectable } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { User } from '../users/entities/user.entity';
 import { NotificationType } from './enums/notification.enum';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
 @Injectable()
 @EventSubscriber()
@@ -39,7 +40,7 @@ export class UserNotificationSubscriber implements EntitySubscriberInterface<Use
   private async handleNewUser(user: User, event: InsertEvent<User>) {
     // Get all admin users to notify
     const adminUsers = await event.manager.find(User, {
-      where: { level: 1 }, // Admin level
+      where: { level: UserLevels[UserRole.SUPER_ADMIN] }, // Admin level
       relations: ['profile'],
     });
 

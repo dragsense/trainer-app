@@ -45,11 +45,3 @@ export class StripeConnectCreateResponseDto implements MessageResponse {
         onboardingUrl: string;
     };
 }
-
-export class StripeConnectDeleteResponseDto implements MessageResponse {
-    @ApiProperty({ example: true, description: 'Success status' })
-    success: boolean;
-
-    @ApiProperty({ example: 'Stripe Connect account deleted successfully', description: 'Response message' })
-    message: string;
-}

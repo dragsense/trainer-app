@@ -15,6 +15,7 @@ import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
 import { IBilling, TBillingData } from "@/@types/billing.type";
 import { BillingCurrency, BillingStatus, BillingType } from "#/modules/v1/billings/enums/billing.enum";
+import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -30,11 +31,11 @@ import { createBilling, updateBilling } from "@/services/billing.api";
 
 // Schema
 export const LineItemSchema = z.object({
-  description: z.string(),
-  quantity: z.number().min(1),
-  unitPrice: z.number().min(0),
-  amount: z.number().min(0),
-  tax: z.number().optional(),
+    description: z.string(),
+    quantity: z.number().min(1),
+    unitPrice: z.number().min(0),
+    amount: z.number().min(0),
+    tax: z.number().optional(),
 });
 
 export const BillingSchema = z.object({
@@ -43,11 +44,18 @@ export const BillingSchema = z.object({
     status: z.nativeEnum(BillingStatus).optional(),
     invoiceAmount: z.number().optional(),
     currency: z.nativeEnum(BillingCurrency).optional(),
+    paymentMethodType: z.nativeEnum(PaymentMethodType),
     userId: z.number().min(1, "User is required"),
     sessionId: z.number().optional(),
     issueDate: z.date().optional(),
-    dueDate: z.date().optional(),
-    lineItems: z.array(LineItemSchema).optional(),
+    dueDate: z
+        .date()
+        .optional()
+        .refine(
+            (date) => !date || date > new Date(),
+            { message: "Due date must be in the future" }
+        ),
+    lineItems: z.array(LineItemSchema).min(1, "At least one line item is required").optional(),
     totalTax: z.number().optional(),
     discount: z.number().optional(),
     totalAmount: z.number().optional(),
@@ -78,6 +86,7 @@ export default function BillingForm({
         status: { value: BillingStatus.PENDING },
         invoiceAmount: { value: 0 },
         currency: { value: BillingCurrency.USD },
+        paymentMethodType: { value: PaymentMethodType.CASH },
         userId: { value: 0 },
         sessionId: { value: undefined },
         issueDate: { value: new Date() },

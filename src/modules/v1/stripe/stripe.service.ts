@@ -6,12 +6,11 @@ import { BillingStatus, BillingType, BillingCurrency } from '../billings/enums/b
 import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
 import Stripe from 'stripe';
 import { User } from '../users/entities/user.entity';
-import { Session } from '../sessions/entities/session.entity';
-import { UsersService } from '../users/users.service';
-import { BillingsService } from '../billings/billings.service';
 import { CreateBillingDto } from '../billings/dto/create-billing.dto';
 import { UserRole, UserLevels } from '../users/enums/user.enum';
 import { StripeConnectAccount } from '../settings/stripe-connect/entities/stripe-connect-account.entity';
+import { PaymentMethodType } from '../settings/payment-methods/enums/payment-method-type.enum';
+import { PaymentMethod } from '../settings/payment-methods/entities/payment-method.entity';
 
 @Injectable()
 export class StripeService {
@@ -22,8 +21,6 @@ export class StripeService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly paymentMethodsService: PaymentMethodsService,
-    private readonly billingsService: BillingsService,
-    private readonly usersService: UsersService,
   ) {
     this.initializeStripe();
   }
@@ -60,159 +57,7 @@ export class StripeService {
     }
   }
 
-  private async findAdminUser(): Promise<User> {
-    const admin = await this.dataSource.manager.findOne(User, {
-      where: { level: UserLevels[UserRole.TRAINER] }
-    });
 
-    if (!admin) {
-      // Fallback to super admin if no admin found
-      const superAdmin = await this.dataSource.manager.findOne(User, {
-        where: { level: UserLevels[UserRole.SUPER_ADMIN] }
-      });
-
-      if (!superAdmin) {
-        throw new Error('No admin user found in system');
-      }
-
-      return superAdmin;
-    }
-
-    return admin;
-  }
-
-  /**
-   * Get the current platform fee percentage from platform settings
-   */
-  private async getPlatformFeePercentage(): Promise<number> {
-    try {
-      return 2
-    } catch (error) {
-      this.logger.warn('Failed to get platform fee from settings, using default 2%:', error.message);
-      return 2; // Fallback to 2% if settings not available
-    }
-  }
-
-  /**
-   * Calculate platform fee amount based on dynamic percentage
-   */
-  private async calculatePlatformFee(amount: number): Promise<{ platformFeeAmount: number; platformFeePercentage: number }> {
-    const platformFeePercentage = await this.getPlatformFeePercentage();
-    const platformFeeAmount = Math.round(amount * (platformFeePercentage / 100));
-    
-    return {
-      platformFeeAmount,
-      platformFeePercentage
-    };
-  }
-
-  private async createTrainerPaymentInvoice(
-    trainer: User,
-    amount: number,
-    originalBilling: Billing,
-    status: BillingStatus,
-    description: string
-  ): Promise<void> {
-    try {
-      const admin = await this.findAdminUser();
-
-      // Calculate platform fee dynamically
-      const { platformFeeAmount, platformFeePercentage } = await this.calculatePlatformFee(amount);
-      const trainerAmount = amount - platformFeeAmount;
-
-      const createDto: CreateBillingDto = {
-        type: BillingType.INDIVIDUAL,
-        userId: admin.id, // Invoice against admin
-        status: status,
-        currency: originalBilling.currency || BillingCurrency.USD,
-        lineItems: [
-          {
-            description: `Trainer Payment: ${description}`,
-            quantity: 1,
-            unitPrice: trainerAmount,
-            amount: trainerAmount,
-            tax: 0
-          }
-        ],
-        totalTax: 0,
-        discount: 0,
-        totalAmount: trainerAmount,
-        notes: `Payment to trainer ${trainer.email} for ${description}. Original amount: ${amount / 100}. Platform fee (${platformFeePercentage}%): ${platformFeeAmount / 100}. Net to trainer: ${trainerAmount / 100}`,
-        terms: 'Due on demand',
-        issueDate: new Date(),
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
-      };
-
-      await this.billingsService.create(createDto, admin);
-
-      this.logger.log(`Created ${status} invoice against admin for trainer ${trainer.email}, amount: ${trainerAmount / 100} (${platformFeePercentage}% platform fee: ${platformFeeAmount / 100})`);
-    } catch (error) {
-      this.logger.error(`Error creating trainer payment invoice:`, error.message);
-      // Don't throw - this shouldn't break the main payment flow
-    }
-  }
-
-  private async transferToTrainerAccount(
-    trainer: User,
-    amount: number,
-    description: string
-  ): Promise<{ success: boolean; transferId?: string; error?: string }> {
-    try {
-      await this.ensureStripeInitialized();
-
-      // Find trainer's Stripe Connect account
-      const connectAccount = await this.dataSource.manager.findOne(StripeConnectAccount, {
-        where: { userId: trainer.id }
-      });
-
-      if (!connectAccount) {
-        return {
-          success: false,
-          error: `No Stripe Connect account found for trainer ${trainer.email}`
-        };
-      }
-
-      if (!connectAccount.chargesEnabled || !connectAccount.detailsSubmitted) {
-        return {
-          success: false,
-          error: `Trainer ${trainer.email} Stripe Connect account not fully activated`
-        };
-      }
-
-      // Calculate platform fee dynamically
-      const { platformFeeAmount, platformFeePercentage } = await this.calculatePlatformFee(amount);
-      const trainerAmount = amount - platformFeeAmount;
-
-      // Create transfer to trainer's connected account
-      const transfer = await this.stripe!.transfers.create({
-        amount: trainerAmount,
-        currency: 'usd',
-        destination: connectAccount.stripeAccountId,
-        description: description,
-        metadata: {
-          trainerId: trainer.id.toString(),
-          trainerEmail: trainer.email,
-          originalAmount: amount.toString(),
-          platformFee: platformFeeAmount.toString(),
-          platformFeePercentage: platformFeePercentage.toString()
-        }
-      });
-
-      this.logger.log(`Successfully transferred ${trainerAmount / 100} to trainer ${trainer.email} (${connectAccount.stripeAccountId}) with ${platformFeePercentage}% platform fee`);
-
-      return {
-        success: true,
-        transferId: transfer.id
-      };
-
-    } catch (error) {
-      this.logger.error(`Error transferring to trainer account:`, error.message);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
 
 
 
@@ -241,21 +86,6 @@ export class StripeService {
       this.logger.log(`Webhook event received: ${event.type} (ID: ${event.id})`);
       this.logger.debug(`Event data: ${JSON.stringify(event.data)}`);
 
-      // Handle checkout session completed
-      if (event.type === 'checkout.session.completed') {
-        this.logger.log(`Processing checkout.session.completed event for session: ${event.data.object.id}`);
-        this.logger.debug(`Session object: ${JSON.stringify(event.data.object)}`);
-
-        const session = event.data.object;
-        this.logger.log(`Processing checkout session completed for session: ${session.id}`);
-      }
-
-      // Handle payment intent succeeded
-      if (event.type === 'payment_intent.succeeded') {
-        this.logger.log(`Processing payment_intent.succeeded event for payment intent: ${event.data.object.id}`);
-        await this.handleSetupIntentSuccess(event.data.object);
-
-      }
 
       // Handle invoice payment succeeded
       if (event.type === 'invoice.payment_succeeded') {
@@ -272,11 +102,7 @@ export class StripeService {
         await this.handleInvoicePaymentFailed(invoice);
       }
 
-      // Handle setup intent succeeded
-      if (event.type === 'setup_intent.succeeded') {
-        this.logger.log(`Processing setup_intent.succeeded event for setup intent: ${event.data.object.id}`);
-        await this.handleSetupIntentSucceeded(event.data.object);
-      }
+
 
 
       // Handle invoice created
@@ -323,7 +149,7 @@ export class StripeService {
       }
 
       const existingBilling = await this.dataSource.manager.findOne(Billing, {
-        where: { stripeInvoiceId: invoice.id },
+        where: { id: metadata.billingId },
       });
 
       if (!existingBilling) {
@@ -341,8 +167,6 @@ export class StripeService {
       throw error;
     }
   }
-
-
 
 
 
@@ -427,115 +251,6 @@ export class StripeService {
   }
 
 
-
-  async checkAndCreatePaymentSession({
-    customerId,
-    invoiceId,
-    successUrl,
-    cancelUrl
-  }: {
-    customerId: string;
-    invoiceId: string;
-    successUrl: string;
-    cancelUrl: string;
-  }): Promise<string> {
-    await this.ensureStripeInitialized();
-
-    try {
-      // Check if customer has default payment method
-      const customer = await this.stripe.customers.retrieve(customerId);
-
-      if (customer.invoice_settings?.default_payment_method) {
-        // Customer has default payment method, use hosted invoice URL
-        const invoice = await this.stripe.invoices.retrieve(invoiceId);
-        return invoice.hosted_invoice_url!;
-
-      } else {
-        // No default payment method, create setup intent checkout session
-        const session = await this.stripe.checkout.sessions.create({
-          mode: 'setup',
-          payment_method_types: ['card'],
-          customer: customerId,
-          success_url: successUrl,
-          cancel_url: cancelUrl,
-          metadata: {
-            invoiceId: invoiceId,
-            type: 'setup_intent'
-          },
-        });
-
-        return session.url!;
-
-      }
-    } catch (error) {
-      this.logger.error(`Error checking/creating setup session:`, error.message);
-      throw new BadRequestException(`Failed to create setup session: ${error.message}`);
-    }
-  }
-
-
-  async handleSetupIntentSuccess(paymentIntent: any): Promise<void> {
-    this.logger.log(`Processing payment intent success for payment intent: ${paymentIntent.id}`);
-
-    try {
-      const { customerId } = paymentIntent.metadata;
-
-      if (!customerId) {
-        this.logger.error(`No    ID found in payment intent metadata: ${paymentIntent.id}`);
-        return;
-      }
-
-      if (paymentIntent.payment_method) {
-        await this.stripe.customers.update(customerId, {
-          invoice_settings: {
-            default_payment_method: paymentIntent.payment_method as string,
-          },
-        });
-
-        this.logger.log(`Set default payment method ${paymentIntent.payment_method} for customer ${customerId}`);
-      }
-
-
-    } catch (error) {
-      this.logger.error(`Error handling payment intent success for payment intent ${paymentIntent.id}:`, error.message);
-      throw error;
-    }
-  }
-
-  async handleSetupIntentSucceeded(setupIntent: any): Promise<void> {
-    this.logger.log(`Processing setup intent success for setup intent: ${setupIntent.id}`);
-
-    try {
-      const { customer } = setupIntent;
-
-      if (!customer) {
-        this.logger.error(`No customer found in setup intent: ${setupIntent.id}`);
-        return;
-      }
-
-      // Find user by Stripe customer ID
-      const user = await this.dataSource.manager.findOne(User, {
-        where: { stripeCustomerId: customer }
-      });
-
-      if (!user) {
-        this.logger.warn(`No user found for Stripe customer: ${customer}`);
-        return;
-      }
-
-      // Update user with Stripe customer ID
-      await this.dataSource.manager.update(User, user.id, {
-        stripeCustomerId: customer
-      });
-
-      this.logger.log(`Updated user ${user.id} with Stripe customer ID: ${customer}`);
-
-    } catch (error) {
-      this.logger.error(`Error handling setup intent success for setup intent ${setupIntent.id}:`, error.message);
-      throw error;
-    }
-  }
-
   async handleInvoicePaymentSucceeded(invoice: any): Promise<void> {
     this.logger.log(`Processing invoice payment succeeded for invoice: ${invoice.id}`);
 
@@ -570,7 +285,7 @@ export class StripeService {
       // Update billing record status to paid
       const billing = await this.dataSource.manager.findOne(Billing, {
         where: { stripeInvoiceId: invoice.id },
-        relations: ['session', 'session.trainer']
+        relations: ['session', 'session.trainer', 'paymentMethod', 'creator']
       });
 
       if (billing) {
@@ -579,16 +294,24 @@ export class StripeService {
         });
         this.logger.log(`Updated billing record ${billing.id} status to PAID for invoice: ${invoice.id}`);
 
+        let trainer;
+        if (billing.creator?.level === UserLevels[UserRole.TRAINER]) {
+          trainer = billing.creator
+        } else
+          if (billing.session?.trainer) {
+            trainer = billing.session.trainer
+          }
+
         // Try to transfer payment to trainer's Stripe Connect account (if session has trainer)
-        if (billing.session?.trainer) {
+        if (trainer) {
           const transferResult = await this.transferToTrainerAccount(
-            billing.session.trainer,
+            trainer,
             invoice.amount_paid,
-            `Session payment - ${billing.session.id}`
+            `Invoice Payment - ${billing.id}`
           );
 
           if (transferResult.success) {
-            this.logger.log(`Successfully transferred payment to trainer ${billing.session.trainer.email}`);
+            this.logger.log(`Successfully transferred payment to trainer ${trainer.email}`);
             // Optionally update billing record with transfer ID
             await this.dataSource.manager.update(Billing, billing.id, {
               notes: `Transfer ID: ${transferResult.transferId}`
@@ -598,18 +321,18 @@ export class StripeService {
           }
 
           await this.createTrainerPaymentInvoice(
-            billing.session.trainer,
+            trainer,
             invoice.amount_paid,
             billing,
             transferResult.success ? BillingStatus.PAID : BillingStatus.PENDING,
-            `Transfer failed - Session ${billing.session.id}. Error: ${transferResult.error}`
+            `Transfer failed - ${billing.id}. Error: ${transferResult.error}`
           );
         }
       } else {
         this.logger.warn(`No billing record found for invoice: ${invoice.id}`);
       }
 
-    
+
 
       this.logger.log(`Successfully processed invoice payment for invoice: ${invoice.id}`);
 
@@ -664,6 +387,161 @@ export class StripeService {
     }
   }
 
+
+  private async findAdminUser(): Promise<User> {
+    const admin = await this.dataSource.manager.findOne(User, {
+      where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+    });
+
+    if (!admin) {
+      // Fallback to super admin if no admin found
+      const superAdmin = await this.dataSource.manager.findOne(User, {
+        where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+      });
+
+      if (!superAdmin) {
+        throw new Error('No admin user found in system');
+      }
+
+      return superAdmin;
+    }
+
+    return admin;
+  }
+
+  private async getPlatformFeePercentage(): Promise<number> {
+    try {
+      return 2
+    } catch (error) {
+      this.logger.warn('Failed to get platform fee from settings, using default 2%:', error.message);
+      return 2; // Fallback to 2% if settings not available
+    }
+  }
+
+
+  private async calculatePlatformFee(amount: number): Promise<{ platformFeeAmount: number; platformFeePercentage: number }> {
+    const platformFeePercentage = await this.getPlatformFeePercentage();
+    const platformFeeAmount = Math.round(amount * (platformFeePercentage / 100));
+
+    return {
+      platformFeeAmount,
+      platformFeePercentage
+    };
+  }
+
+  private async createTrainerPaymentInvoice(
+    trainer: User,
+    amount: number,
+    originalBilling: Billing,
+    status: BillingStatus,
+    description: string
+  ): Promise<void> {
+    try {
+      const admin = await this.findAdminUser();
+
+      // Calculate platform fee dynamically
+      const { platformFeeAmount, platformFeePercentage } = await this.calculatePlatformFee(amount);
+      const trainerAmount = amount - platformFeeAmount;
+
+    const localInvoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000000)}`;
+
+
+      const createDto = {
+        type: BillingType.INDIVIDUAL,
+        user: admin, // Invoice against admin
+        status: status,
+        currency: originalBilling.currency || BillingCurrency.USD,
+        paymentMethod: originalBilling.paymentMethod,
+        lineItems: [
+          {
+            description: `Trainer Payment: ${description}`,
+            quantity: 1,
+            unitPrice: trainerAmount,
+            amount: trainerAmount,
+            tax: 0
+          }
+        ],
+        totalTax: 0,
+        discount: 0,
+        totalAmount: trainerAmount,
+        invoiceAmount: trainerAmount,
+        notes: `Payment to trainer ${trainer.email} for ${description}. Original amount: ${amount / 100}. Platform fee (${platformFeePercentage}%): ${platformFeeAmount / 100}. Net to trainer: ${trainerAmount / 100}`,
+        terms: 'Due on demand',
+        localInvoiceNumber,
+        issueDate: new Date(),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      };
+
+      await this.dataSource.manager.save(Billing, createDto);
+
+      this.logger.log(`Created ${status} invoice against admin for trainer ${trainer.email}, amount: ${trainerAmount / 100} (${platformFeePercentage}% platform fee: ${platformFeeAmount / 100})`);
+    } catch (error) {
+      this.logger.error(`Error creating trainer payment invoice:`, error.message);
+      // Don't throw - this shouldn't break the main payment flow
+    }
+  }
+
+  private async transferToTrainerAccount(
+    trainer: User,
+    amount: number,
+    description: string
+  ): Promise<{ success: boolean; transferId?: string; error?: string }> {
+    try {
+      await this.ensureStripeInitialized();
+
+      // Find trainer's Stripe Connect account
+      const connectAccount = await this.dataSource.manager.findOne(StripeConnectAccount, {
+        where: { userId: trainer.id }
+      });
+
+      if (!connectAccount) {
+        return {
+          success: false,
+          error: `No Stripe Connect account found for trainer ${trainer.email}`
+        };
+      }
+
+      if (!connectAccount.chargesEnabled || !connectAccount.detailsSubmitted) {
+        return {
+          success: false,
+          error: `Trainer ${trainer.email} Stripe Connect account not fully activated`
+        };
+      }
+
+      // Calculate platform fee dynamically
+      const { platformFeeAmount, platformFeePercentage } = await this.calculatePlatformFee(amount);
+      const trainerAmount = amount - platformFeeAmount;
+
+      // Create transfer to trainer's connected account
+      const transfer = await this.stripe!.transfers.create({
+        amount: trainerAmount,
+        currency: 'usd',
+        destination: connectAccount.stripeAccountId,
+        description: description,
+        metadata: {
+          trainerId: trainer.id.toString(),
+          trainerEmail: trainer.email,
+          originalAmount: amount.toString(),
+          platformFee: platformFeeAmount.toString(),
+          platformFeePercentage: platformFeePercentage.toString()
+        }
+      });
+
+      this.logger.log(`Successfully transferred ${trainerAmount / 100} to trainer ${trainer.email} (${connectAccount.stripeAccountId}) with ${platformFeePercentage}% platform fee`);
+
+      return {
+        success: true,
+        transferId: transfer.id
+      };
+
+    } catch (error) {
+      this.logger.error(`Error transferring to trainer account:`, error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 
 
 }

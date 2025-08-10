@@ -30,6 +30,10 @@ export type TDaySchedule = DayScheduleDto;
 export type TWeeklySchedule = WeeklyScheduleDto;
 export type TUnavailablePeriod = UnavailablePeriodDto;
 
+export type TDayKey = keyof TWeeklySchedule;
+
+
+
 export interface IUserAvailability extends UserAvailability, GeneralBaseEntity {}
 
 export type TCreateUserAvailabilityData = CreateUserAvailabilityDto;

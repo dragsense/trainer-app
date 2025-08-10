@@ -96,4 +96,4 @@ export const createStripeConnect = (data: TCreateStripeConnectData) =>
   apiRequest<IStripeConnectCreateResponse>(`${STRIPE_CONNECT_API_PATH}`, "POST", data);
 
 export const deleteStripeConnect = () =>
-  apiRequest<IStripeConnectDeleteResponse>(`${STRIPE_CONNECT_API_PATH}`, "DELETE");
+  apiRequest<void>(`${STRIPE_CONNECT_API_PATH}`, "DELETE");

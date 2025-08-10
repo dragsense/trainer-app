@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -81,6 +81,7 @@ export default function TrainerForm({
     storeKey
 }: ITrainerFormProps) {
 
+
     const queryClient = useQueryClient();
     const [credentialModalContent, setCredentialModalContent] = useState({
         open: false,
@@ -153,7 +154,8 @@ export default function TrainerForm({
         return updatedValues;
     };
 
-    const initialValues = getInitialValues();
+    const initialValues = useMemo(() => getInitialValues(), [response]);
+
 
     if (isLoading) {
         return (
@@ -162,6 +164,8 @@ export default function TrainerForm({
             </div>
         );
     }
+
+
 
     const handleClose = () => {
         setAction('none');
@@ -177,7 +181,7 @@ export default function TrainerForm({
             validationSchema={TrainerSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
-                //queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
 
                 if (!isEditing && response && response.user) {

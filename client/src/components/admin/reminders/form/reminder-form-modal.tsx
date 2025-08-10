@@ -21,6 +21,7 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { useFormContext } from "react-hook-form";
 
 export interface IReminderFormModalProps {
   storeKey: string;
@@ -150,7 +151,7 @@ export default function ReminderFormModal({
           label: "Billing",
           placeholder: "Select Billing",
           type: "custom",
-         visible: ({ values }) => values.type === ReminderType.BILLING,
+          visible: ({ values }) => values.type === ReminderType.BILLING,
           required: ({ values }) => values.type === ReminderType.BILLING,
           valueType: "number",
           Component: (props) => (

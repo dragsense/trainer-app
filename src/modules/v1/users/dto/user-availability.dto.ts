@@ -1,10 +1,12 @@
 import {
+    ArrayMaxSize,
     IsArray,
     IsBoolean,
     IsDateString,
     IsObject,
     IsOptional,
     IsString,
+    Matches,
     ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -18,6 +20,9 @@ export class TimeSlotDto {
         description: 'Start time of the slot (HH:mm)',
     })
     @IsString()
+    @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+        message: 'Start time must be in HH:mm format',
+    })
     start: string;
 
     @ApiProperty({
@@ -26,6 +31,9 @@ export class TimeSlotDto {
         description: 'End time of the slot (HH:mm)',
     })
     @IsString()
+    @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+        message: 'End time must be in HH:mm format',
+    })
     end: string;
 }
 
@@ -45,6 +53,7 @@ export class DayScheduleDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => TimeSlotDto)
+    @ArrayMaxSize(5)
     timeSlots: TimeSlotDto[];
 }
 
@@ -72,7 +81,7 @@ export class UnavailablePeriodDto {
         description: 'Start date of the unavailable period (ISO 8601)',
     })
     @IsDateString()
-    startDate: string;
+    startDate: Date;
 
     @ApiProperty({
         type: String,
@@ -80,7 +89,7 @@ export class UnavailablePeriodDto {
         description: 'End date of the unavailable period (ISO 8601)',
     })
     @IsDateString()
-    endDate: string;
+    endDate: Date;
 }
 
 export class WeeklyScheduleDto {

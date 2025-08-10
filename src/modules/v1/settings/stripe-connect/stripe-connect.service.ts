@@ -6,7 +6,9 @@ import Stripe from 'stripe';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { StripeConnectAccount } from './entities/stripe-connect-account.entity';
 import { CreateStripeConnectDto } from './dto/create-stripe-connect.dto';
-import { StripeConnectStatusDto, StripeConnectCreateResponseDto, StripeConnectDeleteResponseDto } from './dto/stripe-connect-responses.dto';
+import { StripeConnectStatusDto, StripeConnectCreateResponseDto } from './dto/stripe-connect-responses.dto';
+import { ConfigService } from '@nestjs/config';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class StripeConnectService {
@@ -17,6 +19,10 @@ export class StripeConnectService {
     @InjectRepository(StripeConnectAccount)
     private stripeConnectRepository: Repository<StripeConnectAccount>,
     private readonly paymentMethodsService: PaymentMethodsService,
+    private readonly userService: UsersService,
+    private readonly configService: ConfigService,
+
+
   ) {
     this.initializeStripe();
   }
@@ -49,48 +55,56 @@ export class StripeConnectService {
     }
   }
 
-  async create(user: User, createDto: CreateStripeConnectDto): Promise<StripeConnectCreateResponseDto> {
+  async create(authUser: User, createDto: CreateStripeConnectDto): Promise<StripeConnectCreateResponseDto> {
     await this.ensureStripeInitialized();
 
-    // Check if user already has an account
-    const existingAccount = await this.stripeConnectRepository.findOne({
-      where: { userId: user.id }
-    });
+    const user = await this.userService.findOne({ id: authUser.id });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
+    const existingAccount = await this.stripeConnectRepository.findOne({ where: { userId: user.id } });
     if (existingAccount) {
       throw new BadRequestException('User already has a Stripe Connect account');
     }
 
+    let stripeAccount: Stripe.Account | null = null;
+
     try {
-      // Create Stripe Express account
-      const stripeAccount = await this.stripe!.accounts.create({
-        type: createDto.type || 'express',
-        country: createDto.country || 'US',
+      const app = this.configService.get('app');
+
+      const type = createDto.type ?? 'express';
+      const country = createDto.country ?? 'US';
+
+      // Create Stripe account
+      stripeAccount = await this.stripe!.accounts.create({
+        type,
+        country,
         email: user.email,
         metadata: {
           userId: user.id.toString(),
-          userType: 'trainer'
-        }
+          userType: 'trainer',
+        },
       });
 
-      // Create account link for onboarding
+      // Create onboarding link
       const accountLink = await this.stripe!.accountLinks.create({
         account: stripeAccount.id,
-        refresh_url: `${process.env.CLIENT_URL}/settings/stripe-connect?refresh=true`,
-        return_url: `${process.env.CLIENT_URL}/settings/stripe-connect?success=true`,
+        refresh_url: `${app.appUrl}/settings/stripe-connect?refresh=true`,
+        return_url: `${app.appUrl}/settings/stripe-connect?success=true`,
         type: 'account_onboarding',
       });
 
-      // Save to database
+      // Save to DB
       const connectAccount = this.stripeConnectRepository.create({
         stripeAccountId: stripeAccount.id,
-        type: createDto.type || 'express',
-        country: createDto.country || 'US',
+        type,
+        country,
         email: user.email,
         chargesEnabled: stripeAccount.charges_enabled,
         detailsSubmitted: stripeAccount.details_submitted,
         payoutsEnabled: stripeAccount.payouts_enabled,
-        userId: user.id
+        userId: user.id,
       });
 
       await this.stripeConnectRepository.save(connectAccount);
@@ -102,14 +116,25 @@ export class StripeConnectService {
         message: 'Stripe Connect account created successfully',
         data: {
           accountId: stripeAccount.id,
-          onboardingUrl: accountLink.url
-        }
+          onboardingUrl: accountLink.url,
+        },
       };
     } catch (error) {
-      this.logger.error(`Error creating Stripe Connect account:`, error.message);
+      // If stripeAccount was created, delete it to avoid orphan account
+      if (stripeAccount) {
+        try {
+          await this.stripe!.accounts.del(stripeAccount.id);
+          this.logger.log(`Deleted Stripe account ${stripeAccount.id} due to error during creation process.`);
+        } catch (delError) {
+          this.logger.error(`Failed to delete Stripe account ${stripeAccount.id}:`, delError);
+        }
+      }
+
+      this.logger.error('Error creating Stripe Connect account:', error);
       throw new BadRequestException(`Failed to create Stripe Connect account: ${error.message}`);
     }
   }
+
 
   async findByUser(user: User): Promise<StripeConnectStatusDto> {
     const connectAccount = await this.stripeConnectRepository.findOne({
@@ -128,7 +153,7 @@ export class StripeConnectService {
     try {
       await this.ensureStripeInitialized();
       const stripeAccount = await this.stripe!.accounts.retrieve(connectAccount.stripeAccountId);
-      
+
       // Update local record
       connectAccount.chargesEnabled = stripeAccount.charges_enabled;
       connectAccount.detailsSubmitted = stripeAccount.details_submitted;
@@ -149,7 +174,7 @@ export class StripeConnectService {
       };
     } catch (error) {
       this.logger.error('Error syncing with Stripe:', error.message);
-      
+
       // Return local data if Stripe sync fails
       return {
         isComplete: connectAccount.isComplete,
@@ -166,7 +191,7 @@ export class StripeConnectService {
     }
   }
 
-  async delete(user: User): Promise<StripeConnectDeleteResponseDto> {
+  async delete(user: User) {
     const connectAccount = await this.stripeConnectRepository.findOne({
       where: { userId: user.id }
     });
@@ -177,19 +202,16 @@ export class StripeConnectService {
 
     try {
       await this.ensureStripeInitialized();
-      
+
       // Delete from Stripe
       await this.stripe!.accounts.del(connectAccount.stripeAccountId);
-      
+
       // Delete from database
       await this.stripeConnectRepository.remove(connectAccount);
 
       this.logger.log(`Deleted Stripe Connect account ${connectAccount.stripeAccountId} for user ${user.id}`);
 
-      return {
-        success: true,
-        message: 'Stripe Connect account deleted successfully'
-      };
+
     } catch (error) {
       this.logger.error(`Error deleting Stripe Connect account:`, error.message);
       throw new BadRequestException(`Failed to delete Stripe Connect account: ${error.message}`);

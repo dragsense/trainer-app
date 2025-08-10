@@ -4,11 +4,13 @@ import { StripeConnectController } from './stripe-connect.controller';
 import { StripeConnectService } from './stripe-connect.service';
 import { StripeConnectAccount } from './entities/stripe-connect-account.entity';
 import { PaymentMethodsModule } from '../payment-methods/payment-methods.module';
+import { UsersModule } from '../../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([StripeConnectAccount]),
-    PaymentMethodsModule
+    PaymentMethodsModule,
+    UsersModule
   ],
   controllers: [StripeConnectController],
   providers: [StripeConnectService],

@@ -16,6 +16,8 @@ import { TActionComponentProps } from "@/@types/handler-types";
 import { ISession, TSessionData } from "@/@types/session.type";
 import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
 import { SessionType } from "#/modules/v1/sessions/enums/session.enum";
+import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -25,6 +27,9 @@ import { SessionFormModal } from "@/components/admin";
 
 // Services
 import { createSession, updateSession } from "@/services/session.api";
+
+// Hooks
+import { useAuthUser } from "@/hooks/use-auth-user";
 
 
 
@@ -39,6 +44,8 @@ export const SessionSchema = z.object({
     duration: z.number().min(15, "Duration must be at least 15 minutes"),
     pricePerClient: z.number().min(0, "Price must be positive"),
     currency: z.nativeEnum(BillingCurrency).optional(),
+    paymentMethodType: z.nativeEnum(PaymentMethodType),
+
     description: z.string().optional(),
     location: z.string().optional(),
     maxParticipants: z.number().optional(),
@@ -54,12 +61,18 @@ interface ISessionFormProps extends TActionComponentProps<any> {
 interface ISessionFormExtraProps {
     open: boolean,
     onClose: () => void,
-    isEditing?: boolean
+    isEditing?: boolean,
+    trainerId?: number
 }
 
 export default function SessionForm({
     storeKey
 }: ISessionFormProps) {
+
+    const { user } = useAuthUser();
+
+
+    const trainerId = user?.level === UserLevels[UserRole.TRAINER] ? user.id : 0;
 
     const querySession = useQueryClient();
 
@@ -72,6 +85,8 @@ export default function SessionForm({
         duration: { value: 60 },
         pricePerClient: { value: 0 },
         currency: { value: BillingCurrency.USD },
+        paymentMethodType: { value: PaymentMethodType.CASH },
+
         description: { value: "" },
         location: { value: "" },
         maxParticipants: { value: 1 },

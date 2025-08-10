@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsObject, IsArray, ValidateNested, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsObject, IsArray, ValidateNested, IsOptional, ArrayMaxSize } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DayScheduleDto, UnavailablePeriodDto } from './user-availability.dto';
 
@@ -45,5 +45,6 @@ export class CreateUserAvailabilityDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UnavailablePeriodDto)
+  @ArrayMaxSize(10)
   unavailablePeriods?: UnavailablePeriodDto[];
 }

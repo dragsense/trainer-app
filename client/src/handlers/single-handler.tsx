@@ -83,7 +83,7 @@ export function SingleHandler<
   }, [singleStoreKey, store]);
 
 
-  const id = enabled ? 0 : store((state) => state.id);
+  const id = store((state) => state.id);
 
   const queryKey = [singleStoreKey, id];
 

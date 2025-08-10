@@ -11,6 +11,7 @@ import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
 export class AppSettingController {
   constructor(private readonly appSettingService: AppSettingService) { }
 
+  
   @Get()
   @ApiOperation({ summary: 'Get current user app setting' })
   @ApiResponse({ status: 200, description: 'App setting returned successfully.' })

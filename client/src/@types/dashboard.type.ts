@@ -2,6 +2,9 @@
 export interface IDashboardStats {
   overview: {
     totalClients: number;
+    totalTrainers: number;
+    totalActiveTrainers: number;
+    totalActiveClients: number;
     totalSessions: number;
     totalBillings: number;
     totalReminders: number;
@@ -18,40 +21,7 @@ export interface IDashboardStats {
 }
 
 // Revenue Analytics
-export interface IDashboardRevenue {
-  period: string;
-  revenueData: {
-    period: string;
-    transactionCount: number;
-    totalRevenue: number;
-    pendingRevenue: number;
-    averageTransaction: number;
-    currency: string;
-  }[];
-  summary: {
-    totalPaid: number;
-    totalPending: number;
-    totalTransactions: number;
-    currency: string;
-  }[];
-}
 
-// Payment Methods Overview
-export interface IPaymentMethodsOverview {
-  paymentMethods: {
-    id: number;
-    name: string;
-    key: string;
-    isEnabled: boolean;
-    configSchema: Record<string, any>;
-  }[];
-  statistics: {
-    paymentMethod: string;
-    isEnabled: boolean;
-    usageCount: number;
-    totalRevenue: number;
-  }[];
-}
 
 // Sessions Analytics
 export interface ISessionsAnalytics {
@@ -73,16 +43,6 @@ export interface ISessionsAnalytics {
   }[];
 }
 
-// Clients Overview
-export interface IClientsOverview {
-  totalClients: number;
-  activeClients: number;
-  newClientsThisMonth: number;
-  clientGrowth: {
-    period: string;
-    newClients: number;
-  }[];
-}
 
 // Reminders Analytics
 export interface IRemindersAnalytics {
@@ -108,13 +68,19 @@ export interface IFinancialSummary {
   currentPeriod: {
     currency: string;
     totalRevenue: number;
+    platformRevenue: number;
+    trainerRevenue: number;
     pendingRevenue: number;
     paidTransactions: number;
     pendingTransactions: number;
     failedTransactions: number;
     averageTransactionValue: number;
     growthRate: number;
+    platformGrowthRate: number;
     previousPeriodRevenue: number;
+    previousPlatformRevenue: number;
+    successRate?: number; // Optional success rate percentage
+    platformFeePercentage: number; // Always 2% in our case
   }[];
 }
 
@@ -213,11 +179,8 @@ export interface IBarChartData {
 // Combined Dashboard Data Interface
 export interface ICombinedDashboardData {
   stats: IDashboardStats;
-  revenue: IDashboardRevenue;
-  paymentMethods: IPaymentMethodsOverview;
-  sessions: ISessionsAnalytics;
-  clients: IClientsOverview;
   reminders: IRemindersAnalytics;
+  sessions: ISessionsAnalytics;
   financial: IFinancialSummary;
   billing: IBillingAnalytics;
 }

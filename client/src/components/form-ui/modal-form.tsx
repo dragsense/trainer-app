@@ -53,16 +53,17 @@ export function ModalForm<TFormData, TResponse>({
 }: IModalFormProps<TFormData, TResponse>) {
 
 
-    const { onSubmit } = formStore(useShallow(state => ({
-     
-      onSubmit: state.onSubmit
+    const { isSubmitting, error,  onSubmit } = formStore(useShallow(state => ({
+      onSubmit: state.onSubmit,
+      isSubmitting: state.isSubmitting,
+      error: state.error
     })));
 
 
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
+    <Dialog  open={open} onOpenChange={onOpenChange}>
+      <DialogContent forceMount
         className={cn(`max-h-[90vh] overflow-y-auto`, widthMap[width] || "sm:max-w-lg")}
       >
         <form onSubmit={onSubmit}>
@@ -73,14 +74,14 @@ export function ModalForm<TFormData, TResponse>({
               <div>
                 {footerContent}
 
-                {false && (
-                  <p className="text-sm font-medium text-red-500 my-2">{"error.message"}</p>
+                {error && (
+                  <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
                 )}
               </div>
             }
           >
 
-            {false && (
+            {isSubmitting && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>

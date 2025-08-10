@@ -10,7 +10,9 @@ import helmet from 'helmet';
 import * as compression from 'compression';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
   const configService = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -62,7 +64,7 @@ async function bootstrap() {
     }),
   );
 
-  
+
 
   // CORS configuration
   const corsOrigins = configService.get<string>('app.corsOrigins', 'http://localhost:5173').split(',');
@@ -76,7 +78,7 @@ async function bootstrap() {
   });
 
   app.setGlobalPrefix('api');
-  
+
   const port = configService.get<number>('app.port', 3000);
   await app.listen(port);
 

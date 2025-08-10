@@ -24,14 +24,17 @@ export class DashboardService {
     private readonly reminderRepository: Repository<Reminder>,
     @InjectRepository(PaymentMethod)
     private readonly paymentMethodRepository: Repository<PaymentMethod>,
-  ) {}
+  ) { }
 
   async getDashboardStats(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    
+    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+
     // Get counts
     const [
       totalClients,
+      totalTrainers,
+      totalActiveTrainers,
+      totalActiveClients,
       totalSessions,
       totalBillings,
       totalReminders,
@@ -41,7 +44,21 @@ export class DashboardService {
       paidBillings
     ] = await Promise.all([
       this.userRepository.count({
-        where: isAdmin ? { level: UserLevels[UserRole.USER] } : { id: user.id }
+        where: isAdmin ? { level: UserLevels[UserRole.USER] } : { owner: { id: user.id } }
+      }),
+   
+       isAdmin
+        ? this.userRepository.count({
+          where: { level: UserLevels[UserRole.TRAINER] },
+        })
+        : Promise.resolve(0),
+      isAdmin
+        ? this.userRepository.count({
+          where: { level: UserLevels[UserRole.TRAINER], isActive: true },
+        })
+        : Promise.resolve(0),
+      this.userRepository.count({
+        where: isAdmin ? { level: UserLevels[UserRole.USER], isActive: true } : { owner: { id: user.id }, isActive: true }
       }),
       this.sessionRepository.count({
         where: isAdmin ? {} : { trainer: { id: user.id } }
@@ -78,6 +95,7 @@ export class DashboardService {
       })
     ]);
 
+
     // Calculate completion rates
     const sessionCompletionRate = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
     const paymentSuccessRate = totalBillings > 0 ? (paidBillings / totalBillings) * 100 : 0;
@@ -85,6 +103,9 @@ export class DashboardService {
     return {
       overview: {
         totalClients,
+        totalTrainers,
+        totalActiveClients,
+        totalActiveTrainers,
         totalSessions,
         totalBillings,
         totalReminders,
@@ -101,137 +122,8 @@ export class DashboardService {
     };
   }
 
-  async getRevenueAnalytics(user: User, period = 'monthly', startDate?: string, endDate?: string) {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    
-    let dateCondition = '';
-    let groupBy = '';
-    let selectFields = '';
-
-    // Set up date grouping based on period
-    switch (period) {
-      case 'daily':
-        groupBy = "DATE_TRUNC('day', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'weekly':
-        groupBy = "DATE_TRUNC('week', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'monthly':
-        groupBy = "DATE_TRUNC('month', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'yearly':
-        groupBy = "DATE_TRUNC('year', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-    }
-
-    // Custom date range
-    if (startDate && endDate) {
-      dateCondition = `AND b."createdAt" >= '${startDate}' AND b."createdAt" <= '${endDate}'`;
-    } else {
-      // Default to last 12 periods
-      const periodMap = {
-        daily: '30 days',
-        weekly: '12 weeks',
-        monthly: '12 months',
-        yearly: '5 years'
-      };
-      dateCondition = `AND b."createdAt" >= NOW() - INTERVAL '${periodMap[period] || '12 months'}'`;
-    }
-
-    const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
-
-    const revenueQuery = `
-      SELECT 
-        ${selectFields}
-        COUNT(*) as transaction_count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_revenue,
-        SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as pending_revenue,
-        AVG(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE NULL END) as average_transaction,
-        b.currency
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY ${groupBy ? `${groupBy}, ` : ''}b.currency
-      ORDER BY ${groupBy ? `${groupBy} DESC` : 'total_revenue DESC'}
-    `;
-
-    const revenueData = await this.billingRepository.query(revenueQuery);
-
-    // Get total revenue summary
-    const totalRevenueQuery = `
-      SELECT 
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_paid,
-        SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as total_pending,
-        COUNT(*) as total_transactions,
-        b.currency
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY b.currency
-    `;
-
-    const totalRevenue = await this.billingRepository.query(totalRevenueQuery);
-
-    return {
-      period,
-      revenueData: revenueData.map(row => ({
-        period: row.period || 'Total',
-        transactionCount: parseInt(row.transaction_count),
-        totalRevenue: parseFloat(row.total_revenue) || 0,
-        pendingRevenue: parseFloat(row.pending_revenue) || 0,
-        averageTransaction: parseFloat(row.average_transaction) || 0,
-        currency: row.currency
-      })),
-      summary: totalRevenue.map(row => ({
-        totalPaid: parseFloat(row.total_paid) || 0,
-        totalPending: parseFloat(row.total_pending) || 0,
-        totalTransactions: parseInt(row.total_transactions),
-        currency: row.currency
-      }))
-    };
-  }
-
-  async getPaymentMethodsOverview(user: User) {
-    const paymentMethods = await this.paymentMethodRepository.find();
-    
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
-
-    const paymentStatsQuery = `
-      SELECT 
-        pm.name as payment_method,
-        pm."isEnabled",
-        COUNT(b.id) as usage_count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_revenue
-      FROM payment_methods pm
-      LEFT JOIN billings b ON b."stripeInvoiceId" IS NOT NULL ${userCondition}
-      GROUP BY pm.id, pm.name, pm."isEnabled"
-      ORDER BY total_revenue DESC
-    `;
-
-    const paymentStats = await this.paymentMethodRepository.query(paymentStatsQuery);
-
-    return {
-      paymentMethods: paymentMethods.map(pm => ({
-        id: pm.id,
-        name: pm.name,
-        key: pm.key,
-        isEnabled: pm.isEnabled,
-        configSchema: pm.configSchema
-      })),
-      statistics: paymentStats.map(stat => ({
-        paymentMethod: stat.payment_method,
-        isEnabled: stat.isEnabled,
-        usageCount: parseInt(stat.usage_count),
-        totalRevenue: parseFloat(stat.total_revenue) || 0
-      }))
-    };
-  }
-
   async getSessionsAnalytics(user: User, period = 'monthly') {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
+    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
     const userCondition = isAdmin ? '' : `AND s."trainerId" = ${user.id}`;
 
     let groupBy = "DATE_TRUNC('month', s.\"dateTime\")";
@@ -294,69 +186,9 @@ export class DashboardService {
     };
   }
 
-  async getClientsOverview(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    
-    if (!isAdmin) {
-      // For non-admin users, return limited client data
-      return {
-        totalClients: 1,
-        activeClients: 1,
-        newClientsThisMonth: 0,
-        clientGrowth: []
-      };
-    }
-
-    // Client growth over time
-    const clientGrowthQuery = `
-      SELECT 
-        DATE_TRUNC('month', u."createdAt") as period,
-        COUNT(*) as new_clients
-      FROM users u
-      WHERE u.level = ${UserLevels[UserRole.USER]}
-        AND u."createdAt" >= NOW() - INTERVAL '12 months'
-      GROUP BY DATE_TRUNC('month', u."createdAt")
-      ORDER BY period DESC
-    `;
-
-    const clientGrowth = await this.userRepository.query(clientGrowthQuery);
-
-    // Client activity
-    const activeClientsQuery = `
-      SELECT COUNT(DISTINCT sc."clientId") as active_clients
-      FROM sessions s
-      INNER JOIN sessions_clients sc ON s.id = sc."sessionId"
-      WHERE s."dateTime" >= NOW() - INTERVAL '30 days'
-        AND s.status IN ('COMPLETED', 'SCHEDULED')
-    `;
-
-    const activeClients = await this.userRepository.query(activeClientsQuery);
-
-    const totalClients = await this.userRepository.count({
-      where: { level: UserLevels[UserRole.USER] }
-    });
-
-    const newClientsThisMonth = await this.userRepository.count({
-      where: {
-        level: UserLevels[UserRole.USER],
-        createdAt: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      }
-    });
-
-    return {
-      totalClients,
-      activeClients: activeClients[0]?.active_clients || 0,
-      newClientsThisMonth,
-      clientGrowth: clientGrowth.map(row => ({
-        period: row.period,
-        newClients: parseInt(row.new_clients)
-      }))
-    };
-  }
-
   async getRemindersAnalytics(user: User) {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    const userCondition = isAdmin ? '' : `AND r."recipientUserId" = ${user.id}`;
+    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const userCondition = isAdmin ? '' : `AND r."creatorId" = ${user.id}`;
 
     const reminderStatsQuery = `
       SELECT 
@@ -406,8 +238,9 @@ export class DashboardService {
   }
 
   async getFinancialSummary(user: User, period = 'month') {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
+    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const PLATFORM_FEE_PERCENTAGE = 0.02; // 2% platform fee
+    const userCondition = isAdmin ? '' : `AND b."creatorId" = ${user.id}`;
 
     let dateInterval = '1 month';
     if (period === 'quarter') dateInterval = '3 months';
@@ -416,6 +249,7 @@ export class DashboardService {
     const financialQuery = `
       SELECT 
         SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_revenue,
+        ${isAdmin ? `SUM(CASE WHEN b.status = 'paid' THEN (b."invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE}) ELSE 0 END) as platform_revenue,` : ''}
         SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as pending_revenue,
         COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as paid_transactions,
         COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pending_transactions,
@@ -433,6 +267,7 @@ export class DashboardService {
     const previousPeriodQuery = `
       SELECT 
         SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as previous_revenue,
+        ${isAdmin ? `SUM(CASE WHEN b.status = 'paid' THEN (b."invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE}) ELSE 0 END) as previous_platform_revenue,` : ''}
         b.currency
       FROM billings b
       WHERE b."createdAt" >= NOW() - INTERVAL '${dateInterval}' * 2
@@ -450,24 +285,34 @@ export class DashboardService {
         const previousRevenue = parseFloat(prevData?.previous_revenue) || 0;
         const growthRate = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 : 0;
 
+        // Platform revenue calculations
+        const platformRevenue = isAdmin ? parseFloat(row.platform_revenue) || 0 : 0;
+        const previousPlatformRevenue = isAdmin ? parseFloat(prevData?.previous_platform_revenue) || 0 : 0;
+        const platformGrowthRate = previousPlatformRevenue > 0 ?
+          ((platformRevenue - previousPlatformRevenue) / previousPlatformRevenue) * 100 : 0;
+
         return {
           currency: row.currency,
           totalRevenue: currentRevenue,
+          platformRevenue, // 2% of total paid revenue
+          trainerRevenue: currentRevenue - platformRevenue, // 98% remaining
           pendingRevenue: parseFloat(row.pending_revenue) || 0,
           paidTransactions: parseInt(row.paid_transactions),
           pendingTransactions: parseInt(row.pending_transactions),
           failedTransactions: parseInt(row.failed_transactions),
           averageTransactionValue: parseFloat(row.average_transaction_value) || 0,
           growthRate: Math.round(growthRate * 100) / 100,
-          previousPeriodRevenue: previousRevenue
+          platformGrowthRate: Math.round(platformGrowthRate * 100) / 100,
+          previousPeriodRevenue: previousRevenue,
+          previousPlatformRevenue
         };
       })
     };
   }
 
   async getBillingAnalytics(user: User, period = 'monthly', startDate?: string, endDate?: string) {
-    const isAdmin = user.level === UserLevels[UserRole.TRAINER];
-    const userCondition = isAdmin ? '' : `AND b."userUserId" = ${user.id}`;
+    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const userCondition = isAdmin ? '' : `AND b."creatorId" = ${user.id}`;
 
     let dateCondition = '';
     let groupBy = '';

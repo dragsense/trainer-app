@@ -17,6 +17,7 @@ import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { User } from '../users/entities/user.entity';
 import { SessionStatus } from './enums/session.enum';
 import { UserRole, UserLevels } from '../users/enums/user.enum';
+import { StripeConnectService } from '../settings/stripe-connect/stripe-connect.service';
 
 @Injectable()
 export class SessionsService {
@@ -32,6 +33,7 @@ export class SessionsService {
 
     // Validate users exist and have correct roles
     const trainer = await this.usersService.findOne({ id: trainerId });
+
 
 
     if (!trainer || trainer.level !== UserLevels[UserRole.TRAINER]) {
@@ -63,7 +65,7 @@ export class SessionsService {
       dateTime,
       trainer,
       clients,
-      createdBy: user,
+      creator: user,
       status: SessionStatus.SCHEDULED
     });
 
@@ -87,7 +89,7 @@ export class SessionsService {
     const skip = (page - 1) * limit;
     const query = this.sessionsRepository.createQueryBuilder('session')
       .leftJoinAndSelect('session.trainer', 'trainer')
-      .leftJoinAndSelect('session.createdBy', 'createdBy')
+      .leftJoinAndSelect('session.creator', 'createdBy')
       .loadRelationCountAndMap('session.clientCount', 'session.clients');
 
 
@@ -96,6 +98,9 @@ export class SessionsService {
     const userLevel = user.level;
     if (userLevel === UserLevels[UserRole.TRAINER]) {
       query.where('session.trainer.id = :userId', { userId: user.id });
+    } else if (userLevel === UserLevels[UserRole.USER]) {
+      query.leftJoin('session.clients', 'clients').
+        where('clients.id = :userId', { userId: user.id });
     } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else {
@@ -149,6 +154,21 @@ export class SessionsService {
     };
   }
 
+  async findOneById(id: number): Promise<Session> {
+
+    const session = await this.sessionsRepository.findOne({
+      where: {
+        id,
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    return session;
+  }
+
   async findOne(id: number, user: User): Promise<Session> {
     const query = this.sessionsRepository
       .createQueryBuilder('session')
@@ -196,6 +216,7 @@ export class SessionsService {
       if (!trainer || trainer.level !== UserLevels[UserRole.TRAINER]) {
         throw new BadRequestException('Invalid trainer ID');
       }
+
 
 
       if (data.dateTime || data.duration) {

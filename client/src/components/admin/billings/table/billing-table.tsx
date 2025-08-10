@@ -24,7 +24,6 @@ import { CardTable } from "@/components/table-ui/card-table";
 import { columns } from "./billing-columns";
 
 // Stores
-import { useStore } from "zustand";
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IBillingTableProps {
@@ -102,10 +101,15 @@ export default function BillingTable({
     setAction('view', id);
   }
 
+  const updateStatus = (id: number) => {
+    setAction('status', id);
+  }
+
   const tableColumns = columns({
     handleEdit,
     handleView,
-    handleDelete
+    handleDelete,
+    updateStatus
   }
   );
 

@@ -40,7 +40,7 @@ export const ActionComponentHandler = <IData, TListActionProps,>({
     return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
   }
 
-  const action = useStore(singleStore, state => state.action);
+  const action = singleStore(state => state.action);
 
   return React.useMemo(() => {
     if (!action || !actionComponentsMap) return null;
@@ -52,7 +52,7 @@ export const ActionComponentHandler = <IData, TListActionProps,>({
 
     return (
       <ActionComp
-        key={`action-comp-${action}`}
+        key={`action-comp-${action}-${singleStoreKey}`}
         storeKey={storeKey}
         action={action}
         {...listProps}

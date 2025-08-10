@@ -23,70 +23,61 @@ import { AvailabilityCardForm } from "@/components/admin";
 // Services
 import { updateMyAvailability } from "@/services/user.api";
 import { DAYS_OF_WEEK } from "@/components/admin/settings/form/availability-card-form";
+
+// UI Components
 import { Badge } from "@/components/ui/badge";
 
+// Reusable time slot schema
+const TimeSlotSchema = z.object({
+    start: z.string()
+        .min(5, "Must be HH:MM format")
+        .max(5, "Must be HH:MM format")
+        .refine(time => {
+            const [hours, minutes] = time.split(':').map(Number);
+            return hours >= 0 && hours <= 23 &&
+                minutes >= 0 && minutes <= 59;
+        }, "Invalid time (00:00-23:59)"),
+    end: z.string()
+        .min(5, "Must be HH:MM format")
+        .max(5, "Must be HH:MM format")
+}).refine(
+    slot => {
+        const [startH, startM] = slot.start.split(':').map(Number);
+        const [endH, endM] = slot.end.split(':').map(Number);
+        return endH > startH || (endH === startH && endM > startM);
+    },
+    { message: "End time must be after start time", path: ["end"] }
+);
 
+// Reusable day schema
+const DayScheduleSchema = z.object({
+    enabled: z.boolean(),
+    timeSlots: z.array(TimeSlotSchema)
+});
 
+// Reusable unavailable period schema
+const UnavailablePeriodSchema = z.object({
+    id: z.string().optional(),
+    startDate: z.date(),
+    endDate: z.date(),
+    reason: z.string()
+}).refine(
+    period => period.endDate >= period.startDate,
+    { message: "End date must be after start date", path: ["endDate"] }
+);
 
 // Schema
 export const AvailabilitySchema = z.object({
     weeklySchedule: z.object({
-        monday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        tuesday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        wednesday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        thursday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        friday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        saturday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
-        sunday: z.object({
-            enabled: z.boolean(),
-            timeSlots: z.array(z.object({
-                start: z.string(),
-                end: z.string(),
-            })),
-        }),
+        monday: DayScheduleSchema,
+        tuesday: DayScheduleSchema,
+        wednesday: DayScheduleSchema,
+        thursday: DayScheduleSchema,
+        friday: DayScheduleSchema,
+        saturday: DayScheduleSchema,
+        sunday: DayScheduleSchema
     }),
-    unavailablePeriods: z.array(z.object({
-        id: z.string().optional(),
-        startDate: z.string(),
-        endDate: z.string(),
-        reason: z.string(),
-    })).optional(),
+    unavailablePeriods: z.array(UnavailablePeriodSchema).optional()
 });
 
 
@@ -117,6 +108,7 @@ export default function Availability({
         unavailablePeriods: { value: [] },
     };
 
+
     const singleStoreKey = storeKey + "-single";
     const singleStore = useRegisteredStore<TSingleHandlerStore<IUserAvailability>>(singleStoreKey);
 
@@ -124,11 +116,9 @@ export default function Availability({
         return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response: availability, isLoading, reset } = singleStore(useShallow(state => ({
-        action: state.action,
+    const { response: availability, isLoading } = singleStore(useShallow(state => ({
         response: state.response,
         isLoading: state.isLoading,
-        reset: state.reset
     })));
 
     if (!availability)
@@ -143,31 +133,33 @@ export default function Availability({
             return INITIAL_VALUES;
         }
 
-        const flatResponse = {
-            weeklySchedule,
-            unavailablePeriods
+        // Ensure weeklySchedule has all days with proper structure
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
+        const formattedWeeklySchedule = {} as any;
+
+        days.forEach(day => {
+            formattedWeeklySchedule[day] = {
+                enabled: weeklySchedule[day]?.enabled ?? false,
+                timeSlots: weeklySchedule[day]?.timeSlots || []
+            };
+        });
+
+        // Ensure unavailablePeriods is an array with proper structure
+        const formattedUnavailablePeriods = (unavailablePeriods || []).map(period => ({
+            id: period.id || undefined,
+            startDate: period.startDate ? new Date(period.startDate) : new Date(),
+            endDate: period.endDate ? new Date(period.endDate) : new Date(),
+            reason: period.reason || ''
+        }));
+
+        return {
+            weeklySchedule: {
+                value: formattedWeeklySchedule
+            },
+            unavailablePeriods: {
+                value: formattedUnavailablePeriods
+            }
         };
-
-
-        const updatedValues = {
-            ...INITIAL_VALUES,
-            ...Object.fromEntries(
-                Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
-                    return [
-                        key,
-                        {
-                            ...original,
-                            value: newValue !== undefined ? newValue : original.value,
-                        },
-                    ];
-                })
-            ),
-
-        };
-
-
-        return updatedValues;
     };
 
     const initialValues = getInitialValues();
@@ -179,6 +171,8 @@ export default function Availability({
             </div>
         );
     }
+
+
 
     return <>
 
@@ -211,7 +205,6 @@ export default function Availability({
             </div>
         )}
 
-
         <FormHandler<TUpdateUserAvailabilityData, IMessageResponse, IAvailabilityExtraProps>
             mutationFn={updateMyAvailability}
             FormComponent={AvailabilityCardForm}
@@ -219,8 +212,6 @@ export default function Availability({
             initialValues={initialValues}
             validationSchema={AvailabilitySchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            useManualForm={true}
-        
         />
 
 
