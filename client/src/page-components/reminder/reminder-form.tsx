@@ -117,7 +117,12 @@ export default function ReminderForm({
         }
 
         const flatResponse = {
-            ...(response || {})
+            ...(response || {}),
+            ...(response?.recipient ? { recipientId: response.recipient.id } : {}),
+            ...(response?.session ? { sessionId: response.session.id } : {}),
+            ...(response?.billing ? { sessionId: response.billing.id } : {}),
+
+
         };
 
 

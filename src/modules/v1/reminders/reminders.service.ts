@@ -7,7 +7,7 @@ import { Reminder } from './entities/reminder.entity';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
 import { ReminderListDto } from './dto/reminder-list.dto';
-import { ReminderFrequency, ReminderStatus} from './enums/reminder.enum';
+import { ReminderFrequency, ReminderStatus } from './enums/reminder.enum';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { MessageResponse } from '@/interfaces/general.interface';
@@ -29,7 +29,7 @@ export class RemindersService {
     const reminder = this.reminderRepository.create({
       ...createReminderDto,
       creator: { id: user.id },
-      recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId }: undefined,
+      recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId } : undefined,
       session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
       billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
       status: ReminderStatus.SCHEDULED,
@@ -39,7 +39,7 @@ export class RemindersService {
     });
 
     const savedReminder = await this.reminderRepository.save(reminder);
-    
+
     // Emit reminder created event
     this.eventEmitter.emit(
       'reminder.created',
@@ -164,7 +164,7 @@ export class RemindersService {
 
   async findOne(user: Pick<User, 'id'>, id: number): Promise<Reminder> {
     const reminder = await this.reminderRepository.findOne({
-      where: { id, creator: { id: user.id } },
+      where: { id },
       relations: ['creator', 'recipient', 'session'],
     });
 

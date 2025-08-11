@@ -46,8 +46,8 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
             'trainer.profile',
             'clients',
             'clients.profile',
-            'createdBy',
-            'createdBy.profile'
+            'creator',
+            'creator.profile'
           ]
         });
 
@@ -98,8 +98,7 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
         this.logger.log(`Due date calculated: ${dueDate.toISOString()}`);
 
 
-        const billing = await this.createBillingRecord(session, dueDate, client);
-        console.log(billing);
+     await this.createBillingRecord(session, dueDate, client);
 
       } catch (error) {
         this.logger.error(`❌ Failed to generate invoice for session ${session.id}, client ${client.profile?.firstName || client.id}: ${error.message}`);

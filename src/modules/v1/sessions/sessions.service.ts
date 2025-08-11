@@ -173,7 +173,7 @@ export class SessionsService {
     const query = this.sessionsRepository
       .createQueryBuilder('session')
       .where('session.id = :id', { id })
-      .leftJoinAndSelect('session.createdBy', 'createdBy')
+      .leftJoinAndSelect('session.creator', 'createdBy')
       .leftJoinAndSelect('session.reminders', 'reminders')
       .leftJoinAndSelect('session.trainer', 'trainer')
       .loadRelationCountAndMap('session.clientCount', 'session.clients')

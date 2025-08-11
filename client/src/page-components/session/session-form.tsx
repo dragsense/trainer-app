@@ -79,7 +79,7 @@ export default function SessionForm({
     const INITIAL_VALUES: TDefaultValue<TSessionData> = {
         title: { value: "" },
         type: { value: SessionType.ONE_ON_ONE },
-        trainerId: { value: 0 },
+        trainerId: { value: trainerId },
         clientIds: { value: [] },
         dateTime: { value: new Date() },
         duration: { value: 60 },
@@ -171,6 +171,7 @@ export default function SessionForm({
                 open: !!action,
                 onClose: reset,
                 isEditing,
+                trainerId
             }}
         />
 

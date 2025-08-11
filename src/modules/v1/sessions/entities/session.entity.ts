@@ -35,8 +35,7 @@ export class Session extends GeneralBaseEntity {
   })
   @Column({
     type: 'enum',
-    enum: PaymentMethodType,
-    unique: true
+    enum: PaymentMethodType
   })
   paymentMethodType: PaymentMethodType;
 

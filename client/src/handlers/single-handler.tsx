@@ -53,7 +53,7 @@ export function SingleHandler<
 >({
   name = "Item",
   initialParams = {},
-  enabled,
+  enabled = false,
   queryFn,
   deleteFn = () => Promise.resolve(),
   onDeleteSuccess,
