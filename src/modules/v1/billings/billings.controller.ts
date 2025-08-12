@@ -12,7 +12,10 @@ import {
   Query,
   Req,
   UseGuards,
-  BadRequestException
+  BadRequestException,
+  UseInterceptors,
+  UploadedFile,
+  UploadedFiles
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +23,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 
 import { BillingsService } from './billings.service';
@@ -34,6 +38,7 @@ import { UserLevels, UserRole } from '../users/enums/user.enum';
 import { RoleLevelGuard } from '@/guards/level.guard';
 import { MinRoleLevel } from '@/decorators/level.decorator';
 import { UsersService } from '../users/users.service';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Billings')
 @Controller('billings')
@@ -92,6 +97,9 @@ export class BillingsController {
     return this.billingsService.update(id, updateBillingDto);
   }
 
+
+  @UseInterceptors(FilesInterceptor('documents[]', 5)) 
+  @ApiConsumes('multipart/form-data')
   @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update billing status only' })
@@ -101,9 +109,11 @@ export class BillingsController {
   @ApiResponse({ status: 404, description: 'Billing not found' })
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
+    @UploadedFiles() documents: Express.Multer.File[],
     @Body() dto: UpdateBillingStatusDto,
   ) {
-    return this.billingsService.updateStatus(id, dto.status);
+    console.log
+    return this.billingsService.updateStatus(id, dto, documents);
   }
 
   @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])

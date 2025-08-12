@@ -97,21 +97,6 @@ export default function BillingViewModal({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <p className="font-medium">Line Items</p>
-            <div className="space-y-2 text-sm text-gray-700">
-              {billing.lineItems?.map((item, index) => (
-                <div key={index} className="border p-2 rounded">
-                  <p><strong>Description:</strong> {item.description}</p>
-                  <p><strong>Quantity:</strong> {item.quantity}</p>
-                  <p><strong>Unit Price:</strong> {item.unitPrice}</p>
-                  <p><strong>Amount:</strong> {item.amount}</p>
-                  <p><strong>Tax:</strong> {item.tax ?? 0}</p>
-                </div>
-              )) || <p className="text-gray-500">No line items</p>}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="font-medium">Total Tax</p>

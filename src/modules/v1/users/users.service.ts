@@ -88,6 +88,7 @@ export class UsersService {
     const skip = (page - 1) * limit;
     const query = this.userRepo.createQueryBuilder('user')
       .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('profile.image', 'image')
       .leftJoinAndSelect('user.owner', 'owner');
 
     // Role-based filtering

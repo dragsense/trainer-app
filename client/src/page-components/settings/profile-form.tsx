@@ -12,7 +12,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
-import { IProfile, TProfileData } from "@/@types/user.type";
+import { IProfile, TUpdateProfileData } from "@/@types/user.type";
 import { UserGender } from "#/modules/v1/users/enums/user.enum";
 
 // Store
@@ -38,8 +38,9 @@ export const ProfileSchema = z.object({
     phoneNumber: z.string().optional(),
     address: z.string().optional(),
     bio: z.string().optional(),
-    gender: z.nativeEnum(UserGender).optional(),
     fitnessGoals: z.array(z.string()).optional(),
+    image: z.any().optional(),
+
 });
 
 
@@ -58,14 +59,14 @@ export default function ProfileForm({
 }: IProfileFormProps) {
 
 
-    const INITIAL_VALUES: TDefaultValue<TProfileData> = {
+    const INITIAL_VALUES: TDefaultValue<TUpdateProfileData> = {
         firstName: { value: "" },
         lastName: { value: "" },
         phoneNumber: { value: "" },
         address: { value: "" },
         bio: { value: "" },
-        gender: { value: UserGender.MALE },
         fitnessGoals: { value: [] },
+        image: { value: null },
     };
 
     const singleStoreKey = storeKey + "-single";
@@ -129,7 +130,7 @@ export default function ProfileForm({
 
 
     return <>
-        <FormHandler<TProfileData, IMessageResponse, IProfileFormExtraProps>
+        <FormHandler<TUpdateProfileData, IMessageResponse, IProfileFormExtraProps>
             mutationFn={updateProfile}
             FormComponent={ProfileCardForm}
             storeKey={storeKey}

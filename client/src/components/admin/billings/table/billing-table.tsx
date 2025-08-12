@@ -101,15 +101,22 @@ export default function BillingTable({
     setAction('view', id);
   }
 
+  const handleViewInvoice = (id: number) => {
+    setAction('viewInvoice', id);
+  }
+
   const updateStatus = (id: number) => {
     setAction('status', id);
   }
+
+
 
   const tableColumns = columns({
     handleEdit,
     handleView,
     handleDelete,
-    updateStatus
+    updateStatus,
+    handleViewInvoice
   }
   );
 

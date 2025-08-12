@@ -1,5 +1,5 @@
-import { Controller, Get, Body, Patch, Param, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Body, Patch, Param, ParseIntPipe, UseGuards, Req, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../../auth/gaurds/jwt-auth.gaurd';
 
@@ -11,6 +11,7 @@ import { UpdateProfileDto }
 import { RoleLevelGuard } from '@/guards/level.guard';
 import { UserLevels, UserRole } from '../enums/user.enum';
 import { MinRoleLevel } from '@/decorators/level.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
@@ -29,14 +30,24 @@ export class ProfilesController {
   }
 
 
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @MinRoleLevel(UserLevels[UserRole.USER])
   @Patch('profile/me')
   @ApiOperation({ summary: 'Update profile of the authenticated user' })
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  async updateMe(@Req() req: any, @Body() updateProfileDto: UpdateProfileDto) {
+  async updateMe(@Req() req: any,
+    @UploadedFile() image: Express.Multer.File,
+    @Body() updateProfileDto: UpdateProfileDto) {
     const profile = await this.profilesService.findOneByUser({ id: req.user.id });
-    return this.profilesService.update(profile.id, updateProfileDto);
+
+
+    if (updateProfileDto.image) {
+      updateProfileDto.image = null;
+    }
+
+    return this.profilesService.update(profile.id, updateProfileDto, image);
   }
 
 
@@ -51,14 +62,24 @@ export class ProfilesController {
     return this.profilesService.findOneByUser({ id });
   }
 
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @MinRoleLevel(UserLevels[UserRole.USER])
   @Patch(':id')
   @ApiOperation({ summary: 'Update profile by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'Profile ID' })
   @ApiResponse({ status: 200, description: 'Profile updated', type: Profile })
   @ApiResponse({ status: 404, description: 'Profile not found' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateProfileDto: UpdateProfileDto) {
-    return this.profilesService.update(id, updateProfileDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() image: Express.Multer.File,
+    @Body() updateProfileDto: UpdateProfileDto) {
+
+    if (updateProfileDto.image) {
+      updateProfileDto.image = null;
+    }
+
+    return this.profilesService.update(id, updateProfileDto, image);
   }
 
 }

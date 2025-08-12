@@ -8,6 +8,8 @@ import {
     UpdateDateColumn,
     JoinColumn,
     OneToMany,
+    ManyToMany,
+    JoinTable,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '@/modules/v1/users/entities/user.entity';
@@ -15,13 +17,11 @@ import { BillingCurrency, BillingStatus, BillingType } from '../enums/billing.en
 import { Session } from '@/modules/v1/sessions/entities/session.entity';
 import { Reminder } from '../../reminders/entities/reminder.entity';
 import { PaymentMethod } from '../../settings/payment-methods/entities/payment-method.entity';
+import { GeneralBaseEntity } from '@/base-entity/base.entity';
+import { FileUpload } from '../../file-upload/entities/file-upload.entity';
 
 @Entity('billings')
-export class Billing {
-    @ApiProperty({ example: 1, description: 'Unique identifier for the billing record' })
-    @PrimaryGeneratedColumn()
-    id: number;
-
+export class Billing extends GeneralBaseEntity {
     @ApiProperty({ enum: BillingType, example: BillingType.INDIVIDUAL, description: 'Type of Billing' })
     @Column({ type: 'enum', enum: BillingType })
     type: BillingType;
@@ -131,11 +131,13 @@ export class Billing {
     })
     creator: User;
 
-    @ApiProperty({ example: '2025-06-23T10:00:00Z', description: 'When the billing record was created' })
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @ApiProperty({ example: '2025-06-23T10:15:00Z', description: 'When the billing record was last updated' })
-    @UpdateDateColumn()
-    updatedAt: Date;
+    @ApiProperty({
+        type: () => [FileUpload],
+        description: 'Array of billing docs',
+    })
+    @ManyToMany(() => FileUpload)
+    @JoinTable({
+        name: 'product_images',
+    })
+    documents: FileUpload[];
 }

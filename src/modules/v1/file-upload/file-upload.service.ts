@@ -13,7 +13,7 @@ export class FileUploadService {
   constructor(
     @InjectRepository(FileUpload)
     private fileRepo: Repository<FileUpload>,
-  ) {}
+  ) { }
   private ensureDirectoryExists(dir: string) {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -61,6 +61,10 @@ export class FileUploadService {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', folder);
     this.ensureDirectoryExists(uploadDir);
 
+    if (oldFile) {
+      await this.deleteFile(oldFile);
+    }
+
     const timestamp = Date.now();
     const ext = path.extname(newFile.originalname);
     const newFileName = `${timestamp}${ext}`;
@@ -68,20 +72,6 @@ export class FileUploadService {
     fs.writeFileSync(newPath, newFile.buffer);
 
     const relativePath = `uploads/${folder}/${newFileName}`;
-
-    if (oldFile) {
-      const oldPath = path.join(process.cwd(), 'public', oldFile.path);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
-      }
-
-      oldFile.name = newFile.originalname;
-      oldFile.mimeType = newFile.mimetype;
-      oldFile.size = newFile.size;
-      oldFile.path = relativePath;
-
-      return await this.fileRepo.save(oldFile);
-    }
 
     const newRecord = this.fileRepo.create({
       name: newFile.originalname,
@@ -95,6 +85,7 @@ export class FileUploadService {
     }
 
     return await this.fileRepo.save(newRecord);
+
   }
 
   async deleteFile(file: FileUpload): Promise<void> {

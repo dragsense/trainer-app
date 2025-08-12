@@ -34,6 +34,7 @@ export const fetcher = async <T>(
 
 type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
+
 export const apiRequest = async <T>(
   path: string,
   method: HttpMethod,
@@ -51,12 +52,20 @@ export const apiRequest = async <T>(
   });
 };
 
+
+type HttpPostMethod = "POST" | "PATCH" | "PUT";
+
+
 export const apiFileRequest = async <T>(
   path: string,
-  data: any
+  method: HttpPostMethod,
+  data: FormData
 ): Promise<T> => {
+
+
+
   return fetcher<T>(`${BASE_API_URL}${path}`, {
-    method: "POST",
+    method,
     headers: {
     },
     body: data,

@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { BillingTable, BillingViewModal } from "@/components/admin";
+import { BillingTable, BillingViewModal, InvoiceViewModal } from "@/components/admin";
 import { BillingForm, BillingStatusDialog } from "@/page-components";
 
 
@@ -40,9 +40,13 @@ export default function BillingsPage() {
             action: 'createOrUpdate',
             comp: BillingForm
           },
-           {
+          {
             action: 'status',
             comp: BillingStatusDialog
+          },
+          {
+            action: 'viewInvoice',
+            comp: InvoiceViewModal
           },
         ]}
       />

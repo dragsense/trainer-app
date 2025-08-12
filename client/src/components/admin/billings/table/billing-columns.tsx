@@ -18,18 +18,22 @@ import {
 import { IBilling, IStripeInvoice, IStripeTransaction } from "@/@types/billing.type";
 import { Badge } from "@/components/ui/badge";
 import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { cn } from "@/lib/utils";
 
 
 export const columns = ({
   handleEdit,
   handleView,
   handleDelete,
-  updateStatus
+  updateStatus,
+  handleViewInvoice
 }: {
   handleEdit?: (id: number) => void;
   handleView?: (id: number) => void;
   handleDelete?: (id: number) => void;
   updateStatus?: (id: number) => void;
+  handleViewInvoice?: (id: number) => void;
+
 }
 ): ColumnDef<IBilling>[] => [
     {
@@ -136,7 +140,7 @@ export const columns = ({
         const config =
           statusConfig[status as BillingStatus] || statusConfig[BillingStatus.PENDING];
 
-        return <Badge onClick={updateStatus && (() => updateStatus(row.original.id))} className={config.color}>{config.label}</Badge>;
+        return <Badge onClick={updateStatus && (() => updateStatus(row.original.id))} className={cn(config.color, "cursor-pointer")}>{config.label}</Badge>;
       },
     },
     {
@@ -160,6 +164,12 @@ export const columns = ({
                   View
                 </DropdownMenuItem>
               )}
+              {handleViewInvoice && (
+                <DropdownMenuItem onClick={() => handleViewInvoice(billing.id)}>
+                  View Invoice
+                </DropdownMenuItem>
+              )}
+
               {handleEdit && (
                 <DropdownMenuItem onClick={() => handleEdit(billing.id)}>
                   Edit

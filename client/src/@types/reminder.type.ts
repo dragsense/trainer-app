@@ -8,7 +8,7 @@ import { IUser } from "./user.type";
 export interface IReminder extends Reminder, GeneralBaseEntity {
     recipient: IUser
     creator: IUser
-    session: Session
+    session: Session & GeneralBaseEntity
  }
 
 export type TReminderData = Omit<CreateReminderDto, | 'creatorId'>;

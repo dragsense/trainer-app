@@ -17,9 +17,9 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // Security middleware
-  app.use(helmet());
+   app.use(helmet());
   app.use(cookieParser());
-  app.use(compression());
+  app.use(compression()); 
 
   // API documentation
   const config = new DocumentBuilder()
@@ -71,7 +71,11 @@ async function bootstrap() {
   app.enableCors({
     origin: corsOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',],
     exposedHeaders: ['Content-Disposition'],
     credentials: true,
     maxAge: 3600,

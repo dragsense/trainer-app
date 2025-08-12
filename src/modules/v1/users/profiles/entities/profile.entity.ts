@@ -2,11 +2,13 @@ import {
   Entity,
   Column,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { UserGender } from '../../enums/user.enum';
 import { User } from '../../entities/user.entity';
+import { FileUpload } from '@/modules/v1/file-upload/entities/file-upload.entity';
 
 @Entity('profiles')
 export class Profile extends GeneralBaseEntity {
@@ -101,4 +103,17 @@ export class Profile extends GeneralBaseEntity {
   @ApiProperty({ type: () => User, description: 'Associated user' })
   @OneToOne(() => User, user => user.profile, { onDelete: 'CASCADE' })
   user: User;
+
+
+  @ApiPropertyOptional({
+    description: 'File entity for the uploaded image',
+    type: () => FileUpload,
+  })
+  @ManyToOne(() => FileUpload, {
+    cascade: true,
+    eager: true,
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  image?: FileUpload | null;
 }

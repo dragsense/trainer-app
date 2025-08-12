@@ -14,6 +14,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { SessionsService } from '../sessions/sessions.service';
 import { Session } from '../sessions/entities/session.entity';
 import { PaymentMethodsModule } from '../settings/payment-methods/payment-methods.module';
+import { FileUploadModule } from '../file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PaymentMethodsModule } from '../settings/payment-methods/payment-method
     SettingsModule,
     StripeModule,
     PaymentMethodsModule,
+    FileUploadModule,
     JwtModule.registerAsync({
       useFactory: getJwtConfig,
       inject: [ConfigService],

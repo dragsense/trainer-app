@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Billing } from './entities/billing.entity';
 import { CreateBillingDto } from './dto/create-billing.dto';
-import { UpdateBillingDto } from './dto/update-billing.dto';
+import { UpdateBillingDto, UpdateBillingStatusDto } from './dto/update-billing.dto';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { BillingListDto } from './dto/billing-list.dto';
@@ -13,6 +13,8 @@ import { SessionsService } from '../sessions/sessions.service';
 import { Session } from '../sessions/entities/session.entity';
 import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
 import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { FileUpload } from '../file-upload/entities/file-upload.entity';
+import { FileUploadService } from '../file-upload/file-upload.service';
 
 @Injectable()
 export class BillingsService {
@@ -21,7 +23,9 @@ export class BillingsService {
     private readonly billingRepo: Repository<Billing>,
     private readonly userService: UsersService,
     private readonly sessionService: SessionsService,
-    private readonly paymentMethodService: PaymentMethodsService
+    private readonly paymentMethodService: PaymentMethodsService,
+    private fileUploadService: FileUploadService,
+
   ) { }
 
   async create(createDto: CreateBillingDto, authUser: User): Promise<Billing> {
@@ -157,7 +161,7 @@ export class BillingsService {
   async findOne(id: number): Promise<Billing> {
     const billing = await this.billingRepo.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'documents'],
     });
 
     if (!billing) {
@@ -193,22 +197,39 @@ export class BillingsService {
     }
   }
 
-  async updateStatus(id: number, status: BillingStatus): Promise<Billing> {
-    const billing = await this.billingRepo.findOne({ where: { id } });
+  async updateStatus(id: number, statusDto: UpdateBillingStatusDto, documents: Express.Multer.File[]): Promise<Billing> {
+    const billing = await this.billingRepo.findOne({ where: { id }, relations: ['documents'] });
 
     if (!billing) {
       throw new NotFoundException(`Billing with ID ${id} not found`);
     }
 
-    if (billing.status === BillingStatus.PAID && status === BillingStatus.PAID) {
-      throw new BadRequestException(`Billing with ID ${id} is already marked as paid`);
+    const {
+      status,
+      removedDocuments
+    } = statusDto;
+
+    if (removedDocuments?.length) {
+      for (const docId of removedDocuments) {
+        const doc = billing.documents.find(d => d.id === docId);
+        if (doc) {
+          await this.fileUploadService.deleteFile(doc);
+        }
+      }
+      billing.documents = billing.documents.filter(d => !removedDocuments.includes(d.id));
     }
 
-    // Optional: prevent downgrading from PAID unless explicitly allowed
-    if (billing.status === BillingStatus.PAID && status !== BillingStatus.PAID) {
-      throw new BadRequestException(`Cannot change status from paid to ${status}`);
-    }
 
+
+    if (documents && documents.length > 0) {
+      const uploadedDocs: FileUpload[] = [];
+      for (const file of documents) {
+
+        const uploaded = await this.fileUploadService.uploadFile(file, 'billings');
+        uploadedDocs.push(uploaded);
+      }
+      billing.documents = [...billing.documents, ...uploadedDocs];
+    }
 
     billing.status = status;
     return await this.billingRepo.save(billing);

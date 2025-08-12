@@ -16,6 +16,10 @@ import { IMessageResponse } from "@/@types/api/response.type";
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
+
+// Custom Components
+import ProfileImageUpload from "@/components/shared-ui/profile-image-upload";
+
 interface IProfileCardFormProps {
     storeKey: string;
 }
@@ -76,8 +80,6 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             type: "textarea",
             required: false,
         },
-
-       
         {
             id: "fitnessGoals",
             name: "fitnessGoals",
@@ -92,6 +94,21 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
                 { value: "rehabilitation", label: "Rehabilitation" },
             ],
             required: false,
+        },
+        {
+            id: "image",
+            name: "image",
+            label: "Profile Image",
+            type: "custom",
+            className: "w-full",
+            required: false,
+            Component: ({ value, onChange, disabled }) => (
+                <ProfileImageUpload
+                    value={value}
+                    onImageUpload={onChange}
+                    disabled={disabled}
+                />
+            ),
         },
     ];
 

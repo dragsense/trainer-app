@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
@@ -30,6 +31,7 @@ import { SettingsModule } from './modules/v1/settings/settings.module';
 import { DashboardModule } from './modules/v1/dashboard/dashboard.module';
 import { TrainerClientsModule } from './modules/v1/trainer-clients/trainer-clients.module';
 import { NotificationGateway } from './gateways/notification.gateway';
+import { join } from 'path';
 
 
 @Module({
@@ -41,8 +43,14 @@ import { NotificationGateway } from './gateways/notification.gateway';
       isGlobal: true,
     }),
 
+    ServeStaticModule.forRoot({
+      rootPath:   join(process.cwd(), 'public'),
+      serveRoot: '/', // or use '/uploads' to serve only uploads
+      
+    }),
+
     // Cache
-    CacheModule.register({ 
+    CacheModule.register({
       ttl: 300, // 5 minutes
       max: 100, // maximum number of items in cache
       isGlobal: true,

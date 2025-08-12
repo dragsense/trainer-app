@@ -1,10 +1,11 @@
 // Utils
-import { apiRequest } from "@/utils/fetcher";
+import { apiFileRequest, apiRequest } from "@/utils/fetcher";
 
 // Types
 import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
 import { IListParams } from "@/@types/api/param.type";
 import { IBilling, TBillingData, TUpdateBillingStatusData } from "@/@types/billing.type";
+import { FileUpload } from "#/modules/v1/file-upload/entities/file-upload.entity";
 
 // Constants
 const BILLINGS_API_PATH = "/billings";
@@ -23,12 +24,35 @@ export const updateBilling = (id: number) => (data: Partial<TBillingData>) =>
     );
 
 
-export const updateBillingStatus = (id: number) => (statusData: TUpdateBillingStatusData) =>
-    apiRequest<IMessageResponse>(
+export const updateBillingStatus = (id: number) => (data: TUpdateBillingStatusData) => {
+    const formData = new FormData();
+
+
+    Object.entries(data).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (item instanceof File || item instanceof Blob) {
+                    formData.append(`${key}[]`, item);
+                } else {
+                    formData.append(`${key}[]`, String(item));
+                }
+            });
+        } else if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value); 
+        } else {
+            formData.append(key, String(value));
+        }
+    });
+
+    return apiFileRequest<IMessageResponse>(
         `${BILLINGS_API_PATH}/${id}/status`,
         "PATCH",
-        statusData
+        formData
     );
+
+}
 
 export const fetchBillings = (
     params: IListParams

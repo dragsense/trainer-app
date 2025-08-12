@@ -93,10 +93,10 @@ export function useInput({
 
           const onChangeHandler = (value: any) => {
             const parsed = convertValue(value, field.valueType);
-            // Trigger RHF control
             controllerField.onChange(parsed);
             field?.onChange?.(parsed);
           };
+
           const commonClass = cn(
             field.startAdornment && "pl-10",
             field.endAdornment && "pr-10",

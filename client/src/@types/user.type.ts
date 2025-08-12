@@ -2,9 +2,11 @@ import { User } from "#/modules/v1/users/entities/user.entity";
 import { GeneralBaseEntity } from "#/base-entity/base.entity";
 
 import { CreateUserDto } from "#/modules/v1/users/dto/create-user.dto";
+
 import { ResetPasswordDto } from "#/modules/v1/users/dto/reset-password.dto";
 import { Profile } from "#/modules/v1/users/profiles/entities/profile.entity";
 import { CreateProfileDto } from "#/modules/v1/users/profiles/dto/create-profile.dto";
+import { UpdateProfileDto } from "#/modules/v1/users/profiles/dto/update-profile.dto";
 
 // Availability imports
 import { UserAvailability } from "#/modules/v1/users/entities/user-availability.entity";
@@ -22,6 +24,8 @@ export interface IProfile extends Profile, GeneralBaseEntity {}
 
 export type TUserData = CreateUserDto;
 export type TProfileData = CreateProfileDto;
+export type TUpdateProfileData = UpdateProfileDto;
+
 export type TResetPasswordData = ResetPasswordDto;
 
 // Availability Types - using proper backend types

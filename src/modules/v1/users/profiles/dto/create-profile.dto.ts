@@ -1,5 +1,5 @@
 
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -98,4 +98,14 @@ export class CreateProfileDto {
   @IsOptional()
   @IsEnum(UserGender)
   preferredTrainerGender?: UserGender;
+
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Image file',
+  })
+  @IsOptional()
+  image?: any;
 }

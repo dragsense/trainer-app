@@ -1,18 +1,19 @@
 // Utils
-import { apiRequest } from "@/utils/fetcher";
+import { apiFileRequest, apiRequest } from "@/utils/fetcher";
 
 // Types
 import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
 import { IListParams } from "@/@types/api/param.type";
 import {
     IUser,
-    TResetPasswordDto,
+    TResetPasswordData,
     TUserData,
     IProfile,
     TProfileData,
     IUserAvailability,
     TUpdateUserAvailabilityData,
-    TCreateUserAvailabilityData
+    TCreateUserAvailabilityData,
+    TUpdateProfileData
 } from "@/@types/user.type";
 
 // Constants
@@ -38,8 +39,6 @@ export const fetchUsers = (
     params: IListParams,
     level?: number
 ) => {
-
-    console.log('👥 Fetching users with params:', params);
 
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append("page", params.page.toString());
@@ -77,10 +76,33 @@ export const deleteUser = (id: number) =>
 export const fetchProfile = () =>
     apiRequest<IProfile>(`${PROFILES_API_PATH}/profile/me`, "GET");
 
-export const updateProfile = (data: Partial<TProfileData>) =>
-    apiRequest<IMessageResponse>(`${PROFILES_API_PATH}/profile/me`, "PATCH", data);
+export const updateProfile = (data: TUpdateProfileData) => {
 
-export const changePassword = (data: TResetPasswordDto) =>
+    const formData = new FormData();
+
+
+    Object.entries(data).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (item instanceof File || item instanceof Blob) {
+                    formData.append(`${key}[]`, item); 
+                } else {
+                    formData.append(`${key}[]`, String(item));
+                }
+            });
+        } else if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value);
+        } else {
+            formData.append(key, String(value));
+        }
+    });
+
+    return apiFileRequest<IMessageResponse>(`${PROFILES_API_PATH}/profile/me`, "PATCH", formData);
+}
+
+export const changePassword = (data: TResetPasswordData) =>
     apiRequest<IMessageResponse>(`${USERS_API_PATH}/me/reset-password`, "PUT", data);
 
 // Availability API functions

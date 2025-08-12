@@ -75,13 +75,13 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
 
   const handleSubmit = async (formData: TFormData) => {
 
-
     const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
       if (!config.notIncluded) {
         acc[key as keyof TFormData] = formData[key as keyof TFormData] ?? initialValues[key].value;
       }
       return acc;
     }, {} as TFormData);
+
 
 
     try {

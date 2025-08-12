@@ -18,6 +18,9 @@ import { IUser } from "@/@types/user.type";
 import { Badge } from "@/components/ui/badge";
 
 
+const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
+
+
 export const columns = ({
   handleEdit,
   handleDelete,
@@ -32,7 +35,29 @@ export const columns = ({
   handleAssign?: (id: number) => void;
 }
 ): ColumnDef<IUser>[] => [
-
+    {
+      accessorKey: "profile",
+      header: "Profile",
+      cell: ({ row }) => {
+        const profile = row.original.profile;
+        const name = profile ? `${profile.firstName} ${profile.lastName}` : '-';
+        const imagePath = profile?.image?.path
+        return (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold">
+              {imagePath ? (
+                <img
+                  src={encodeURI(`${API_URL}/${imagePath}`)}
+                  alt={name}
+                  className="w-10 h-10 rounded-full object-cover"
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                name.charAt(0)
+              )}
+            </div>
+        );
+      },
+    },
     {
       accessorKey: "email",
       header: "Email",
