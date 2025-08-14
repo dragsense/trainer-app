@@ -76,10 +76,6 @@ export class Session extends GeneralBaseEntity {
   @Column({ nullable: true })
   location?: string;
 
-  @ApiProperty({ description: 'Maximum number of participants (for group sessions)' })
-  @Column({ type: 'int', nullable: true })
-  maxParticipants?: number;
-
   @ApiProperty({ description: 'Whether the session payment is required in advance' })
   @Column({ default: true })
   requirePrepayment: boolean;

@@ -5,12 +5,10 @@ import { Loader2, } from 'lucide-react';
 
 // Components
 import { DashboardControls } from './dashboard-controls';
-import { RemindersAnalyticsCard, BillingOverviewCard, FinancialSummaryCard } from './cards';
 import CompactDashboard from './compact-dashboard';
 
 // Types
 import { ICombinedDashboardData } from '@/@types/dashboard.type';
-import { useAuthUser } from '@/hooks/use-auth-user';
 
 interface IDashboardViewProps {
   storeKey: string;

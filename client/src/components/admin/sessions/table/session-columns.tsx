@@ -86,7 +86,7 @@ export const columns = ({
       cell: ({ row }) => {
         const price = row.getValue<number>("pricePerClient");
         const currency = row.original.currency;
-        return `${currency || 'USD'} ${price}`;
+        return `${currency || 'USD'} ${price / 100}`;
       },
     },
     {

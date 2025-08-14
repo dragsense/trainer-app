@@ -31,22 +31,28 @@ import { createBilling, updateBilling } from "@/services/billing.api";
 
 // Schema
 export const LineItemSchema = z.object({
-    description: z.string(),
-    quantity: z.number().min(1),
-    unitPrice: z.number().min(0),
-    amount: z.number().min(0),
-    tax: z.number().optional(),
+    description: z.string().min(1, "Description is required"),
+    quantity: z.number().min(1, "Quantity must be at least 1"),
+    unitPrice: z.number().min(0, "Unit price cannot be negative"),
+    amount: z.number().min(0, "Amount cannot be negative"),
+    tax: z.number().min(0, "Tax cannot be negative").optional(),
+}).superRefine((data, ctx) => {
+    const expectedAmount = data.quantity * data.unitPrice;
+    if (data.amount !== expectedAmount) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["amount"],
+            message: `Amount must equal quantity × unitPrice (${expectedAmount})`,
+        });
+    }
 });
 
 export const BillingSchema = z.object({
-    stripeInvoiceId: z.string().optional(),
     type: z.nativeEnum(BillingType),
     status: z.nativeEnum(BillingStatus).optional(),
-    invoiceAmount: z.number().optional(),
     currency: z.nativeEnum(BillingCurrency).optional(),
     paymentMethodType: z.nativeEnum(PaymentMethodType),
     userId: z.number().min(1, "User is required"),
-    sessionId: z.number().optional(),
     issueDate: z.date().optional(),
     dueDate: z
         .date()
@@ -55,10 +61,9 @@ export const BillingSchema = z.object({
             (date) => !date || date > new Date(),
             { message: "Due date must be in the future" }
         ),
-    lineItems: z.array(LineItemSchema).min(1, "At least one line item is required").optional(),
+    lineItems: z.array(LineItemSchema).min(1, "At least one line item is required"),
     totalTax: z.number().optional(),
     discount: z.number().optional(),
-    totalAmount: z.number().optional(),
     notes: z.string().optional(),
     terms: z.string().optional(),
 });
@@ -88,7 +93,7 @@ export default function BillingForm({
         currency: { value: BillingCurrency.USD },
         paymentMethodType: { value: PaymentMethodType.CASH },
         userId: { value: 0 },
-        sessionId: { value: undefined },
+        sessionId: { value: 0 },
         issueDate: { value: new Date() },
         dueDate: { value: new Date() },
         lineItems: { value: [] },

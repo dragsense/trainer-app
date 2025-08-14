@@ -108,7 +108,7 @@ export default function BillingViewModal({
             </div>
             <div>
               <p className="font-medium">Total Amount</p>
-              <p className="text-sm text-gray-600">{billing.totalAmount ?? 0}</p>
+              <p className="text-sm text-gray-600">{billing.currency || 'USD'} {(billing.totalAmount ?? 0) / 100}</p>
             </div>
           </div>
 

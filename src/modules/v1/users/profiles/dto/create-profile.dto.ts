@@ -64,12 +64,6 @@ export class CreateProfileDto {
   @IsString({ each: true })
   specialties?: string[];
 
-  @ApiProperty({ example: ['ACE Certified', 'NASM CPT'], required: false })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  certifications?: string[];
-
   @ApiProperty({ example: 5, minimum: 0, maximum: 5, required: false })
   @IsOptional()
   @IsNumber()

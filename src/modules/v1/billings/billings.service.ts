@@ -43,6 +43,8 @@ export class BillingsService {
       ...rest
     } = createDto;
 
+
+
     // Fetch required relations
     const user = await this.userService.findOne({ id: userId });
     let session: Session | undefined = undefined;
@@ -59,7 +61,7 @@ export class BillingsService {
 
 
     // Auto-calculate totalAmount if not provided but line items exist
-    let calculatedTotal = totalAmount;
+    let calculatedTotal = 0;
     if (!totalAmount && Array.isArray(lineItems)) {
       const subtotal = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0);
       calculatedTotal = subtotal + totalTax - discount;

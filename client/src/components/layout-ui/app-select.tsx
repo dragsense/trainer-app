@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 
+type OptionValue = string | number;
+
 interface Option {
-    value: string;
+    value: OptionValue;
     label: string;
 }
 
@@ -26,21 +28,27 @@ type BaseProps = {
     options: Option[];
     placeholder?: string;
     className?: string;
+    disabled?: boolean;
+    emptyText?: string;
 };
 
 type MultiProps = BaseProps & {
     multiple: true;
-    value: string[];
-    onChange: (value: string[]) => void;
+    value: OptionValue[];
+    onChange: (value: OptionValue[]) => void;
 };
 
 type SingleProps = BaseProps & {
     multiple?: false;
-    value: string | undefined;
-    onChange: (value: string | undefined) => void;
+    value: OptionValue | undefined;
+    onChange: (value: OptionValue | undefined) => void;
 };
 
 type AppSelectProps = MultiProps | SingleProps;
+
+function toKey(v: OptionValue) {
+    return String(v);
+}
 
 export function AppSelect({
     options,
@@ -49,108 +57,123 @@ export function AppSelect({
     placeholder = "Select…",
     className,
     multiple = false,
+    disabled = false,
+    emptyText = "No options found.",
 }: AppSelectProps) {
     const [open, setOpen] = React.useState(false);
-    const [search, setSearch] = React.useState("");
 
-    const onClear = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (multiple) {
-            (onChange as (v: string[]) => void)([]);
-        } else {
-            (onChange as (v: string | undefined) => void)(undefined);
-        }
-    };
+    // Map value -> label (keys must be strings)
+    const labelMap = React.useMemo(
+        () => Object.fromEntries(options.map((o) => [toKey(o.value), o.label])),
+        [options]
+    );
 
-    const handleSelect = (optionValue: string) => {
+    const isSelected = React.useCallback(
+        (val: OptionValue) =>
+            multiple
+                ? (value as OptionValue[]).some((v) => toKey(v) === toKey(val))
+                : toKey(value as OptionValue | undefined ?? "") === toKey(val),
+        [multiple, value]
+    );
+
+    const toggle = (val: OptionValue) => {
         if (multiple) {
-            const v = value as string[];
-            const exists = v.includes(optionValue);
-            const updated = exists ? v.filter((i) => i !== optionValue) : [...v, optionValue];
-            (onChange as (v: string[]) => void)(updated);
+            const list = value as OptionValue[];
+            const exists = list.some((v) => toKey(v) === toKey(val));
+            const next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
+            (onChange as (v: OptionValue[]) => void)(next);
         } else {
-            const current = value as string | undefined;
-            const next = current === optionValue ? undefined : optionValue;
-            (onChange as (v: string | undefined) => void)(next);
+            const current = value as OptionValue | undefined;
+            const next = current !== undefined && toKey(current) === toKey(val) ? undefined : val;
+            (onChange as (v: OptionValue | undefined) => void)(next);
             setOpen(false);
         }
     };
 
-    const isSelected = (optVal: string) =>
-        multiple
-            ? (value as string[]).includes(optVal)
-            : (value as string | undefined) === optVal;
+    const clearAll = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation?.();
+        if (multiple) {
+            (onChange as (v: OptionValue[]) => void)([]);
+        } else {
+            (onChange as (v: OptionValue | undefined) => void)(undefined);
+        }
+    };
 
-    const selectedLabels =
-        multiple
-            ? (value as string[]).map(
-                (v) => options.find((o) => o.value === v)?.label ?? v
-            )
-            : options.find((o) => o.value === value)?.label;
-
-    const hasSelection = multiple ? (value as string[]).length > 0 : !!value;
-
-    const filtered = React.useMemo(() => {
-        const q = search.trim().toLowerCase();
-        if (!q) return options;
-        return options.filter(
-            (o) =>
-                o.label.toLowerCase().includes(q) ||
-                o.value.toLowerCase().includes(q)
-        );
-    }, [options, search]);
+    const hasSelection = multiple
+        ? (value as OptionValue[]).length > 0
+        : value !== undefined && value !== null && value !== "";
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    disabled={disabled}
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-between", className)}
+                    className={cn(
+                        "w-full h-auto min-h-10 py-2 pl-3 pr-2",
+                        "justify-between items-start",
+                        "text-left whitespace-normal",
+                        "flex flex-wrap gap-1",
+                        className
+                    )}
                 >
-                    <div className="flex items-center gap-1 flex-wrap text-left">
-                        {!hasSelection && <span className="text-muted-foreground">{placeholder}</span>}
+                    <div className="flex flex-1 items-center gap-1 flex-wrap">
+                        {!hasSelection && (
+                            <span className="text-muted-foreground">{placeholder}</span>
+                        )}
 
                         {multiple ? (
-                            hasSelection &&
-                            (value as string[]).map((item) => (
-                                <Badge key={item} variant="secondary" className="mr-1 mb-1">
-                                    {options.find((o) => o.value === item)?.label ?? item}
-                                </Badge>
-                            ))
+                            (value as OptionValue[]).map((v) => {
+                                const key = toKey(v);
+                                return (
+                                    <Badge
+                                        key={key}
+                                        variant="secondary"
+                                        className="mr-1 mb-1 flex items-center gap-1"
+                                    >
+                                        {labelMap[key] ?? key}
+
+                                    </Badge>
+                                );
+                            })
                         ) : (
-                            hasSelection && <span>{selectedLabels}</span>
+                            hasSelection && (
+                                <span>{labelMap[toKey(value as OptionValue)] ?? toKey(value as OptionValue)}</span>
+                            )
                         )}
                     </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0 ml-auto">
                         {hasSelection && (
+                            <Button variant="ghost" size="sm" onClick={clearAll}>
                             <X
-                                className="h-4 w-4 opacity-60 hover:opacity-100"
-                                onClick={onClear}
+                                className="h-4 w-4 shrink-0 opacity-60 hover:opacity-100"
+                                
                             />
+                            </Button>
                         )}
-                        <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </div>
                 </Button>
             </PopoverTrigger>
 
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                <Command shouldFilter={false}>
-                    <CommandInput
-                        value={search}
-                        onValueChange={setSearch}
-                        placeholder="Search…"
-                    />
-                    <CommandEmpty>No options found.</CommandEmpty>
-                    <CommandGroup>
-                        {filtered.map((option) => {
+                {/* Use built-in cmdk filtering by providing item values */}
+                <Command>
+                    <CommandInput placeholder="Search…" />
+                    <CommandEmpty>{emptyText}</CommandEmpty>
+                    <CommandGroup className="w-100 max-h-60 overflow-y-auto">
+                        {options.map((option) => {
                             const selected = isSelected(option.value);
                             return (
                                 <CommandItem
-                                    key={option.value}
-                                    onSelect={() => handleSelect(option.value)}
+                                    key={toKey(option.value)}
+                                    value={`${option.label} ${toKey(option.value)}`}
+                                    onSelect={() => toggle(option.value)}
+                                    aria-selected={selected}
                                 >
                                     <Check
                                         className={cn(

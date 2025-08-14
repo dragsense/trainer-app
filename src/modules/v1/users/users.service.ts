@@ -235,7 +235,6 @@ export class UsersService {
         address: createUserDto.address,
         bio: createUserDto.bio,
         specialties: createUserDto.specialties,
-        certifications: createUserDto.certifications,
         avatar: createUserDto.avatar,
         experience: createUserDto.experience,
         rating: createUserDto.rating,

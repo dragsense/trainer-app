@@ -66,13 +66,6 @@ export class Profile extends GeneralBaseEntity {
   @Column({ type: 'simple-array', nullable: true })
   specialties?: string[];
 
-  @ApiPropertyOptional({
-    example: ['Certified Personal Trainer (CPT)'],
-    description: 'Trainer certifications'
-  })
-  @Column({ type: 'simple-array', nullable: true })
-  certifications?: string[];
-
 
   @ApiPropertyOptional({ example: 3, description: 'Years of experience as trainer' })
   @Column({ type: 'int', nullable: true })

@@ -2,7 +2,7 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IFinancialSummary, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
+import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
 
 // Constants
 const DASHBOARD_API_PATH = "/dashboard";
@@ -28,25 +28,14 @@ export const fetchRemindersAnalytics = (params?: {
   return apiRequest(`${DASHBOARD_API_PATH}/reminders/analytics${queryParams}`, "GET");
 };
 
-// Financial Summary
-export const fetchFinancialSummary = (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-}): Promise<IFinancialSummary> => {
-  const queryParams = params?.period ? `?period=${params.period}` : '';
-  return apiRequest(`${DASHBOARD_API_PATH}/financial/summary${queryParams}`, "GET");
-};
 
 // Billing Analytics
 export const fetchBillingAnalytics = (params?: {
   period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  startDate?: string;
-  endDate?: string;
 }): Promise<IBillingAnalytics> => {
   const queryParams = new URLSearchParams();
 
   if (params?.period) queryParams.append("period", params.period);
-  if (params?.startDate) queryParams.append("startDate", params.startDate);
-  if (params?.endDate) queryParams.append("endDate", params.endDate);
 
   const queryString = queryParams.toString();
   return apiRequest(`${DASHBOARD_API_PATH}/billing/analytics${queryString ? `?${queryString}` : ''}`, "GET");
@@ -63,13 +52,11 @@ export const fetchCombinedDashboardData = async (params?: {
     stats,
     reminders,
     sessions,
-    financial,
     billing
   ] = await Promise.all([
     fetchDashboardStats(),
     fetchRemindersAnalytics({ period }),
     fetchSessionsAnalytics({ period }),
-    fetchFinancialSummary({ period }),
     fetchBillingAnalytics({
       period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'
     })
@@ -79,7 +66,6 @@ export const fetchCombinedDashboardData = async (params?: {
     stats,
     reminders,
     sessions,
-    financial,
     billing
   };
 };
@@ -90,7 +76,6 @@ export const dashboardApi = {
   getStats: fetchDashboardStats,
   getSessionsAnalytics: fetchSessionsAnalytics,
   getRemindersAnalytics: fetchRemindersAnalytics,
-  getFinancialSummary: fetchFinancialSummary,
   getBillingAnalytics: fetchBillingAnalytics,
   getCombinedData: fetchCombinedDashboardData,
 };

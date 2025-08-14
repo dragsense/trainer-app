@@ -62,99 +62,76 @@ export interface IRemindersAnalytics {
   }[];
 }
 
-// Financial Summary
-export interface IFinancialSummary {
-  period: string;
-  currentPeriod: {
-    currency: string;
-    totalRevenue: number;
-    platformRevenue: number;
-    trainerRevenue: number;
-    pendingRevenue: number;
-    paidTransactions: number;
-    pendingTransactions: number;
-    failedTransactions: number;
-    averageTransactionValue: number;
-    growthRate: number;
-    platformGrowthRate: number;
-    previousPeriodRevenue: number;
-    previousPlatformRevenue: number;
-    successRate?: number; // Optional success rate percentage
-    platformFeePercentage: number; // Always 2% in our case
-  }[];
+
+
+
+export interface RevenueStats {
+  total: number;
+  paid: number;
+  pending: number;
+  platform: number;
+  trainer: number;
+  transactions: number;
 }
 
-// Billing Analytics
+export interface TimelineItem {
+  month: string;
+  total: number;
+  paid: number;
+  platformFee: number;
+  trainerPayout: number;
+}
+
+export interface PaymentMethodBreakdown {
+  method: string;
+  count: number;
+  amount: number;
+}
+
+export interface SummaryStats {
+  total_billings: number;
+  paid_billings: number;
+  pending_billings: number;
+  failed_billings: number;
+  overdue_billings: number;
+  total_paid: number;
+  total_pending: number;
+  total_failed: number;
+  total_overdue: number;
+  average_billing_amount: number;
+  average_paid_amount: number;
+}
+
+
+
+
+export interface TypeDistributionItem {
+  type: string;
+  count: number;
+  total_amount: number;
+  paid_amount: number;
+  average_amount: number;
+}
+
+export interface CurrencyBreakdownItem {
+  currency: string;
+  total_billings: number;
+  paid_count: number;
+  paid_amount: number;
+  total_amount: number;
+  average_amount: number;
+}
+
+
 export interface IBillingAnalytics {
   period: string;
-  timeline: {
-    period: string;
-    totalBillings: number;
-    paidBillings: number;
-    pendingBillings: number;
-    failedBillings: number;
-    overdueBillings: number;
-    paidAmount: number;
-    pendingAmount: number;
-    failedAmount: number;
-    overdueAmount: number;
-    averagePaidAmount: number;
-    currency: string;
-    successRate: number;
-  }[];
-  statusDistribution: {
-    status: string;
-    count: number;
-    totalAmount: number;
-    averageAmount: number;
-    currency: string;
-  }[];
-  typeDistribution: {
-    type: string;
-    count: number;
-    paidAmount: number;
-    totalAmount: number;
-    averageAmount: number;
-    currency: string;
-  }[];
-  currencyBreakdown: {
-    currency: string;
-    totalBillings: number;
-    paidCount: number;
-    paidAmount: number;
-    totalAmount: number;
-    averageAmount: number;
-    conversionRate: number;
-  }[];
-  recentTrends: {
-    date: string;
-    dailyCount: number;
-    dailyRevenue: number;
-  }[];
-  paymentPerformance: {
-    paymentMethod: string;
-    totalCount: number;
-    successCount: number;
-    successAmount: number;
-    averageSuccessAmount: number;
-    successRate: number;
-  }[];
-  summary: {
-    totalBillings: number;
-    paidBillings: number;
-    pendingBillings: number;
-    failedBillings: number;
-    overdueBillings: number;
-    totalPaid: number;
-    totalPending: number;
-    totalFailed: number;
-    totalOverdue: number;
-    averageBillingAmount: number;
-    averagePaidAmount: number;
-    overallSuccessRate: number;
-  } | null;
+  revenue: RevenueStats;
+  timeline: TimelineItem[];
+  paymentMethods: PaymentMethodBreakdown[];
+  summary: SummaryStats;
+  typeDistribution: TypeDistributionItem[];
+  currencyBreakdown: CurrencyBreakdownItem[];
 }
-
 // Chart Data Types for frontend usage
 export interface IChartDataPoint {
   name: string;
@@ -181,6 +158,9 @@ export interface ICombinedDashboardData {
   stats: IDashboardStats;
   reminders: IRemindersAnalytics;
   sessions: ISessionsAnalytics;
-  financial: IFinancialSummary;
   billing: IBillingAnalytics;
 }
+
+
+
+

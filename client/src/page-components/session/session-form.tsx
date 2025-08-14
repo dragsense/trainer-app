@@ -89,7 +89,6 @@ export default function SessionForm({
 
         description: { value: "" },
         location: { value: "" },
-        maxParticipants: { value: 1 },
         requirePrepayment: { value: true },
         cancellationDeadline: { value: 24 },
     };

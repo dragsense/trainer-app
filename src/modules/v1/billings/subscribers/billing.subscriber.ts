@@ -232,11 +232,11 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
             </tr>
               <tr>
               <td style="padding: 8px 0; font-weight: bold;">Invoice Amount:</td>
-              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.invoiceAmount)}</td>
+              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.invoiceAmount / 100)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold;">Amount Due:</td>
-              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.dueAmount)}</td>
+              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.dueAmount / 100)}</td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold;">Currency:</td>
@@ -266,7 +266,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
                 <tr>
                   <td style="padding: 12px 8px; border-bottom: 1px solid #eee;">${item.description || 'Membership Fee'}</td>
                   <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">${item.quantity || 1}</td>
-                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.amount)}</td>
+                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.amount)} cents</td>
                   <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.tax)}</td>
                   <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.discount)}</td>
 
@@ -277,7 +277,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
             <tfoot>
               <tr style="background: #f9f9f9;">
                 <td colspan="2" style="padding: 12px 8px; text-align: right; font-weight: bold;">Total:</td>
-                <td style="padding: 12px 8px; text-align: right; font-weight: bold; color: #c8102e;">$${(billing.totalAmount)}</td>
+                <td style="padding: 12px 8px; text-align: right; font-weight: bold; color: #c8102e;">$${(billing.totalAmount / 100)}</td>
               </tr>
             </tfoot>
           </table>

@@ -63,7 +63,7 @@ export class ReminderSchedulerService {
       await this.reminderNotificationService.sendReminderStatusNotification(reminder, 'sent');
 
       // Schedule next attempt if needed
-      if (reminder.frequency === ReminderFrequency.ONCE &&
+      if (reminder.frequencyConfig?.frequency === ReminderFrequency.ONCE &&
         reminder.isRecurring &&
         (!reminder.endDate || reminder.endDate > new Date()) &&
         reminder.sentCount < reminder.maxAttempts
@@ -92,22 +92,6 @@ export class ReminderSchedulerService {
       
       throw error;
     }
-  }
-
-  private getDefaultMessage(reminder: Reminder): string {
-    let message = '';
-    switch (reminder.type) {
-      case ReminderType.BILLING:
-        message = 'Billing reminder: You have a pending payment due.';
-        break;
-      case ReminderType.SESSION:
-        message = `Session reminder: You have a session scheduled.`;
-        break;
-      case ReminderType.CUSTOM:
-        message = 'This is a custom reminder message.';
-        break;
-    }
-    return message;
   }
 
   async cancelReminder(id: number): Promise<void> {

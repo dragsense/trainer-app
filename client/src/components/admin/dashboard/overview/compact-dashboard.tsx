@@ -20,7 +20,7 @@ import { AppCard } from "@/components/layout-ui/app-card"
 
 // Types
 import { ICombinedDashboardData } from "@/@types/dashboard.type"
-import { BillingOverviewCard, FinancialSummaryCard, RemindersAnalyticsCard, SessionsAnalyticsCard } from "./cards"
+import { BillingOverview, RemindersAnalyticsCard, SessionsAnalyticsCard } from "./cards"
 import { useAuthUser } from "@/hooks/use-auth-user"
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum"
 import { Button } from "@/components/ui/button"
@@ -200,7 +200,7 @@ export default function CompactDashboard({ data, error, isLoading }: CompactDash
 
 
 
-    const { stats, billing, reminders, sessions, financial } = data;
+    const { stats, billing, reminders, sessions } = data;
     const { overview, metrics } = stats;
 
     // Calculate derived metrics
@@ -228,7 +228,7 @@ export default function CompactDashboard({ data, error, isLoading }: CompactDash
 
                 <div className="space-y-4">
                     <RemindersAnalyticsCard data={reminders} loading={isLoading} />
-                    <FinancialSummaryCard isAdmin={user?.level === UserLevels[UserRole.SUPER_ADMIN]} data={financial} loading={isLoading} />
+                    <BillingOverview isAdmin={user?.level === UserLevels[UserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
                 </div>
 
                 <div className="space-y-4">
@@ -260,45 +260,9 @@ export default function CompactDashboard({ data, error, isLoading }: CompactDash
                         </div>
                     </AppCard>
 
-
-
-                    <AppCard>
-                        <h3 className="font-semibold text-sm mb-3 text-emerald-700">Financial Health</h3>
-                        <div className="space-y-1">
-                            <MetricRow
-                                icon={<CheckCircle className="h-4 w-4" />}
-                                label="Paid"
-                                value={`${overview.paidBillings}`}
-                                change={`${metrics.paymentSuccessRate}%`}
-                                trend={metrics.paymentSuccessRate > 80 ? "up" : metrics.paymentSuccessRate > 50 ? "neutral" : "down"}
-                                secondary="Success rate"
-                            />
-                            <MetricRow
-                                icon={<Clock className="h-4 w-4" />}
-                                label="Pending"
-                                value={`${overview.pendingBillings}`}
-                                change={`${billingPendingRate}%`}
-                                trend={Number.parseFloat(billingPendingRate) > 30 ? "down" : "neutral"}
-                                secondary="Needs follow-up"
-                            />
-                            <MetricRow
-                                icon={<DollarSign className="h-4 w-4" />}
-                                label="Total Billings"
-                                value={overview.totalBillings}
-                                secondary={`$${avgRevenuePerClient} avg/client`}
-                            />
-                        </div>
-                    </AppCard>
-
                     <KPICard
                         title="Performance Overview"
                         metrics={[
-                            {
-                                label: "Payment Overall Success Rate",
-                                value: `${billing?.summary?.overallSuccessRate?.toFixed(1) || "0"}%`,
-                                status: (billing?.summary?.overallSuccessRate || 0) > 85 ? "good" : "warning",
-                                icon: <Target className="h-3 w-3" />,
-                            },
                             {
                                 label: "Session Completion",
                                 value: `${metrics.sessionCompletionRate}%`,
@@ -343,9 +307,6 @@ export default function CompactDashboard({ data, error, isLoading }: CompactDash
                                             : undefined
                         }
                     />
-
-                    <BillingOverviewCard data={billing} loading={isLoading} />
-
                 </div>
             </div>
 

@@ -46,8 +46,8 @@ export class DashboardService {
       this.userRepository.count({
         where: isAdmin ? { level: UserLevels[UserRole.USER] } : { owner: { id: user.id } }
       }),
-   
-       isAdmin
+
+      isAdmin
         ? this.userRepository.count({
           where: { level: UserLevels[UserRole.TRAINER] },
         })
@@ -237,320 +237,127 @@ export class DashboardService {
     };
   }
 
-  async getFinancialSummary(user: User, period = 'month') {
+
+  async getBillingAnalytics(user: User, period: string = 'month') {
     const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
-    const PLATFORM_FEE_PERCENTAGE = 0.02; // 2% platform fee
-    const userCondition = isAdmin ? '' : `AND b."creatorId" = ${user.id}`;
+    const PLATFORM_FEE_PERCENTAGE = 0.02;
+    const userCondition = isAdmin ? '' : `AND "creatorId" = ${user.id}`;
 
-    let dateInterval = '1 month';
-    if (period === 'quarter') dateInterval = '3 months';
-    if (period === 'year') dateInterval = '1 year';
+    // Period date calculation
+    const now = new Date();
+    const start = new Date(now);
+    start.setMonth(now.getMonth() - (period === 'year' ? 12 : period === 'quarter' ? 3 : 1));
 
-    const financialQuery = `
-      SELECT 
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_revenue,
-        ${isAdmin ? `SUM(CASE WHEN b.status = 'paid' THEN (b."invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE}) ELSE 0 END) as platform_revenue,` : ''}
-        SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as pending_revenue,
-        COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as paid_transactions,
-        COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pending_transactions,
-        COUNT(CASE WHEN b.status = 'failed' THEN 1 END) as failed_transactions,
-        AVG(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" END) as average_transaction_value,
-        b.currency
-      FROM billings b
-      WHERE b."createdAt" >= NOW() - INTERVAL '${dateInterval}' ${userCondition}
-      GROUP BY b.currency
-    `;
 
-    const financialData = await this.billingRepository.query(financialQuery);
+    /** 2. Revenue Stats */
+    const revenueStats = await this.billingRepository.query(`
+    SELECT
+      SUM("invoiceAmount") as total_revenue,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" ELSE 0 END) as paid_revenue,
+      SUM(CASE WHEN status = 'pending' THEN "invoiceAmount" ELSE 0 END) as pending_revenue,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE} ELSE 0 END) as platform_revenue,
+      COUNT(*) as total_transactions
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+  `, [start]);
 
-    // Previous period comparison
-    const previousPeriodQuery = `
-      SELECT 
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as previous_revenue,
-        ${isAdmin ? `SUM(CASE WHEN b.status = 'paid' THEN (b."invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE}) ELSE 0 END) as previous_platform_revenue,` : ''}
-        b.currency
-      FROM billings b
-      WHERE b."createdAt" >= NOW() - INTERVAL '${dateInterval}' * 2
-        AND b."createdAt" < NOW() - INTERVAL '${dateInterval}' ${userCondition}
-      GROUP BY b.currency
-    `;
+    /** 3. Timeline (last 6 months) */
+    const timelineStart = new Date(now);
+    timelineStart.setMonth(now.getMonth() - 6);
 
-    const previousPeriodData = await this.billingRepository.query(previousPeriodQuery);
+    const timeline = await this.billingRepository.query(`
+    SELECT 
+      TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') as month,
+      SUM("invoiceAmount") as total,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" ELSE 0 END) as paid,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" * ${PLATFORM_FEE_PERCENTAGE} ELSE 0 END) as platform_fee
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+    GROUP BY month
+    ORDER BY month ASC
+  `, [timelineStart]);
+
+    /** 4. Payment Methods */
+    const paymentMethods = await this.billingRepository.query(`
+    SELECT 
+      CASE WHEN "stripeInvoiceId" IS NOT NULL THEN 'stripe' ELSE 'cash' END as method,
+      COUNT(*) as count,
+      SUM("invoiceAmount") as amount
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+    GROUP BY method
+  `, [start]);
+
+    /** 5. Detailed Summary (extra stats) */
+    const summary = await this.billingRepository.query(`
+    SELECT
+      COUNT(*) as total_billings,
+      SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_billings,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_billings,
+      SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_billings,
+      SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue_billings,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" ELSE 0 END) as total_paid,
+      SUM(CASE WHEN status = 'pending' THEN "invoiceAmount" ELSE 0 END) as total_pending,
+      SUM(CASE WHEN status = 'failed' THEN "invoiceAmount" ELSE 0 END) as total_failed,
+      SUM(CASE WHEN status = 'overdue' THEN "invoiceAmount" ELSE 0 END) as total_overdue,
+      AVG("invoiceAmount") as average_billing_amount,
+      AVG(CASE WHEN status = 'paid' THEN "invoiceAmount" END) as average_paid_amount
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+  `, [start]);
+
+
+    /** 8. Type Distribution */
+    const typeDistribution = await this.billingRepository.query(`
+    SELECT 
+      "type" as type,
+      COUNT(*) as count,
+      SUM("invoiceAmount") as total_amount,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" ELSE 0 END) as paid_amount,
+      AVG("invoiceAmount") as average_amount
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+    GROUP BY type
+  `, [start]);
+
+    /** 9. Currency Breakdown */
+    const currencyBreakdown = await this.billingRepository.query(`
+    SELECT
+      currency,
+      COUNT(*) as total_billings,
+      SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count,
+      SUM(CASE WHEN status = 'paid' THEN "invoiceAmount" ELSE 0 END) as paid_amount,
+      SUM("invoiceAmount") as total_amount,
+      AVG("invoiceAmount") as average_amount
+    FROM billings
+    WHERE "createdAt" >= $1 ${userCondition}
+    GROUP BY currency
+  `, [start]);
+
 
     return {
       period,
-      currentPeriod: financialData.map(row => {
-        const prevData = previousPeriodData.find(p => p.currency === row.currency);
-        const currentRevenue = parseFloat(row.total_revenue) || 0;
-        const previousRevenue = parseFloat(prevData?.previous_revenue) || 0;
-        const growthRate = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 : 0;
-
-        // Platform revenue calculations
-        const platformRevenue = isAdmin ? parseFloat(row.platform_revenue) || 0 : 0;
-        const previousPlatformRevenue = isAdmin ? parseFloat(prevData?.previous_platform_revenue) || 0 : 0;
-        const platformGrowthRate = previousPlatformRevenue > 0 ?
-          ((platformRevenue - previousPlatformRevenue) / previousPlatformRevenue) * 100 : 0;
-
-        return {
-          currency: row.currency,
-          totalRevenue: currentRevenue,
-          platformRevenue, // 2% of total paid revenue
-          trainerRevenue: currentRevenue - platformRevenue, // 98% remaining
-          pendingRevenue: parseFloat(row.pending_revenue) || 0,
-          paidTransactions: parseInt(row.paid_transactions),
-          pendingTransactions: parseInt(row.pending_transactions),
-          failedTransactions: parseInt(row.failed_transactions),
-          averageTransactionValue: parseFloat(row.average_transaction_value) || 0,
-          growthRate: Math.round(growthRate * 100) / 100,
-          platformGrowthRate: Math.round(platformGrowthRate * 100) / 100,
-          previousPeriodRevenue: previousRevenue,
-          previousPlatformRevenue
-        };
-      })
+      revenue: {
+        total: Number(revenueStats[0]?.total_revenue || 0),
+        paid: Number(revenueStats[0]?.paid_revenue || 0),
+        pending: Number(revenueStats[0]?.pending_revenue || 0),
+        platform: Number(revenueStats[0]?.platform_revenue || 0),
+        trainer: (Number(revenueStats[0]?.paid_revenue || 0) - Number(revenueStats[0]?.platform_revenue || 0)),
+        transactions: Number(revenueStats[0]?.total_transactions || 0)
+      },
+      timeline: timeline.map(item => ({
+        month: item.month,
+        total: Number(item.total),
+        paid: Number(item.paid),
+        platformFee: Number(item.platform_fee),
+        trainerPayout: Number(item.paid) - Number(item.platform_fee)
+      })),
+      paymentMethods,
+      summary: summary[0] || null,
+      typeDistribution,
+      currencyBreakdown,
     };
   }
 
-  async getBillingAnalytics(user: User, period = 'monthly', startDate?: string, endDate?: string) {
-    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
-    const userCondition = isAdmin ? '' : `AND b."creatorId" = ${user.id}`;
 
-    let dateCondition = '';
-    let groupBy = '';
-    let selectFields = '';
-
-    // Set up date grouping based on period
-    switch (period) {
-      case 'daily':
-        groupBy = "DATE_TRUNC('day', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'weekly':
-        groupBy = "DATE_TRUNC('week', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'monthly':
-        groupBy = "DATE_TRUNC('month', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-      case 'yearly':
-        groupBy = "DATE_TRUNC('year', b.\"createdAt\")";
-        selectFields = `${groupBy} as period, `;
-        break;
-    }
-
-    // Custom date range
-    if (startDate && endDate) {
-      dateCondition = `AND b."createdAt" >= '${startDate}' AND b."createdAt" <= '${endDate}'`;
-    } else {
-      // Default to last 12 periods
-      const periodMap = {
-        daily: '30 days',
-        weekly: '12 weeks',
-        monthly: '12 months',
-        yearly: '5 years'
-      };
-      dateCondition = `AND b."createdAt" >= NOW() - INTERVAL '${periodMap[period] || '12 months'}'`;
-    }
-
-    // Billing timeline analytics
-    const billingTimelineQuery = `
-      SELECT 
-        ${selectFields}
-        COUNT(*) as total_billings,
-        COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as paid_billings,
-        COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pending_billings,
-        COUNT(CASE WHEN b.status = 'failed' THEN 1 END) as failed_billings,
-        COUNT(CASE WHEN b.status = 'overdue' THEN 1 END) as overdue_billings,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as paid_amount,
-        SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as pending_amount,
-        SUM(CASE WHEN b.status = 'failed' THEN b."invoiceAmount" ELSE 0 END) as failed_amount,
-        SUM(CASE WHEN b.status = 'overdue' THEN b."invoiceAmount" ELSE 0 END) as overdue_amount,
-        AVG(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" END) as average_paid_amount,
-        b.currency
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY ${groupBy ? `${groupBy}, ` : ''}b.currency
-      ORDER BY ${groupBy ? `${groupBy} DESC` : 'paid_amount DESC'}
-    `;
-
-    const billingTimeline = await this.billingRepository.query(billingTimelineQuery);
-
-    // Billing status distribution
-    const statusDistributionQuery = `
-      SELECT 
-        b.status,
-        COUNT(*) as count,
-        SUM(b."invoiceAmount") as total_amount,
-        AVG(b."invoiceAmount") as average_amount,
-        b.currency
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY b.status, b.currency
-      ORDER BY count DESC
-    `;
-
-    const statusDistribution = await this.billingRepository.query(statusDistributionQuery);
-
-    // Billing type distribution
-    const typeDistributionQuery = `
-      SELECT 
-        b.type,
-        COUNT(*) as count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as paid_amount,
-        SUM(b."invoiceAmount") as total_amount,
-        AVG(b."invoiceAmount") as average_amount,
-        b.currency
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY b.type, b.currency
-      ORDER BY count DESC
-    `;
-
-    const typeDistribution = await this.billingRepository.query(typeDistributionQuery);
-
-    // Currency breakdown
-    const currencyBreakdownQuery = `
-      SELECT 
-        b.currency,
-        COUNT(*) as total_billings,
-        COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as paid_count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as paid_amount,
-        SUM(b."invoiceAmount") as total_amount,
-        AVG(b."invoiceAmount") as average_amount
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY b.currency
-      ORDER BY total_amount DESC
-    `;
-
-    const currencyBreakdown = await this.billingRepository.query(currencyBreakdownQuery);
-
-    // Recent billing trends
-    const trendsQuery = `
-      SELECT 
-        DATE_TRUNC('day', b."createdAt") as date,
-        COUNT(*) as daily_count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as daily_revenue
-      FROM billings b
-      WHERE b."createdAt" >= NOW() - INTERVAL '30 days' ${userCondition}
-      GROUP BY DATE_TRUNC('day', b."createdAt")
-      ORDER BY date DESC
-      LIMIT 30
-    `;
-
-    const trends = await this.billingRepository.query(trendsQuery);
-
-    // Payment method performance (if connected to payment methods)
-    const paymentPerformanceQuery = `
-      SELECT 
-        CASE 
-          WHEN b."stripeInvoiceId" IS NOT NULL THEN 'stripe'
-          ELSE 'manual'
-        END as payment_method,
-        COUNT(*) as total_count,
-        COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as success_count,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as success_amount,
-        AVG(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" END) as average_success_amount
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-      GROUP BY 
-        CASE 
-          WHEN b."stripeInvoiceId" IS NOT NULL THEN 'stripe'
-          ELSE 'manual'
-        END
-      ORDER BY success_amount DESC
-    `;
-
-    const paymentPerformance = await this.billingRepository.query(paymentPerformanceQuery);
-
-    // Summary statistics
-    const summaryQuery = `
-      SELECT 
-        COUNT(*) as total_billings,
-        COUNT(CASE WHEN b.status = 'paid' THEN 1 END) as paid_billings,
-        COUNT(CASE WHEN b.status = 'pending' THEN 1 END) as pending_billings,
-        COUNT(CASE WHEN b.status = 'failed' THEN 1 END) as failed_billings,
-        COUNT(CASE WHEN b.status = 'overdue' THEN 1 END) as overdue_billings,
-        SUM(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" ELSE 0 END) as total_paid,
-        SUM(CASE WHEN b.status = 'pending' THEN b."invoiceAmount" ELSE 0 END) as total_pending,
-        SUM(CASE WHEN b.status = 'failed' THEN b."invoiceAmount" ELSE 0 END) as total_failed,
-        SUM(CASE WHEN b.status = 'overdue' THEN b."invoiceAmount" ELSE 0 END) as total_overdue,
-        AVG(b."invoiceAmount") as average_billing_amount,
-        AVG(CASE WHEN b.status = 'paid' THEN b."invoiceAmount" END) as average_paid_amount
-      FROM billings b
-      WHERE 1=1 ${dateCondition} ${userCondition}
-    `;
-
-    const summary = await this.billingRepository.query(summaryQuery);
-
-    return {
-      period,
-      timeline: billingTimeline.map(row => ({
-        period: row.period || 'Total',
-        totalBillings: parseInt(row.total_billings),
-        paidBillings: parseInt(row.paid_billings),
-        pendingBillings: parseInt(row.pending_billings),
-        failedBillings: parseInt(row.failed_billings),
-        overdueBillings: parseInt(row.overdue_billings),
-        paidAmount: parseFloat(row.paid_amount) || 0,
-        pendingAmount: parseFloat(row.pending_amount) || 0,
-        failedAmount: parseFloat(row.failed_amount) || 0,
-        overdueAmount: parseFloat(row.overdue_amount) || 0,
-        averagePaidAmount: parseFloat(row.average_paid_amount) || 0,
-        currency: row.currency,
-        successRate: row.total_billings > 0 ? (row.paid_billings / row.total_billings) * 100 : 0
-      })),
-      statusDistribution: statusDistribution.map(row => ({
-        status: row.status,
-        count: parseInt(row.count),
-        totalAmount: parseFloat(row.total_amount) || 0,
-        averageAmount: parseFloat(row.average_amount) || 0,
-        currency: row.currency
-      })),
-      typeDistribution: typeDistribution.map(row => ({
-        type: row.type,
-        count: parseInt(row.count),
-        paidAmount: parseFloat(row.paid_amount) || 0,
-        totalAmount: parseFloat(row.total_amount) || 0,
-        averageAmount: parseFloat(row.average_amount) || 0,
-        currency: row.currency
-      })),
-      currencyBreakdown: currencyBreakdown.map(row => ({
-        currency: row.currency,
-        totalBillings: parseInt(row.total_billings),
-        paidCount: parseInt(row.paid_count),
-        paidAmount: parseFloat(row.paid_amount) || 0,
-        totalAmount: parseFloat(row.total_amount) || 0,
-        averageAmount: parseFloat(row.average_amount) || 0,
-        conversionRate: row.total_billings > 0 ? (row.paid_count / row.total_billings) * 100 : 0
-      })),
-      recentTrends: trends.map(row => ({
-        date: row.date,
-        dailyCount: parseInt(row.daily_count),
-        dailyRevenue: parseFloat(row.daily_revenue) || 0
-      })),
-      paymentPerformance: paymentPerformance.map(row => ({
-        paymentMethod: row.payment_method,
-        totalCount: parseInt(row.total_count),
-        successCount: parseInt(row.success_count),
-        successAmount: parseFloat(row.success_amount) || 0,
-        averageSuccessAmount: parseFloat(row.average_success_amount) || 0,
-        successRate: row.total_count > 0 ? (row.success_count / row.total_count) * 100 : 0
-      })),
-      summary: summary[0] ? {
-        totalBillings: parseInt(summary[0].total_billings),
-        paidBillings: parseInt(summary[0].paid_billings),
-        pendingBillings: parseInt(summary[0].pending_billings),
-        failedBillings: parseInt(summary[0].failed_billings),
-        overdueBillings: parseInt(summary[0].overdue_billings),
-        totalPaid: parseFloat(summary[0].total_paid) || 0,
-        totalPending: parseFloat(summary[0].total_pending) || 0,
-        totalFailed: parseFloat(summary[0].total_failed) || 0,
-        totalOverdue: parseFloat(summary[0].total_overdue) || 0,
-        averageBillingAmount: parseFloat(summary[0].average_billing_amount) || 0,
-        averagePaidAmount: parseFloat(summary[0].average_paid_amount) || 0,
-        overallSuccessRate: summary[0].total_billings > 0 ? (summary[0].paid_billings / summary[0].total_billings) * 100 : 0
-      } : null
-    };
-  }
 }

@@ -107,7 +107,7 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="Total Potential Revenue"
-            value={data?.timeline.reduce((acc, item) => acc + item.totalPotentialRevenue, 0) || 0}
+            value={data?.timeline.reduce((acc, item) => acc + item.totalPotentialRevenue / 100, 0) || 0}
             isCurrency
           />
           <StatCard
@@ -123,7 +123,7 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
             title="Average Session Price"
             value={
               data?.timeline.length
-                ? data.timeline.reduce((acc, item) => acc + item.averagePrice, 0) / data.timeline.length
+                ? data.timeline.reduce((acc, item) => acc + item.averagePrice / 100, 0) / data.timeline.length
                 : 0
             }
             isCurrency

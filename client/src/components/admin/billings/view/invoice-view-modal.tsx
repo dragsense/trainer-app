@@ -127,9 +127,9 @@ export default function InvoiceViewModal({ storeKey }: IInvoiceViewModalProps) {
                                     <TableRow key={idx}>
                                         <TableCell>{item.description}</TableCell>
                                         <TableCell className="text-center">{item.quantity}</TableCell>
-                                        <TableCell className="text-right">{item.unitPrice}</TableCell>
+                                        <TableCell className="text-right"> {billing.currency || 'USD'} {item.unitPrice / 100}</TableCell>
                                         <TableCell className="text-right">{item.tax ?? 0}</TableCell>
-                                        <TableCell className="text-right">{item.amount}</TableCell>
+                                        <TableCell className="text-right"> {billing.currency || 'USD'} {item.amount / 100}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
@@ -146,7 +146,7 @@ export default function InvoiceViewModal({ storeKey }: IInvoiceViewModalProps) {
                     <div className="mt-6 space-y-1 text-right">
                         <p>
                             <strong>Subtotal:</strong>{" "}
-                            {billing.totalAmount - (billing.totalTax ?? 0) + (billing.discount ?? 0)}
+                           {billing.currency || 'USD'} {(billing.totalAmount - (billing.totalTax ?? 0) + (billing.discount ?? 0)) / 100}
                         </p>
                         <p>
                             <strong>Tax:</strong> {billing.totalTax ?? 0}
@@ -155,7 +155,7 @@ export default function InvoiceViewModal({ storeKey }: IInvoiceViewModalProps) {
                             <strong>Discount:</strong> {billing.discount ?? 0}
                         </p>
                         <p className="text-lg font-bold">
-                            Total: {billing.totalAmount ?? 0}
+                            Total:  {billing.currency || 'USD'} {(billing.totalAmount ?? 0) / 100}
                         </p>
                     </div>
 

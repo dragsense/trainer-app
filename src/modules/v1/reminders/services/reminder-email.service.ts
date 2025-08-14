@@ -45,17 +45,17 @@ export class ReminderEmailService {
       case ReminderType.SESSION:
         if (!reminder.session) break;
         const sessionDate = reminder.session.dateTime ? new Date(reminder.session.dateTime) : null;
-        const sessionDateTime = sessionDate ? sessionDate.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        const sessionDateTime = sessionDate ? sessionDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
         }) : 'TBD';
-        const sessionTime = sessionDate ? sessionDate.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
+        const sessionTime = sessionDate ? sessionDate.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
         }) : 'TBD';
-        
+
         content = `
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 0; text-align: center; margin-bottom: 30px;">
             <h1 style="color: white; margin: 0; font-size: 28px;">🏋️ Session Reminder</h1>
@@ -110,11 +110,11 @@ export class ReminderEmailService {
       case ReminderType.BILLING:
         if (!reminder.billing) break;
         const amount = reminder.billing.invoiceAmount || 0;
-        const formattedAmount = new Intl.NumberFormat('en-US', { 
-          style: 'currency', 
-          currency: 'USD' 
+        const formattedAmount = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD'
         }).format(amount);
-        
+
         content = `
           <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); padding: 30px 0; text-align: center; margin-bottom: 30px;">
             <h1 style="color: white; margin: 0; font-size: 28px;">💳 Payment Reminder</h1>
@@ -164,11 +164,9 @@ export class ReminderEmailService {
 
       case ReminderType.CUSTOM:
       default:
-        const customMessage = reminder.message || 'You have a new reminder.';
-        const messageLines = customMessage.split('\n');
-        const title = messageLines[0] || 'Custom Reminder';
-        const body = messageLines.slice(1).join('<br>') || 'No additional details provided.';
-        
+        const title = reminder.title || 'You have a new reminder.';
+        const body = reminder.message || 'No additional details provided.';
+
         content = `
           <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 30px 0; text-align: center; margin-bottom: 30px;">
             <h1 style="color: white; margin: 0; font-size: 28px;">🔔 ${title}</h1>
@@ -185,14 +183,14 @@ export class ReminderEmailService {
               ${reminder.scheduledAt ? `
               <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #c8e6c9;">
                 <p style="margin: 0; color: #666; font-size: 14px;">
-                  <strong>Scheduled for:</strong> ${new Date(reminder.scheduledAt).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  <strong>Scheduled for:</strong> ${new Date(reminder.scheduledAt).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}
                 </p>
               </div>
               ` : ''}
@@ -245,7 +243,7 @@ export class ReminderEmailService {
 
   async sendReminderEmail(reminder: Reminder): Promise<void> {
     const recipients = this.getRecipients(reminder);
-    
+
     if (recipients.length === 0) {
       throw new Error('No valid recipients found for reminder');
     }
@@ -257,7 +255,7 @@ export class ReminderEmailService {
     // Send emails to all recipients efficiently
     const emailPromises = recipients.map(async (recipient) => {
       const html = await this.getReminderContent(reminder, recipient);
-      
+
       return this.mailerService.sendMail({
         from: this.fromEmail,
         to: recipient.email,
@@ -307,7 +305,7 @@ export class ReminderEmailService {
     }
 
     const html = this.generateSummaryHtml(stats, 'Daily');
-    
+
     await this.mailerService.sendMail({
       from: this.fromEmail,
       to: this.adminEmail,
@@ -323,7 +321,7 @@ export class ReminderEmailService {
     }
 
     const html = this.generateSummaryHtml(stats, 'Weekly');
-    
+
     await this.mailerService.sendMail({
       from: this.fromEmail,
       to: this.adminEmail,

@@ -315,7 +315,7 @@ export class StripeInvoiceService {
     try {
       const invoiceItemData: any = {
         customer: customerId,
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: Math.round(amount), 
         currency: currency.toLowerCase(),
         metadata,
       };

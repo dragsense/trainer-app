@@ -8,6 +8,7 @@ import { Reminder } from '../entities/reminder.entity';
 import { ReminderFrequency, ReminderStatus } from '../enums/reminder.enum';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
+import { FrequencyConfigDto } from '../dto/frequency-config.dto';
 
 @Injectable()
 export class ReminderSubscriber {
@@ -69,38 +70,6 @@ export class ReminderSubscriber {
     this.removeReminderJob(event.reminderId);
   }
 
-  private async scheduleReminder(reminder: Reminder) {
-    const jobName = `reminder_${reminder.id}`;
-
-    // Remove existing job if any
-    this.removeReminderJob(reminder.id);
-
-    switch (reminder.frequency) {
-      case ReminderFrequency.MINUTELY:
-        this.scheduleMinutelyJob(reminder);
-        break;
-
-      case ReminderFrequency.HOURLY:
-        this.scheduleHourlyJob(reminder);
-        break;
-
-      case ReminderFrequency.DAILY:
-        this.scheduleDailyJob(reminder);
-        break;
-
-      case ReminderFrequency.WEEKLY:
-        this.scheduleWeeklyJob(reminder);
-        break;
-
-      case ReminderFrequency.MONTHLY:
-        this.scheduleMonthlyJob(reminder);
-        break;
-
-      case ReminderFrequency.ONCE:
-        this.scheduleOneTimeJob(reminder);
-        break;
-    }
-  }
 
   private removeReminderJob(reminderId: number) {
     const jobName = `reminder_${reminderId}`;
@@ -115,36 +84,66 @@ export class ReminderSubscriber {
     }
   }
 
-  private scheduleMinutelyJob(reminder: Reminder) {
-    const interval = reminder.intervalMinutes || 30;
-    const cronExpression = `*/${interval} * * * *`;
-    this.createCronJob(reminder, cronExpression);
+
+
+  private getTimeOfDay(timeOfDay?: string): [number, number] {
+    const isValidFormat = /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeOfDay || "");
+    if (!isValidFormat) return [0, 0];
+    return timeOfDay!.split(":").map(Number) as [number, number];
   }
 
-  private scheduleHourlyJob(reminder: Reminder) {
-    const interval = Math.floor((reminder.intervalMinutes || 60) / 60);
-    const cronExpression = `0 */${interval} * * *`;
-    this.createCronJob(reminder, cronExpression);
+  private buildCronExpression(
+    config?: FrequencyConfigDto
+  ): string {
+    const { frequency, timeOfDay, intervalMinutes, weekdays, monthDays } = config ?? {};
+
+    // If fixed time of day
+    if (timeOfDay) {
+      const [hours, minutes] = this.getTimeOfDay(timeOfDay);
+
+      if (frequency === ReminderFrequency.WEEKLY) {
+        const days = weekdays?.length ? weekdays.join(",") : "*";
+        return `${minutes} ${hours} * * ${days}`;
+      }
+
+      if (frequency === ReminderFrequency.MONTHLY) {
+        const days = monthDays?.length ? monthDays.join(",") : "*";
+        return `${minutes} ${hours} ${days} * *`;
+      }
+
+      // DAILY or ONCE style
+      return `${minutes} ${hours} * * *`;
+    }
+
+    // If interval-based
+    if (intervalMinutes) {
+      if (frequency === ReminderFrequency.WEEKLY) {
+        const days = weekdays?.length ? weekdays.join(",") : "*";
+        return `*/${intervalMinutes} * * * ${days}`;
+      }
+
+      if (frequency === ReminderFrequency.MONTHLY) {
+        const days = monthDays?.length ? monthDays.join(",") : "*";
+        return `*/${intervalMinutes} * * ${days} *`;
+      }
+
+      // DAILY or default
+      return `*/${intervalMinutes} * * * *`;
+    }
+
+    throw new Error("Invalid frequency configuration");
   }
 
-  private scheduleDailyJob(reminder: Reminder) {
-    const [hours, minutes] = reminder.timeOfDay?.split(':').map(Number) || [0, 0];
-    const cronExpression = `${minutes} ${hours} * * *`;
-    this.createCronJob(reminder, cronExpression);
-  }
+  private scheduleReminder(reminder: Reminder) {
 
-  private scheduleWeeklyJob(reminder: Reminder) {
-    const [hours, minutes] = reminder.timeOfDay?.split(':').map(Number) || [0, 0];
-    const weekdays = reminder.weekdays?.join(',') || '*';
-    const cronExpression = `${minutes} ${hours} * * ${weekdays}`;
-    this.createCronJob(reminder, cronExpression);
-  }
+    const { frequencyConfig } = reminder;
 
-  private scheduleMonthlyJob(reminder: Reminder) {
-    const [hours, minutes] = reminder.timeOfDay?.split(':').map(Number) || [0, 0];
-    const monthDays = reminder.monthDays?.join(',') || '*';
-    const cronExpression = `${minutes} ${hours} ${monthDays} * *`;
-    this.createCronJob(reminder, cronExpression);
+    if (frequencyConfig?.frequency === ReminderFrequency.ONCE)
+      this.scheduleOneTimeJob(reminder)
+    else {
+      const cronExpression = this.buildCronExpression(reminder.frequencyConfig);
+      this.createCronJob(reminder, cronExpression);
+    }
   }
 
   private createCronJob(reminder: Reminder, cronExpression: string) {
@@ -196,14 +195,7 @@ export class ReminderSubscriber {
 
   private scheduleOneTimeJob(reminder: Reminder) {
     const jobName = `reminder_${reminder.id}`;
-
-
     let scheduledAt = new Date(reminder.scheduledAt);
-
-    if (reminder.timeOfDay) {
-      const [hours, minutes] = reminder.timeOfDay.split(':').map(Number);
-      scheduledAt.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-    }
 
     const job = new CronJob(
       scheduledAt,
@@ -248,7 +240,7 @@ export class ReminderSubscriber {
   }
 
   // Global scheduled tasks
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_5_HOURS)
   async handleFailedReminders() {
     await this.schedulerService.retryFailedReminders();
   }
@@ -262,7 +254,7 @@ export class ReminderSubscriber {
 
     // Delete completed one-time reminders older than 7 days
     const result = await this.reminderRepository.delete({
-      frequency: ReminderFrequency.ONCE,
+      frequencyConfig: { frequency: ReminderFrequency.ONCE },
       status: ReminderStatus.SENT,
       sentAt: LessThanOrEqual(sevenDaysAgo)
     });

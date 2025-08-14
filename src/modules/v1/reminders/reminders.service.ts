@@ -24,7 +24,6 @@ export class RemindersService {
 
   async create(user: Pick<User, 'id'>, createReminderDto: CreateReminderDto): Promise<MessageResponse> {
     // Validate frequency-specific fields
-    this.validateFrequencyFields(createReminderDto);
 
     const reminder = this.reminderRepository.create({
       ...createReminderDto,
@@ -45,7 +44,7 @@ export class RemindersService {
       'reminder.created',
       new ReminderCreatedEvent(
         savedReminder.id,
-        savedReminder.frequency,
+        savedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
         savedReminder.scheduledAt
       )
     );
@@ -53,40 +52,6 @@ export class RemindersService {
     return { message: 'Reminder created successfully' };
   }
 
-  private validateFrequencyFields(dto: CreateReminderDto | UpdateReminderDto): void {
-    switch (dto.frequency) {
-      case ReminderFrequency.MINUTELY:
-      case ReminderFrequency.HOURLY:
-        if (!dto.intervalMinutes) {
-          throw new BadRequestException('intervalMinutes is required for MINUTELY/HOURLY frequency');
-        }
-        break;
-
-      case ReminderFrequency.DAILY:
-        if (!dto.timeOfDay) {
-          throw new BadRequestException('timeOfDay is required for DAILY frequency');
-        }
-        break;
-
-      case ReminderFrequency.WEEKLY:
-        if (!dto.weekdays?.length || !dto.timeOfDay) {
-          throw new BadRequestException('weekdays and timeOfDay are required for WEEKLY frequency');
-        }
-        if (dto.weekdays.some(day => day < 0 || day > 6)) {
-          throw new BadRequestException('weekdays must be between 0 (Sunday) and 6 (Saturday)');
-        }
-        break;
-
-      case ReminderFrequency.MONTHLY:
-        if (!dto.monthDays?.length || !dto.timeOfDay) {
-          throw new BadRequestException('monthDays and timeOfDay are required for MONTHLY frequency');
-        }
-        if (dto.monthDays.some(day => day < 1 || day > 31)) {
-          throw new BadRequestException('monthDays must be between 1 and 31');
-        }
-        break;
-    }
-  }
 
   async findAll(user: User, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
     const {
@@ -179,13 +144,6 @@ export class RemindersService {
     const reminder = await this.findOne(user, id);
     const oldStartAt = reminder.scheduledAt;
 
-    // If frequency is being updated, validate the new frequency fields
-    if (updateReminderDto.frequency) {
-      this.validateFrequencyFields({
-        ...reminder,
-        ...updateReminderDto
-      });
-    }
 
     Object.assign(reminder, updateReminderDto);
     const updatedReminder = await this.reminderRepository.save(reminder);
@@ -195,7 +153,7 @@ export class RemindersService {
       'reminder.updated',
       new ReminderUpdatedEvent(
         updatedReminder.id,
-        updatedReminder.frequency,
+        updatedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
         updatedReminder.scheduledAt,
         oldStartAt
       )

@@ -9,6 +9,9 @@ import {
   ValidateNested,
   IsDateString,
   MinDate,
+  ArrayMinSize,
+  isNotEmpty,
+  Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BillingStatus, BillingType, BillingCurrency } from '../enums/billing.enum';
@@ -28,6 +31,7 @@ class LineItemDto {
   unitPrice: number;
 
   @ApiProperty({ example: 10000, description: 'Total amount (quantity × unitPrice)' })
+  @Min(0)
   @IsNumber()
   amount: number;
 
@@ -89,11 +93,11 @@ export class CreateBillingDto {
     description: 'Line items for the invoice',
     type: [LineItemDto],
   })
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'At least one line item is required' })
   @ValidateNested({ each: true })
   @Type(() => LineItemDto)
-  lineItems?: LineItemDto[];
+  lineItems: LineItemDto[];
 
   @ApiProperty({ example: 2000, description: 'Total tax amount (in cents)' })
   @IsOptional()

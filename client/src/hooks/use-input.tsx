@@ -51,11 +51,15 @@ export function useInput({
 
 
   const convertValue = (input: unknown, type?: string): any => {
+
+                console.log(input)
+
+
     const getValue = (val: any) => {
       if (val === "") return val;
-      if (type === "number") return Number(val);
+      if (type === "number") return Number(val ?? 0);
       if (type === "boolean") return !!val;
-      if (type === "date") return new Date(val);
+      if (type === "date") return new Date(val ?? "");
       return val;
     };
 
@@ -93,6 +97,7 @@ export function useInput({
 
           const onChangeHandler = (value: any) => {
             const parsed = convertValue(value, field.valueType);
+            console.log(parsed)
             controllerField.onChange(parsed);
             field?.onChange?.(parsed);
           };

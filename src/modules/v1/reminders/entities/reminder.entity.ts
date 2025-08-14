@@ -12,6 +12,7 @@ import { User } from '../../users/entities/user.entity';
 import { Session } from '../../sessions/entities/session.entity';
 import { ReminderFrequency, ReminderType, ReminderStatus, ReminderActions } from '../enums/reminder.enum';
 import { Billing } from '../../billings/entities/billing.entity';
+import { FrequencyConfigDto } from '../dto/frequency-config.dto';
 
 @Entity('reminders')
 export class Reminder extends GeneralBaseEntity {
@@ -30,6 +31,15 @@ export class Reminder extends GeneralBaseEntity {
   })
   @Column({ type: 'enum', enum: ReminderStatus, default: ReminderStatus.SCHEDULED })
   status: ReminderStatus;
+
+
+  @ApiProperty({
+    description: 'Message title for the reminder',
+    example: 'This is a reminder title',
+  })
+  @Column({ type: 'varchar', nullable: true })
+  title: string;
+
 
   @ApiProperty({
     description: 'Message content for the reminder',
@@ -154,39 +164,15 @@ export class Reminder extends GeneralBaseEntity {
   endDate?: Date;
 
   @ApiProperty({
-    description: 'Frequency of the reminder',
-    enum: ReminderFrequency,
-    example: ReminderFrequency.DAILY,
+    description: 'Frequency configuration details',
+    type: FrequencyConfigDto,
+    example: {
+      intervalMinutes: 30,
+      weekdays: [1, 3, 5],
+      monthDays: [1, 15],
+      timeOfDay: '09:00'
+    }
   })
-  @Column({ type: 'enum', enum: ReminderFrequency, default: ReminderFrequency.ONCE })
-  frequency: ReminderFrequency;
-
-
-  @ApiProperty({
-    description: 'Custom interval in minutes (for MINUTELY/HOURLY frequency)',
-    example: 30,
-  })
-  @Column({ nullable: true })
-  intervalMinutes?: number;
-
-  @ApiProperty({
-    description: 'Selected weekdays for WEEKLY frequency (0 = Sunday, 6 = Saturday)',
-    example: [1, 3, 5],
-  })
-  @Column('simple-array', { nullable: true })
-  weekdays?: number[];
-
-  @ApiProperty({
-    description: 'Selected days of month for MONTHLY frequency',
-    example: [1, 15, 28],
-  })
-  @Column('simple-array', { nullable: true })
-  monthDays?: number[];
-
-  @ApiProperty({
-    description: 'Specific time of day for DAILY/WEEKLY/MONTHLY frequency (HH:mm)',
-    example: '09:00',
-  })
-  @Column({ nullable: true })
-  timeOfDay?: string;
+  @Column({ type: 'json', nullable: true })
+  frequencyConfig?: FrequencyConfigDto;
 }

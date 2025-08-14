@@ -52,7 +52,7 @@ export default function BillingFormModal({
     {
       id: "userId",
       name: "userId",
-      label: "Trainer",
+      label: "User",
       placeholder: "Select User",
       type: "custom",
       required: true,
@@ -115,14 +115,6 @@ export default function BillingFormModal({
       type: "select",
       required: false,
       options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
-    },
-    {
-      id: "totalAmount",
-      name: "totalAmount",
-      label: "Total Amount (cents)",
-      type: "number",
-      valueType: "number",
-      required: false,
     },
     {
       id: "totalTax",

@@ -55,9 +55,7 @@ export const TrainerSchema = z.object({
     specialties: z.array(z.string()).min(1, {
         message: "At least one specialty is required",
     }),
-    certifications: z.array(z.string()).min(1, {
-        message: "At least one certification is required",
-    }),
+ 
     experience: z.number().min(1, {
         message: "Experience must be a non-negative number",
     }),
@@ -99,7 +97,6 @@ export default function TrainerForm({
         address: { value: "" },
         gender: { value: UserGender.MALE },
         specialties: { value: [] },
-        certifications: { value: [] },
         level: { value: UserLevels[UserRole.TRAINER] },
         isActive: { value: true },
         experience: { value: 0 },

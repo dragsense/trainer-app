@@ -40,31 +40,17 @@ export class DashboardController {
     return this.dashboardService.getRemindersAnalytics(req.user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
-  @Get('financial/summary')
-  @ApiOperation({ summary: 'Get financial summary for dashboard' })
-  @ApiResponse({ status: 200, description: 'Financial summary retrieved successfully' })
-  @ApiQuery({ name: 'period', required: false, enum: ['month', 'quarter', 'year'], description: 'Time period for financial summary' })
-  async getFinancialSummary(
-    @Req() req: any,
-    @Query('period') period?: string,
-  ) {
-    return this.dashboardService.getFinancialSummary(req.user, period);
-  }
+
 
   @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Get('billing/analytics')
   @ApiOperation({ summary: 'Get comprehensive billing analytics' })
   @ApiResponse({ status: 200, description: 'Billing analytics retrieved successfully' })
   @ApiQuery({ name: 'period', required: false, enum: ['daily', 'weekly', 'monthly', 'yearly'], description: 'Time period for billing analysis' })
-  @ApiQuery({ name: 'startDate', required: false, type: 'string', description: 'Start date for custom period (YYYY-MM-DD)' })
-  @ApiQuery({ name: 'endDate', required: false, type: 'string', description: 'End date for custom period (YYYY-MM-DD)' })
   async getBillingAnalytics(
     @Req() req: any,
     @Query('period') period?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
   ) {
-    return this.dashboardService.getBillingAnalytics(req.user, period, startDate, endDate);
+    return this.dashboardService.getBillingAnalytics(req.user, period);
   }
 }

@@ -21,7 +21,6 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
 
   constructor(
     private readonly dataSource: DataSource,
-    @InjectRepository(Session)
     private readonly billingsService: BillingsService,
   ) {
     this.dataSource.subscribers.push(this);
@@ -49,18 +48,17 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
             'creator',
             'creator.profile'
           ]
-        });
+        }); 
 
       if (!sessionWithRelations) {
         this.logger.error(`❌ Session not found after creation: ${event.entity.id}`);
         return;
       }
-
       console.log(`Session with all relations: ${JSON.stringify(sessionWithRelations, null, 2)}`);
 
       // Use setTimeout to ensure the session is fully saved
       setTimeout(() => {
-        this.generateSessionInvoices(sessionWithRelations);
+        this.generateSingleSessionInvoice(sessionWithRelations);
       }, 100);
 
     } catch (error) {
@@ -69,17 +67,6 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
     }
   }
 
-  private async generateSessionInvoices(session: Session): Promise<void> {
-    const { clients } = session;
-
-    if (!clients || clients.length === 0) {
-      this.logger.warn(`No clients found for session ${session.id}`);
-      return;
-    }
-
-    await this.generateSingleSessionInvoice(session);
-
-  }
 
   private async generateSingleSessionInvoice(session: Session): Promise<void> {
     const { clients } = session;
@@ -98,7 +85,7 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
         this.logger.log(`Due date calculated: ${dueDate.toISOString()}`);
 
 
-     await this.createBillingRecord(session, dueDate, client);
+        await this.createBillingRecord(session, dueDate, client);
 
       } catch (error) {
         this.logger.error(`❌ Failed to generate invoice for session ${session.id}, client ${client.profile?.firstName || client.id}: ${error.message}`);
@@ -110,21 +97,22 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
 
   }
 
-  private async createBillingRecord(session: Session, dueDate, user: User): Promise<Billing> {
+  private async createBillingRecord(session: Session, dueDate: Date, user: User): Promise<Billing> {
 
     const createBillingDto: CreateBillingDto = {
       userId: user.id,
       sessionId: session.id,
       type: BillingType.SESSION,
       status: BillingStatus.PENDING,
-      invoiceAmount: session.pricePerClient || 0,
       currency: session.currency as BillingCurrency || BillingCurrency.USD,
       issueDate: new Date(),
       dueDate,
       paymentMethodType: session.paymentMethodType,
+      
+          discount: 0,
       lineItems: [
         {
-          description: session.description || '',
+          description: session.description || ('Session Item' + session.id),
           amount: session.pricePerClient || 0,
           quantity: 1,
           tax: 0,
@@ -133,7 +121,7 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
       ],
     };
 
-    const billing = await this.billingsService.create(createBillingDto, user);
+    const billing = await this.billingsService.create(createBillingDto, session.creator);
     this.logger.log(`✅ Successfully created billing record for session ${session.id}, client ${user.email}: ${billing.id}`);
     return billing;
   }

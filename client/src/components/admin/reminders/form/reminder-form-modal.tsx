@@ -21,7 +21,6 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { useFormContext } from "react-hook-form";
 
 export interface IReminderFormModalProps {
   storeKey: string;
@@ -59,22 +58,34 @@ export default function ReminderFormModal({
   // Base fields
   const categorizedFields: { category: string; fields: TFieldConfig[] }[] = [
     {
+      category: "",
+      fields: [{
+        id: "type",
+        name: "type",
+        label: "Reminder Type",
+        type: "select",
+        options: [
+          { value: ReminderType.BILLING, label: "Payment Reminder" },
+          { value: ReminderType.SESSION, label: "Session Reminder" },
+          { value: ReminderType.CUSTOM, label: "Custom Reminder" },
+        ],
+        required: true,
+      }]
+
+    },
+
+    {
+
       category: "Basic Information",
       fields: [
         {
-          id: "type",
-          name: "type",
-          label: "Reminder Type",
-          type: "select",
-          options: [
-            { value: ReminderType.BILLING, label: "Payment Reminder" },
-            { value: ReminderType.SESSION, label: "Session Reminder" },
-            { value: ReminderType.CUSTOM, label: "Custom Reminder" },
-          ],
+          id: "title",
+          name: "title",
+          label: "Title",
+          type: "text",
+          placeholder: "Enter reminder title...",
           required: true,
-
         },
-
         {
           id: "message",
           name: "message",
@@ -173,27 +184,58 @@ export default function ReminderFormModal({
       category: "Frequency Settings",
       fields: [
         {
-          id: "frequency",
-          name: "frequency",
+          id: "frequencyConfig.frequency",
+          name: "frequencyConfig.frequency",
           label: "Frequency",
           type: "select",
           options: [
             { value: ReminderFrequency.ONCE, label: "Once" },
-            { value: ReminderFrequency.MINUTELY, label: "Every Few Minutes" },
-            { value: ReminderFrequency.HOURLY, label: "Hourly" },
             { value: ReminderFrequency.DAILY, label: "Daily" },
             { value: ReminderFrequency.WEEKLY, label: "Weekly" },
             { value: ReminderFrequency.MONTHLY, label: "Monthly" },
           ],
           required: true,
         },
-
         {
-          id: "frequencyConfig.selectedDays",
-          name: "frequencyConfig.selectedDays",
+          id: "frequencyConfig.timeOfDay",
+          name: "frequencyConfig.timeOfDay",
+          label: "Time of Day",
+          type: "time",
+          visible: ({ values }) =>
+            values.frequencyConfig.frequency !== ReminderFrequency.ONCE,
+          required: ({ values }) =>
+            values.frequencyConfig.frequency !== ReminderFrequency.ONCE
+        },
+        {
+          id: "frequencyConfig.intervalMinutes",
+          name: "frequencyConfig.intervalMinutes",
+          label: "Repeat Every",
+          type: "select",
+          valueType: "number",
+          options: [
+            5, 10, 20, 30, 45,
+            ...Array.from({ length: (5 - 1) * 2 + 1 }, (_, i) => 60 + i * 30),
+            ...Array.from({ length: 12 - 5 }, (_, i) => (i + 6) * 60)
+          ].map(v => ({
+            value: v.toString(),
+            label:
+              v < 60
+                ? `${v} min`
+                : v % 60 === 0
+                  ? `${v / 60} hour${v / 60 > 1 ? "s" : ""}`
+                  : `${Math.floor(v / 60)}.5 hours`
+          })),
+          visible: ({ values }) =>
+            values.frequencyConfig.frequency !== ReminderFrequency.ONCE,
+          required: ({ values }) =>
+            values.frequencyConfig.frequency !== ReminderFrequency.ONCE
+        },
+        {
+          id: "frequencyConfig.weekdays",
+          name: "frequencyConfig.weekdays",
           label: "Select Days of Week",
           type: "multiSelect",
-          valueType: 'number',
+          valueType: "number",
           options: [
             { value: "0", label: "Sunday" },
             { value: "1", label: "Monday" },
@@ -202,66 +244,36 @@ export default function ReminderFormModal({
             { value: "4", label: "Thursday" },
             { value: "5", label: "Friday" },
             { value: "6", label: "Saturday" },
-
           ],
           placeholder: "Select days of the week...",
-          required: true,
+          visible: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.WEEKLY,
+          required: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.WEEKLY,
         },
         {
-          id: "frequencyConfig.selectedDates",
-          name: "frequencyConfig.selectedDates",
+          id: "frequencyConfig.monthDays",
+          name: "frequencyConfig.monthDays",
           label: "Select Dates of Month",
           type: "multiSelect",
-          valueType: 'number',
+          valueType: "number",
           options: Array.from({ length: 31 }, (_, i) => ({
             value: (i + 1).toString(),
-            label: `${i + 1}${getOrdinalSuffix(i + 1)}`
+            label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
           })),
-          placeholder: "Select dates of the month (1-31)...",
-          required: true,
-        }, {
-          id: "frequencyConfig.selectedHours",
-          name: "frequencyConfig.selectedHours",
-          label: "Select Hours",
-          type: "multiSelect",
-          valueType: 'number',
-          options: Array.from({ length: 24 }, (_, i) => ({
-            value: i.toString(),
-            label: `${i === 0 ? 12 : i > 12 ? i - 12 : i}:00 ${i < 12 ? 'AM' : 'PM'}`
-          })),
-          placeholder: "Select hours of the day...",
-          required: true,
-        }, {
-          id: "frequencyConfig.selectedMinutes",
-          name: "frequencyConfig.selectedMinutes",
-          label: "Select Minutes",
-          type: "multiSelect",
-          valueType: 'number',
-          options: [
-            { value: "0", label: "On the hour (:00)" },
-            { value: "15", label: "Quarter past (:15)" },
-            { value: "30", label: "Half past (:30)" },
-            { value: "45", label: "Quarter to (:45)" },
-          ],
-          placeholder: "Select minute intervals...",
-          required: true,
-        }, {
-          id: "frequencyConfig.time",
-          name: "frequencyConfig.time",
-          label: "Time of Day",
-          type: "time",
-          placeholder: "09:00",
-          required: true,
+          visible: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.MONTHLY,
+          required: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.MONTHLY,
         },
-
         {
           id: "isRecurring",
           name: "isRecurring",
           label: "Recurring Reminder",
           type: "switch",
           required: false,
-        }],
-    },
+          visible: ({ values }) =>
+            values.frequencyConfig.frequency === ReminderFrequency.ONCE,
+        },
+      ],
+    }
+    ,
     {
       category: "Delivery & Priority",
       fields: [

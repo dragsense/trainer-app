@@ -125,19 +125,6 @@ export default function TrainerFormModal({
       required: false,
     },
     {
-      id: "certifications",
-      name: "certifications",
-      label: "Certifications",
-      type: "multiSelect",
-      options: [
-        { value: "cpt", label: "Certified Personal Trainer" },
-        { value: "nutrition", label: "Nutrition Certification" },
-        { value: "yoga", label: "Yoga Certification" },
-        { value: "pilates", label: "Pilates Certification" },
-      ],
-      required: false,
-    },
-    {
       id: "experience",
       name: "experience",
       label: "Experience (years)",

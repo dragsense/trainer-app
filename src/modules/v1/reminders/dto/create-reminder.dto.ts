@@ -1,6 +1,12 @@
-import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsDate, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Matches, Min, Max, IsDateString, ValidateIf } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ReminderType, ReminderStatus, ReminderFrequency, ReminderActions } from '../enums/reminder.enum';
+import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsArray, ArrayNotEmpty, IsPositive, IsBoolean, Min, IsDateString, ValidateIf, ValidateNested } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { ReminderType, ReminderActions } from '../enums/reminder.enum';
+import { FrequencyConfigDto } from './frequency-config.dto';
+import { Type } from 'class-transformer';
+
+
+
+
 export class CreateReminderDto {
   @ApiProperty({
     description: 'Type of reminder (BILLING, SESSION, CUSTOM)',
@@ -39,6 +45,15 @@ export class CreateReminderDto {
   @IsNumber()
   billingId?: number;
 
+
+  @ApiProperty({
+    description: 'Title message for the reminder',
+    example: 'Please make your payment for the upcoming session',
+  })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
   @ApiProperty({
     description: 'Custom message for the reminder',
     example: 'Please make your payment for the upcoming session',
@@ -47,14 +62,7 @@ export class CreateReminderDto {
   @IsString()
   message?: string;
 
-  @ApiProperty({
-    description: 'Frequency of the reminder',
-    enum: ReminderFrequency,
-    example: ReminderFrequency.DAILY,
-  })
-  @IsNotEmpty()
-  @IsEnum(ReminderFrequency)
-  frequency: ReminderFrequency;
+
 
 
   @ApiProperty({
@@ -67,48 +75,13 @@ export class CreateReminderDto {
 
 
   @ApiProperty({
-    description: 'Custom interval in minutes (required for MINUTELY/HOURLY frequency)',
-    example: 30,
+    description: 'Frequency configuration object',
+    type: FrequencyConfigDto,
   })
-  @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  intervalMinutes?: number;
+  @ValidateNested()
+  @Type(() => FrequencyConfigDto)
+  frequencyConfig: FrequencyConfigDto;
 
-  @ApiProperty({
-    description: 'Selected weekdays for WEEKLY frequency (0 = Sunday, 6 = Saturday)',
-    example: [1, 3, 5],
-  })
-  @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  @Max(6, { each: true })
-  weekdays?: number[];
-
-  @ApiProperty({
-    description: 'Selected days of month for MONTHLY frequency',
-    example: [1, 15, 28],
-  })
-  @IsOptional()
-  @IsArray()
-  @ArrayNotEmpty()
-  @IsNumber({}, { each: true })
-  @Min(1, { each: true })
-  @Max(31, { each: true })
-  monthDays?: number[];
-
-  @ApiProperty({
-    description: 'Specific time of day for DAILY/WEEKLY/MONTHLY frequency (HH:mm)',
-    example: '09:00',
-  })
-  @IsOptional()
-  @IsString()
-  @Matches(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
-    message: 'Time of day must be in HH:mm format',
-  })
-  timeOfDay?: string;
 
   @ApiProperty({
     description: 'Maximum number of times to send this reminder',

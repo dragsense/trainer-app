@@ -51,14 +51,14 @@ export class SessionsService {
 
     // Check both scheduling conflicts and availability
     const hasConflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
-    if (hasConflict) {
+  /*   if (hasConflict) {
       throw new BadRequestException('Trainer has a scheduling conflict');
     }
 
     const isAvailable = await this.checkTrainerAvailability(trainer.id, dateTime, data.duration);
     if (!isAvailable) {
       throw new BadRequestException('Trainer is not available during the requested time');
-    }
+    } */
 
     const session = this.sessionsRepository.create({
       ...data,

@@ -115,7 +115,7 @@ export default function SessionFormModal({
     {
       id: "pricePerClient",
       name: "pricePerClient",
-      label: "Price per client",
+      label: "Price per client (cents)",
       type: "number",
       placeholder: "50.00",
       valueType: "number",
@@ -146,7 +146,7 @@ export default function SessionFormModal({
       type: "custom",
       required: true,
       valueType: "number",
-      disabled: trainerId !== undefined,
+      disabled: !!trainerId,
       Component: (props) => (
         <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
 
@@ -171,16 +171,6 @@ export default function SessionFormModal({
       label: "Location",
       type: "text",
       placeholder: "Gym Room 1 or https://zoom.us/...",
-      required: false,
-    },
-    {
-      id: "maxParticipants",
-      name: "maxParticipants",
-      label: "Max Participants",
-      type: "number",
-      valueType: "number",
-      placeholder: "1",
-      min: 1,
       required: false,
     },
     {

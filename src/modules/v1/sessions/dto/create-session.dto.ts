@@ -88,17 +88,6 @@ export class CreateSessionDto {
   @IsString()
   location?: string;
 
-  @ApiPropertyOptional({
-    description: 'Maximum number of participants (for group sessions)',
-    example: 10,
-    minimum: 2
-  })
-  @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  @Min(1)
-  maxParticipants?: number;
-
   @ApiProperty({
     description: 'Whether the session payment is required in advance',
     default: true

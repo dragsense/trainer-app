@@ -14,7 +14,7 @@ import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderActions, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
+import { ReminderActions, ReminderFrequency, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -24,41 +24,70 @@ import { ReminderFormModal } from "@/components/admin";
 
 // Services
 import { createReminder, updateReminder } from "@/services/reminder.api";
-import { ReminderFrequency } from "@/enums/reminder.enum";
 
 
+export const ReminderSchema = z
+    .object({
+        type: z.nativeEnum(ReminderType),
+        message: z.string().min(5, "Message must be at least 5 characters"),
+        title: z.string().min(5, "Message must be at least 5 characters"),
+        scheduledAt: z.date().min(new Date(), "Scheduled date must be in the future"),
+        frequencyConfig: z.object({
+            frequency: z.nativeEnum(ReminderFrequency),
+            timeOfDay: z.string().optional(),
+            intervalMinutes: z
+                .number()
+                .min(5, "Minimum interval is 5 minutes")
+                .optional(),
+            weekdays: z.array(z.number()).optional(),
+            monthDays: z.array(z.number()).optional(),
+        }),
+        actions: z.array(z.nativeEnum(ReminderActions)).min(1, "At least one delivery method is required"),
+        recipientId: z.number().optional(),
+        sessionId: z.number().optional(),
+        billingId: z.number().optional(),
+        priority: z.number().min(1).max(5).optional(),
+        maxAttempts: z.number().min(1).max(10).optional(),
+        retryInterval: z.number().min(1).optional(),
+        isRecurring: z.boolean().default(false),
+        recurringInterval: z.number().min(1).optional(),
+        endDate: z.date().optional(),
+    })
+    .superRefine((data, ctx) => {
+        const { frequencyConfig } = data;
+        const { frequency, timeOfDay, intervalMinutes, weekdays, monthDays } = frequencyConfig;
 
+        if (frequency !== ReminderFrequency.ONCE) {
+            if (!timeOfDay && !intervalMinutes) {
+                ctx.addIssue({
+                    path: ["frequencyConfig", "timeOfDay"],
+                    code: z.ZodIssueCode.custom,
+                    message: "Select either a time of day or an interval for reminders",
+                });
+            }
+        }
 
-// Schema
-export const LineItemSchema = z.object({
-    description: z.string(),
-    quantity: z.number().min(1),
-    unitPrice: z.number().min(0),
-    amount: z.number().min(0),
-    tax: z.number().optional(),
-});
+        if (frequency === ReminderFrequency.WEEKLY) {
+            if (!weekdays || weekdays.length === 0) {
+                ctx.addIssue({
+                    path: ["frequencyConfig", "weekdays"],
+                    code: z.ZodIssueCode.custom,
+                    message: "Select at least one day of the week",
+                });
+            }
+        }
 
-export const ReminderSchema = z.object({
-    type: z.nativeEnum(ReminderType),
-    message: z.string().min(5, "Message must be at least 5 characters"),
-    scheduledAt: z.date().min(new Date(), "Scheduled date must be in the future"),
-    frequency: z.nativeEnum(ReminderFrequency),
-    endDate: z.date().optional(),
-    actions: z
-        .array(z.nativeEnum(ReminderActions))
-        .min(1, "At least one delivery method is required"),
-    recipientId: z.number().optional(),
-    sessionId: z.number().optional(),
-    reminderId: z.number().optional(),
-    priority: z.number().min(1).max(5).optional(),
-    maxAttempts: z.number().min(1).max(10).optional(),
-    retryInterval: z.number().min(1).optional(),
-    isRecurring: z.boolean().default(false),
-    recurringInterval: z.number().min(1).optional(),
-    timeOfDay: z.string().optional(),
-    intervalMinutes: z.number().min(1).optional(),
-});
+        if (frequency === ReminderFrequency.MONTHLY) {
+            if (!monthDays || monthDays.length === 0) {
+                ctx.addIssue({
+                    path: ["frequencyConfig", "monthDays"],
+                    code: z.ZodIssueCode.custom,
+                    message: "Select at least one date of the month",
+                });
+            }
 
+        }
+    });
 
 interface IReminderFormProps extends TActionComponentProps<any> {
 }
@@ -79,8 +108,17 @@ export default function ReminderForm({
     const INITIAL_VALUES: TDefaultValue<TReminderData> = {
         type: { value: ReminderType.CUSTOM },
         message: { value: "" },
+        title: { value: "" },
+
         scheduledAt: { value: new Date() },
-        frequency: { value: ReminderFrequency.ONCE },
+        frequencyConfig: {
+            value: {
+                frequency: ReminderFrequency.ONCE,
+                intervalMinutes: 30,
+                weekdays: [],
+                monthDays: []
+            }
+        },
         endDate: { value: undefined },
         actions: { value: [ReminderActions.EMAIL] },
         priority: { value: 2 },
@@ -88,8 +126,6 @@ export default function ReminderForm({
         retryInterval: { value: 1440 },
         isRecurring: { value: false },
         recurringInterval: { value: 7 },
-        timeOfDay: { value: "09:00" },
-        intervalMinutes: { value: 30 },
         recipientId: { value: 0 },
         sessionId: { value: 0 },
         billingId: { value: 0 }
