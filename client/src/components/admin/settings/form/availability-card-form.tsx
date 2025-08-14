@@ -192,7 +192,7 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
                            
                                 <>
                                     {Array.from({ length: timeSlotCounts[day.key] }).map((_, idx) => (
-                                        <div key={idx} className="grid grid-cols-3 gap-2 items-end mt-2">
+                                        <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end mt-2">
                                             {inputs.find(
                                                 (i) =>
                                                     i.props.name ===
@@ -233,7 +233,7 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
                 <div className="border p-4 rounded-md">
                     <h4 className="font-medium mb-2">Unavailable Periods</h4>
                     {Array.from({ length: unavailableCount }).map((_, idx) => (
-                        <div key={idx} className="grid grid-cols-4 gap-2 items-end mt-2">
+                        <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end mt-2">
                             {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].startDate`)}
                             {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].endDate`)}
                             {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].reason`)}

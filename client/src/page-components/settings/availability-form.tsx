@@ -180,7 +180,7 @@ export default function Availability({
         {availability && (
             <div className="space-y-4 mb-4">
                 <h3 className="text-lg font-semibold">Current Status</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label className="text-sm text-muted-foreground">Last Updated</label>
                         <p className="font-medium">
@@ -189,7 +189,7 @@ export default function Availability({
                     </div>
                     <div>
                         <label className="text-sm text-muted-foreground">Working Days</label>
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex flex-wrap gap-1 mt-1">
                             {DAYS_OF_WEEK.map(({ key, label }) => (
                                 <Badge
                                     key={key}

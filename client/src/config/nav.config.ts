@@ -36,7 +36,7 @@ export const navItems: {
         {
             title: "Sessions",
             urls: [ADMIN_ROUTES.SESSIONS],
-            icon: User2,
+            icon: Calendar,
         },
          {
             title: "Billings",

@@ -74,9 +74,9 @@ export default function StripeConnectInfoCard({ storeKey }: IStripeConnectInfoCa
       </div>
 
 
-      <AppCard className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+      <AppCard>
+        <div className="flex flex-wrap items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
               <CreditCard className="h-5 w-5 text-blue-600" />
             </div>

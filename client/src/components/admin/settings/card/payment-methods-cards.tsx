@@ -106,7 +106,7 @@ export default function PaymentMethodsCards({
 
             header={
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center flex-wrap justify-between">
                   <div className="flex items-center space-x-4">
                     {getPaymentMethodIcon(method.key)}
                     <div>

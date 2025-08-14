@@ -58,25 +58,25 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
           <StatCard
             title="Total Reminders"
             value={data?.reminderTypes?.reduce((sum, type) => sum + type.count, 0) || 0}
-            icon={<div className="bg-blue-100 p-2 rounded-full"><Mail className="h-4 w-4 text-blue-600" /></div>}
+            icon={<div className="bg-blue-100 p-2 rounded-full hidden md:block"><Mail className="h-4 w-4 text-blue-600" /></div>}
             trend={5.2} // Example trend value
           />
           <StatCard
             title="Successful"
             value={data?.reminderTypes?.reduce((sum, type) => sum + type.successfulCount, 0) || 0}
-            icon={<div className="bg-green-100 p-2 rounded-full"><CheckCircle2 className="h-4 w-4 text-green-600" /></div>}
+            icon={<div className="bg-green-100 p-2 rounded-full hidden md:block"><CheckCircle2 className="h-4 w-4 text-green-600" /></div>}
             trend={3.8}
           />
           <StatCard
             title="Pending"
             value={data?.timeline?.[0]?.pendingReminders || 0}
-            icon={<div className="bg-amber-100 p-2 rounded-full"><Clock className="h-4 w-4 text-amber-600" /></div>}
+            icon={<div className="bg-amber-100 p-2 rounded-full hidden md:block"><Clock className="h-4 w-4 text-amber-600" /></div>}
             trend={-2.1}
           />
           <StatCard
             title="Failed"
             value={data?.timeline?.[0]?.failedReminders || 0}
-            icon={<div className="bg-red-100 p-2 rounded-full"><AlertCircle className="h-4 w-4 text-red-600" /></div>}
+            icon={<div className="bg-red-100 p-2 rounded-full hidden md:block"><AlertCircle className="h-4 w-4 text-red-600" /></div>}
             trend={1.5}
           />
         </div>
