@@ -31,8 +31,8 @@ export default function Login() {
   const queryReminder = useQueryClient();
 
   const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
-    email: { value: "admin@trainer-app.com" },
-    password: { value: "admin1245" },
+    email: { value: "" },
+    password: { value: "" },
   };
 
 
