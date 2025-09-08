@@ -18,7 +18,7 @@ cd client && pnpm install --frozen-lockfile && pnpm build && cd ..
 # build server
 pnpm build
 
-pm2 stop payback-dev
+pm2 stop trainer-dev
 
 # reload app
-pm2 reload ecosystem.config.js --only payback-prod
+pm2 reload ecosystem.config.js --only trainer-prod
