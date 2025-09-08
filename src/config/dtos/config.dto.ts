@@ -17,7 +17,7 @@ export class EnvironmentVariables {
   APP_NAME: string;
 
   @IsString()
-  FRONTEND_URL: string;
+  APP_URL: string;
 
   @IsString()
   HOST: string;
@@ -102,40 +102,31 @@ export class EnvironmentVariables {
   @IsString()
   MAIL_FROM: string;
 
-  // MongoDB
+  // Super Admin
   @IsString()
-  @IsOptional()
-  MONGO_URI: string;
-
-  @IsString()
-  MONGO_DB_NAME: string;
+  SUPER_ADMIN_EMAIL: string;
 
   @IsString()
-  @IsOptional()
-  MONGO_USER: string;
+  SUPER_ADMIN_PASSWORD: string;
 
   @IsString()
-  @IsOptional()
-  MONGO_PASS: string;
-
-  @IsNumber()
-  @IsOptional()
-  MONGO_RETRY_ATTEMPTS: number;
-
-  @IsNumber()
-  @IsOptional()
-  MONGO_RETRY_DELAY: number;
-
-  // File Upload
-  @IsNumber()
-  @IsOptional()
-  MAX_FILE_SIZE: number;
+  SUPER_ADMIN_FIRST_NAME: string;
 
   @IsString()
-  @IsOptional()
-  FILE_UPLOAD_DIR: string;
+  SUPER_ADMIN_LAST_NAME: string;
 
-  @IsString()
+  
+  // Stripe Configuration
   @IsOptional()
-  ALLOWED_MIME_TYPES: string;
+  @IsString()
+  STRIPE_SECRET_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_PUBLISHABLE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  STRIPE_WEBHOOK_SECRET?: string;
+  
 }

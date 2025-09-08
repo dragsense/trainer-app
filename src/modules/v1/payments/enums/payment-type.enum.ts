@@ -1,8 +1,0 @@
-export enum PaymentType {
-  SESSION = 'SESSION',
-  PACKAGE = 'PACKAGE',
-  CUSTOM = 'CUSTOM',
-  SUBSCRIPTION = 'SUBSCRIPTION',
-  DEPOSIT = 'DEPOSIT',
-  REFUND = 'REFUND',
-}

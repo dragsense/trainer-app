@@ -1,7 +1,7 @@
-import { EORDER_CLASSES } from "@/@types/enums/general.enum";
 import { ReactNode } from "react";
+import { EORDER_CLASSES } from "@/enums/general.enum";
 
-export type FieldType =
+export type TFieldType =
   | "text"
   | "email"
   | "textarea"
@@ -14,30 +14,51 @@ export type FieldType =
   | "time"
   | "switch"
   | "checked"
-  | "radio";
+  | "radio"
+  | "file"
+  | "checkbox"
+  | "multiSelect"
+  | "url"
+  | "rating"
+  | "slider"
+  | "datetime";
 
-export type FieldConfig = {
+export type TFieldConfig = {
   id: string;
   label: string;
   name: string;
-  type: FieldType;
-  disabled?: boolean;
-  layout?: "horizental" | "vertical";
+  type: TFieldType;
+  valueType?: "string" | "number" | "boolean" | "date" | "object";
+  disabled?: boolean | ((ctx: { values: Record<string, any> }) => boolean);
+  layout?: "horizontal" | "vertical";
   lableOrder?: EORDER_CLASSES;
   placeholder?: string;
   options?: { label: string; value: string }[];
-  defaultValue?: string;
-  required: boolean;
+  defaultValue?: any;
+  min?: number;
+  max?: number;
+  step?: number;
+  required: boolean | ((ctx: { values: Record<string, any> }) => boolean);
+  visible?: (ctx: { values: Record<string, any> }) => boolean;
   startAdornment?: ReactNode;
   endAdornment?: ReactNode;
   bottomAdornment?: ReactNode;
   className?: string;
-  listeners?: any;
-  Component?: React.ComponentType<CustomInputWrapper>;
+  onChange?: (value: any) => void;
+
+  Component?: React.ComponentType<TCustomInputWrapper>;
 };
 
-export type CustomInputWrapper = {
+export type TCustomInputWrapper = {
   value: any;
   onChange: (value: any) => void;
   disabled?: boolean;
+};
+
+
+export type TDefaultValue<T> = {
+  [K in keyof T]: {
+    notIncluded?: boolean;
+    value: T[K];
+  };
 };

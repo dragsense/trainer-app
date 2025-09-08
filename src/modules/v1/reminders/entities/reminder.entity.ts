@@ -10,17 +10,16 @@ import { ApiProperty } from '@nestjs/swagger';
 import { GeneralBaseEntity } from '@/base-entity/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { Session } from '../../sessions/entities/session.entity';
-import { Payment } from '../../payments/entities/payment.entity';
-import { ReminderType } from '../enums/reminder-type.enum';
-import { ReminderStatus } from '../enums/reminder-status.enum';
+import { ReminderFrequency, ReminderType, ReminderStatus, ReminderActions } from '../enums/reminder.enum';
+import { Billing } from '../../billings/entities/billing.entity';
+import { FrequencyConfigDto } from '../dto/frequency-config.dto';
 
 @Entity('reminders')
 export class Reminder extends GeneralBaseEntity {
-
   @ApiProperty({
-    description: 'Type of reminder (PAYMENT, SESSION, CUSTOM)',
+    description: 'Type of reminder (BILLING, SESSION, CUSTOM)',
     enum: ReminderType,
-    example: ReminderType.PAYMENT,
+    example: ReminderType.BILLING,
   })
   @Column({ type: 'enum', enum: ReminderType })
   type: ReminderType;
@@ -33,56 +32,54 @@ export class Reminder extends GeneralBaseEntity {
   @Column({ type: 'enum', enum: ReminderStatus, default: ReminderStatus.SCHEDULED })
   status: ReminderStatus;
 
-  @ApiProperty({
-    description: 'The trainer who created the reminder',
-    type: () => User,
-  })
-  @ManyToOne(() => User, (user) => user.createdReminders)
-  @JoinColumn({ name: 'creator_id' })
-  creator: User;
 
   @ApiProperty({
-    description: 'The client who will receive the reminder',
-    type: () => User,
+    description: 'Message title for the reminder',
+    example: 'This is a reminder title',
   })
-  @ManyToOne(() => User, (user) => user.receivedReminders)
-  @JoinColumn({ name: 'recipient_id' })
-  recipient: User;
+  @Column({ type: 'varchar', nullable: true })
+  title: string;
+
 
   @ApiProperty({
-    description: 'The session this reminder is related to (if type is SESSION)',
-    type: () => Session,
+    description: 'Message content for the reminder',
+    example: 'This is a reminder message',
   })
-  @ManyToOne(() => Session, (session) => session.reminders)
-  @JoinColumn({ name: 'session_id' })
-  session?: Session;
-
-  @ApiProperty({
-    description: 'The payment this reminder is related to (if type is PAYMENT)',
-    type: () => Payment,
-  })
-  @ManyToOne(() => Payment, (payment) => payment.reminders)
-  @JoinColumn({ name: 'payment_id' })
-  payment?: Payment;
-
-  @ApiProperty({
-    description: 'Custom message for the reminder',
-    example: 'Please make your payment for the upcoming session',
-  })
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   message: string;
 
   @ApiProperty({
-    description: 'Scheduled time for sending the reminder',
+    description: 'When the reminder should be sent',
+    example: '2025-07-07T10:00:00.000Z',
   })
   @Column({ type: 'timestamp' })
   scheduledAt: Date;
 
   @ApiProperty({
-    description: 'Actual time when the reminder was sent',
+    description: 'When the reminder was actually sent',
+    example: '2025-07-07T10:00:00.000Z',
   })
   @Column({ type: 'timestamp', nullable: true })
-  sentAt: Date;
+  sentAt?: Date;
+
+  // Relationships
+  @ManyToOne(() => User)
+  @JoinColumn()
+  recipient?: User;
+
+  @ManyToOne(() => User)
+  @JoinColumn()
+  creator?: User;
+
+
+  @ManyToOne(() => Session, { nullable: true })
+  @JoinColumn()
+  session?: Session;
+
+
+  @ManyToOne(() => Billing, { nullable: true })
+  @JoinColumn()
+  billing?: Billing;
 
   @ApiProperty({
     description: 'Number of times the reminder has been sent',
@@ -110,17 +107,34 @@ export class Reminder extends GeneralBaseEntity {
   metadata: Record<string, any>;
 
   @ApiProperty({
-    description: 'Last error message if reminder failed',
+    description: 'Number of retry attempts for failed reminders',
+    example: 0,
   })
-  @Column({ nullable: true })
-  lastError: string;
+  @Column({ type: 'int', default: 0 })
+  retryCount: number;
 
   @ApiProperty({
-    description: 'Delivery method (EMAIL, SMS, PUSH_NOTIFICATION)',
-    example: 'EMAIL',
+    description: 'Last error message if reminder failed',
+    example: 'Failed to send email: Connection timeout',
   })
-  @Column({ type: 'simple-array', default: ['EMAIL'] })
-  deliveryMethods: string[];
+  @Column({ type: 'text', nullable: true })
+  lastError?: string;
+
+  @ApiProperty({
+    description: 'Next retry timestamp for failed reminders',
+    example: '2025-07-08T10:00:00.000Z',
+  })
+  @Column({ type: 'timestamp', nullable: true })
+  nextRetryAt?: Date;
+
+  @ApiProperty({
+    description: 'Actions to take for the reminder (EMAIL)',
+    example: [ReminderActions.EMAIL],
+    isArray: true,
+    enum: ReminderActions,
+  })
+  @Column({ array: true, type: 'enum', enum: ReminderActions, default: [ReminderActions.EMAIL] })
+  actions: ReminderActions[];
 
   @ApiProperty({
     description: 'Priority level of the reminder',
@@ -148,4 +162,17 @@ export class Reminder extends GeneralBaseEntity {
   })
   @Column({ type: 'timestamp', nullable: true })
   endDate?: Date;
+
+  @ApiProperty({
+    description: 'Frequency configuration details',
+    type: FrequencyConfigDto,
+    example: {
+      intervalMinutes: 30,
+      weekdays: [1, 3, 5],
+      monthDays: [1, 15],
+      timeOfDay: '09:00'
+    }
+  })
+  @Column({ type: 'json', nullable: true })
+  frequencyConfig?: FrequencyConfigDto;
 }

@@ -5,3 +5,4 @@ export {
   DashboardLayoutWrapper,
 } from "./DashboardLayout";
 export { default as PageInnerLayout } from "./PageInnerLayout";
+export { default as SettingsLayout } from "./SettingsLayout";

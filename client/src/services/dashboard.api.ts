@@ -1,86 +1,81 @@
-import { DashboardResponse } from "@/@types/dashboard.type";
-import { EClientStatus } from "@/@types/enums/client.enums";
-import { ESessionStatus, ESessionType } from "@/@types/enums/session.enums";
-import { EPaymentStatus, EPaymentMethod } from "@/@types/enums/payment.enums";
-import { EAlertSeverity, EAlertType } from "@/@types/enums/alert.enums";
+// Utils
+import { apiRequest } from "@/utils/fetcher";
 
-const BASE_URL = "/api/dashboard";
+// Types
+import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
 
-export const getDashboardStats = async (): Promise<DashboardResponse> => {
-  try {
-    // For now, using mock data
-    return {
-      stats: {
-        totalClients: 125,
-        activeClients: 102,
-        totalSessions: 250,
-        upcomingSessions: 35,
-        totalPayments: 150,
-        pendingPayments: 12,
-        revenue: {
-          currentMonth: 15000,
-          previousMonth: 12000
-        }
-      },
-      clients: [
-        {
-          id: "1",
-          name: "John Doe",
-          email: "john@example.com",
-          phone: "123-456-7890",
-          createdAt: "2025-06-01",
-          status: EClientStatus.ACTIVE
-        },
-        {
-          id: "2",
-          name: "Jane Smith",
-          email: "jane@example.com",
-          phone: "987-654-3210",
-          createdAt: "2025-06-02",
-          status: EClientStatus.ACTIVE
-        }
-      ],
-      sessions: [
-        {
-          id: "1",
-          clientId: "1",
-          trainerId: "trainer1",
-          startTime: "2025-06-29T10:00:00",
-          endTime: "2025-06-29T11:00:00",
-          status: ESessionStatus.SCHEDULED,
-          type: ESessionType.PERSONAL
-        }
-      ],
-      payments: [
-        {
-          id: "1",
-          clientId: "1",
-          amount: 150,
-          paymentDate: "2025-06-28",
-          status: EPaymentStatus.COMPLETED,
-          method: EPaymentMethod.CARD
-        }
-      ],
-      alerts: [
-        {
-          id: "1",
-          type: EAlertType.SESSION,
-          message: "Upcoming session with John Doe in 1 hour",
-          severity: EAlertSeverity.INFO,
-          timestamp: "2025-06-29T08:00:00",
-          read: false
-        },
-        {
-          id: "2",
-          type: EAlertType.PAYMENT,
-          message: "Pending payment from Jane Smith",
-          severity: EAlertSeverity.WARNING,
-          timestamp: "2025-06-29T09:00:00",
-          read: false
-        }
-      ]
-    };
-  } catch (error) {
-    throw error;
-  }
+// Constants
+const DASHBOARD_API_PATH = "/dashboard";
+
+// Dashboard Statistics
+export const fetchDashboardStats = (): Promise<IDashboardStats> =>
+  apiRequest(`${DASHBOARD_API_PATH}/stats`, "GET");
+
+// Sessions Analytics
+export const fetchSessionsAnalytics = (params?: {
+  period?: 'day' | 'week' | 'month' | 'year';
+}): Promise<ISessionsAnalytics> => {
+  const queryParams = params?.period ? `?period=${params.period}` : '';
+  return apiRequest(`${DASHBOARD_API_PATH}/sessions/analytics${queryParams}`, "GET");
+};
+
+
+// Reminders Analytics
+export const fetchRemindersAnalytics = (params?: {
+  period?: 'day' | 'week' | 'month' | 'year';
+}): Promise<IRemindersAnalytics> => {
+  const queryParams = params?.period ? `?period=${params.period}` : '';
+  return apiRequest(`${DASHBOARD_API_PATH}/reminders/analytics${queryParams}`, "GET");
+};
+
+
+// Billing Analytics
+export const fetchBillingAnalytics = (params?: {
+  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+}): Promise<IBillingAnalytics> => {
+  const queryParams = new URLSearchParams();
+
+  if (params?.period) queryParams.append("period", params.period);
+
+  const queryString = queryParams.toString();
+  return apiRequest(`${DASHBOARD_API_PATH}/billing/analytics${queryString ? `?${queryString}` : ''}`, "GET");
+};
+
+// Combined dashboard query function
+export const fetchCombinedDashboardData = async (params?: {
+  period?: 'day' | 'week' | 'month' | 'year';
+  date?: string;
+}): Promise<ICombinedDashboardData> => {
+  const { period = 'month' } = params || {};
+
+  const [
+    stats,
+    reminders,
+    sessions,
+    billing
+  ] = await Promise.all([
+    fetchDashboardStats(),
+    fetchRemindersAnalytics({ period }),
+    fetchSessionsAnalytics({ period }),
+    fetchBillingAnalytics({
+      period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'
+    })
+  ]);
+
+  return {
+    stats,
+    reminders,
+    sessions,
+    billing
+  };
+};
+
+
+// Export dashboard API object for easier imports
+export const dashboardApi = {
+  getStats: fetchDashboardStats,
+  getSessionsAnalytics: fetchSessionsAnalytics,
+  getRemindersAnalytics: fetchRemindersAnalytics,
+  getBillingAnalytics: fetchBillingAnalytics,
+  getCombinedData: fetchCombinedDashboardData,
 };

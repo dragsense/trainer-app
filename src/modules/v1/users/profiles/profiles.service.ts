@@ -13,12 +13,15 @@ import { User } from '../entities/user.entity';
 
 
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { FileUploadService } from '../../file-upload/file-upload.service';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     @InjectRepository(Profile)
     private readonly profileRepo: Repository<Profile>,
+    private fileUploadService: FileUploadService,
+
   ) { }
 
   async findOneByUser(user: Pick<User, "id">): Promise<Profile> {
@@ -27,6 +30,7 @@ export class ProfilesService {
 
     const profile = await this.profileRepo.findOne({
       where: { user: { id: userId } },
+      relations: ['image']
     });
 
     if (!profile) {
@@ -36,15 +40,39 @@ export class ProfilesService {
     return profile;
   }
 
-  async update(id: number, updateProfileDto: UpdateProfileDto): Promise<MessageResponse> {
-    const profile = await this.profileRepo.preload({
-      id,
-      ...updateProfileDto,
+  async update(id: number, updateProfileDto: UpdateProfileDto, profileImage?: Express.Multer.File): Promise<MessageResponse> {
+
+
+    const {
+      image,
+      ...profileData
+    } = updateProfileDto;
+
+
+    const profile = await this.profileRepo.findOne({
+      where: { id },
+      relations: ['image'],
     });
+
 
     if (!profile) {
       throw new NotFoundException(`Profile with ID ${id} not found`);
     }
+
+    Object.assign(profile, profileData);
+
+
+
+    if (profileImage) {
+      const uploaded = await this.fileUploadService.updateFile(
+        profileImage,
+        profile.image,
+        'profile',
+      );
+
+      profile.image = uploaded;
+    }
+
 
     await this.profileRepo.save(profile);
 

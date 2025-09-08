@@ -1,23 +1,33 @@
-import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
-type QueryFunction<T = any, P = any> = (params: P) => Promise<T>;
+import { TQueryParams } from '@/@types/api/param.type';
 
-export function useApiQuery<T = any, P = any>(
+export function useApiQuery<T = any>(
   queryKey: string | any[],
-  queryFn: QueryFunction<T, P>,
-  params: P,
-  options?: Omit<UseQueryOptions<T, Error>, 'queryKey' | 'queryFn'>
-): UseQueryResult<T, Error> & {
-  params: P;
-} {
+  queryFn: (params: TQueryParams) => Promise<T>,
+  initialParams: TQueryParams,
+  options?: Omit<
+    UseQueryOptions<T, Error>,
+    "queryKey" | "queryFn"
+  >,
+) {
+  const [params, setParams] = useState(initialParams);
+
   const query = useQuery<T, Error>({
-    queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+    queryKey: [...(Array.isArray(queryKey) ? queryKey : [queryKey]), params],
     queryFn: () => queryFn(params),
     ...options,
   });
 
+
+  const setQueryParams = (params: TQueryParams) => {
+    setParams((prev) => ({ ...prev, ...params }));
+  };
+
   return {
     ...query,
     params,
+    setQueryParams,
   };
 }

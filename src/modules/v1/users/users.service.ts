@@ -1,249 +1,378 @@
 import {
-  BadRequestException,
   ConflictException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
-
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
-
+import { DataSource, EntityManager, Repository, FindOptionsWhere, DeepPartial, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { MailerService } from '@nestjs-modules/mailer';
-
 import * as bcrypt from 'bcrypt';
-
-import { MessageResponse } from '@/interfaces/general.interface';
 
 import { User } from './entities/user.entity';
 import { Profile } from './profiles/entities/profile.entity';
-
-import {
-  CreateUserDto,
-} from './dtos/create-user.dto';
-import {
-  ResetPasswordDto,
-} from './dtos/update-user.dto';
-import { CreateProfileDto } from './profiles/dto/create-profile.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRole, UserLevels } from './enums/user.enum';
+import { MessageResponse } from '@/interfaces/general.interface';
+import { PaginationResponse } from '@/interfaces/pagination-response.interface';
+import { ListQueryDto } from '@/shared-dto/list-query.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
+import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
+import { UserEmailService } from './services/user-email.service';
+import { UserListDto } from './dto/user-list.dto';
+import { TrainerClientsService } from '../trainer-clients/trainer-clients.service';
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly configService: ConfigService,
-    private readonly mailerService: MailerService,
-    private readonly dataSource: DataSource,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    @InjectRepository(Profile)
-    private readonly profileRepo: Repository<Profile>,
+    private readonly mailerService: MailerService,
+    private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
+    @InjectRepository(AppSetting)
+    private readonly appSettingRepo: Repository<AppSetting>,
+    @InjectRepository(NotificationSetting)
+    private readonly notificationSettingRepo: Repository<NotificationSetting>,
+    private readonly userEmailService: UserEmailService,
+    private readonly trianerClientService: TrainerClientsService
   ) { }
 
-
   async findOne(
-    where: Partial<Record<keyof User, any>>,
+    where: FindOptionsWhere<User>,
     options?: {
-      select?: (keyof User)[],
-      relations?: string[],
-    },
+      select?: (keyof User)[];
+      relations?: string[];
+    }
   ): Promise<User> {
-    const { select = ['id', 'email'], relations = [] } = options || {};
+    const { select = [], relations = ['profile'] } = options || {};
 
-    const query = this.userRepo.createQueryBuilder('user');
-
-    Object.entries(where).forEach(([key, value]) => {
-      query.andWhere(`user.${key} = :${key}`, { [key]: value });
+    const user = await this.userRepo.findOne({
+      where,
+      select,
+      relations,
     });
 
-    const selects = select.map((field) => `user.${field}`);
-    query.select(selects);
-
-    for (const relation of relations) {
-      query.leftJoinAndSelect(`user.${relation}`, relation);
-    }
-
-    const user = await query.getOne();
-
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new NotFoundException('User not found');
     }
 
     return user;
   }
 
-
-
-  async create(
-    createUserDto: CreateUserDto,
-  ): Promise<MessageResponse> {
-    const {
-      email,
-      firstName,
-      lastName,
-      password
-    } = createUserDto;
-
-
-    return await this.dataSource.transaction(async (manager: EntityManager) => {
-      const existingUser = await this.findOne({ email });
-      if (existingUser) {
-        throw new HttpException(
-          'The email is already taken',
-          HttpStatus.CONFLICT,
-        );
-      }
-
-      const encryptedPassword = await bcrypt.hash(password, 12);
-
-      const user = this.userRepo.create({
-        email,
-        password: encryptedPassword
-      });
-
-      const savedUser = await manager.save(this.userRepo.target, user);
-
-      const profile = this.profileRepo.create({
-        firstName,
-        lastName,
-        user: { id: savedUser.id },
-      });
-
-      await manager.save(this.profileRepo.target, profile);
-      return {
-        message: 'User created successfully',
-      };
+  async findByIds(
+    ids: number[],
+  ): Promise<User[]> {
+    return this.userRepo.findBy({
+      id: In(ids),
     });
   }
 
-  async createUserWithProfile(
-    createUserProfileDto: CreateUserDto & CreateProfileDto,
-    manager?: EntityManager
-  ): Promise<User> {
-    const run = async (em: EntityManager): Promise<User> => {
-      const {
-        firstName,
-        lastName,
-        email,
-        password,
-        address,
-        gender,
-        contactPhone,
-      } = createUserProfileDto;
 
-      const existingUser = await this.findOne({ email });
+  async findAll(
+    queryDto: UserListDto,
+    currentUser: User
+  ): Promise<PaginationResponse<User>> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      level,
+      trainerId,
+      ...filters
+    } = queryDto;
 
-      if (existingUser) {
-        throw new HttpException('The email is already taken', HttpStatus.CONFLICT);
-      }
+    const skip = (page - 1) * limit;
+    const query = this.userRepo.createQueryBuilder('user')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('profile.image', 'image')
+      .leftJoinAndSelect('user.owner', 'owner');
 
-      const encryptedPassword = await bcrypt.hash(password, 12);
-
-      const user = this.userRepo.create({ email, password: encryptedPassword });
-      const savedUser = await em.save(this.userRepo.target, user);
-
-      const profile = this.profileRepo.create({
-        firstName,
-        lastName,
-        address,
-        gender,
-        contactPhone,
-        user: { id: savedUser.id },
+    // Role-based filtering
+    const userLevel = currentUser.level;
+    if (userLevel === UserLevels[UserRole.TRAINER]) {
+      query.where('owner.id = :userId', { userId: currentUser.id });
+    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
+      query.where('user.level != :superAdminLevel', {
+        superAdminLevel: UserLevels[UserRole.SUPER_ADMIN],
       });
+    }
+    else {
+      throw new ForbiddenException('Invalid role');
+    }
 
-      await em.save(this.profileRepo.target, profile);
+    // Apply filters
+    if (search) {
+      query.andWhere(
+        '(user.email ILIKE :search OR profile.firstName ILIKE :search OR profile.lastName ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
 
-      return savedUser;
+    if (level) {
+      query.andWhere('user.level = :level', { level });
+    }
+
+    if (trainerId) {
+      query.andWhere('createdBy.id = :trainerId', { trainerId });
+    }
+
+    // (Optional) Apply extra filters dynamically if needed
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined) {
+        query.andWhere(`user.${key} = :${key}`, { [key]: value });
+      }
+    });
+
+    // Sorting (could be enhanced if queryDto includes sort options)
+    query.orderBy('user.createdAt', 'DESC');
+
+    const [data, total] = await query
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    const lastPage = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      lastPage,
+      hasNextPage: page < lastPage,
+      hasPrevPage: page > 1,
     };
 
-    return manager
-      ? await run(manager)
-      : await this.dataSource.transaction(run);
   }
 
-  async updateUserWithProfile(
-    userId: number,
-    updateUserProfileDto: Partial<CreateUserDto & CreateProfileDto>,
-    manager?: EntityManager
-  ): Promise<User> {
-    const run = async (em: EntityManager): Promise<User> => {
-      const {
-        email,
-        password,
-        firstName,
-        lastName,
-        address,
-        gender,
-        contactPhone,
-      } = updateUserProfileDto;
-
-      const user = await this.findOne({ id: userId }, {
-        relations: ['profile'],
-      });
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      if (email && email !== user.email) {
-        const existingUser = await this.findOne({ email });
-
-        if (existingUser) {
-          throw new HttpException('The email is already taken', HttpStatus.CONFLICT);
-        }
-
-        user.email = email;
-      }
-
-      if (password) {
-        user.password = await bcrypt.hash(password, 12);
-      }
-
-      await em.save(this.userRepo.target, user);
-
-      await em.update(this.profileRepo.target, { user: { id: userId } }, {
-        firstName,
-        lastName,
-        address,
-        gender,
-        contactPhone,
-      });
-
-      return user;
+  private generateStrongPassword(length: number): string {
+    const chars = {
+      alpha: 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz',
+      numeric: '23456789',
+      special: '!@#$%^&*',
     };
 
-    return manager
-      ? await run(manager)
-      : await this.dataSource.transaction(run);
+    let password = '';
+    // Ensure at least one of each type
+    password += chars.alpha.charAt(
+      Math.floor(Math.random() * chars.alpha.length),
+    );
+    password += chars.numeric.charAt(
+      Math.floor(Math.random() * chars.numeric.length),
+    );
+    password += chars.special.charAt(
+      Math.floor(Math.random() * chars.special.length),
+    );
+
+    // Fill remaining with random characters
+    const allChars = chars.alpha + chars.numeric + chars.special;
+    for (let i = password.length; i < length; i++) {
+      password += allChars.charAt(Math.floor(Math.random() * allChars.length));
+    }
+
+    // Shuffle the password
+    return password
+      .split('')
+      .sort(() => 0.5 - Math.random())
+      .join('');
+  }
+
+  async create(createUserDto: CreateUserDto, currentUser?: User): Promise<MessageResponse> {
+    // Check if email exists
+    const existingUser = await this.userRepo.findOne({
+      where: { email: createUserDto.email },
+    });
+
+
+    if (createUserDto.level !== UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+      throw new ForbiddenException('Trainers can only create clients');
+    }
+
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    let owner: User;
+    let tempPassword: string;
+
+    if (currentUser) {
+      owner = await this.findOne({ id: currentUser.id }, { select: ['id'] });
+    }
+
+    if (!createUserDto.password) {
+      tempPassword = this.generateStrongPassword(12);
+      createUserDto.password = tempPassword;
+    }
+
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+
+    return await this.dataSource.transaction(async (manager: EntityManager) => {
+      // Create user
+      const userData: DeepPartial<User> = {
+        email: createUserDto.email,
+        password: hashedPassword,
+        level: createUserDto.level,
+        isActive: createUserDto.isActive,
+        owner,
+      };
+
+      // Track created by is handled through audit columns
+      const user = manager.create(User, userData);
+      await manager.save(user);
+
+      // Create profile
+      const profileData: DeepPartial<Profile> = {
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
+        phoneNumber: createUserDto.phoneNumber,
+        dateOfBirth: createUserDto.dateOfBirth,
+        gender: createUserDto.gender,
+        address: createUserDto.address,
+        bio: createUserDto.bio,
+        specialties: createUserDto.specialties,
+        avatar: createUserDto.avatar,
+        experience: createUserDto.experience,
+        rating: createUserDto.rating,
+        fitnessGoals: createUserDto.fitnessGoals,
+        preferredTrainerGender: createUserDto.preferredTrainerGender,
+        user: { id: user.id } as DeepPartial<User>,
+      };
+
+      const profile = manager.create(Profile, profileData);
+      await manager.save(profile);
+
+      user.profile = profile;
+
+      if (tempPassword) {
+        this.userEmailService.sendOnboardingEmail({
+          user,
+          tempPassword,
+          createdBy: currentUser,
+        }).catch((error) =>
+          console.error('Onboarding email failed', error),
+        );
+        user.password = tempPassword;
+      }
+
+
+      if (user.level === UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+        this.trianerClientService.assignTrainerToClient({
+          trainerId: currentUser.id,
+          clientId: user.id,
+        });
+      }
+
+      return { message: 'User created successfully.', user };
+    });
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findOne({ id }, { relations: ['profile'] });
+
+    // Check email uniqueness if changed
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
+      const existingUser = await this.userRepo.findOne({
+        where: { email: updateUserDto.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    return await this.dataSource.transaction(async (manager: EntityManager) => {
+      // Update user
+      if (updateUserDto.email) {
+        user.email = updateUserDto.email;
+      }
+
+      if (updateUserDto.isActive !== undefined) {
+        user.isActive = updateUserDto.isActive;
+      }
+
+      await manager.save(user);
+
+
+      return user;
+    });
+  }
+
+  async remove(id: number, currentUser: User): Promise<MessageResponse> {
+    const user = await this.findOne({ id }, { relations: ['owner'] });
+
+    // Only admins can delete users, and they cannot delete super admins
+    if (user.level === UserLevels[UserRole.SUPER_ADMIN]
+    ) {
+      throw new ForbiddenException('Insufficient permissions to delete this user');
+    }
+
+    await this.userRepo.remove(user);
+
+    return {
+      message: 'User deleted successfully',
+    };
   }
 
   async resetPassword(
-    userId: number,
-    resetDto: ResetPasswordDto,
+    id: number,
+    resetPasswordDto: ResetPasswordDto,
+    force: boolean = false
   ): Promise<MessageResponse> {
-    const { newPassword } = resetDto;
+    const { currentPassword, newPassword } = resetPasswordDto;
 
-    let user: User | null;
+    const user = await this.findOne({ id }, { select: ['id', 'password'] });
 
-    user = await this.findOne({ id: userId }, { select: ['id', 'password'] });
-    if (!user) throw new NotFoundException('User not found');
+    if (!force) {
+      if (!currentPassword) {
+        throw new ConflictException('Current password is required');
+      }
 
-    const isSame = await bcrypt.compare(newPassword, user.password);
+      const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isOldPasswordValid) {
+        throw new ConflictException('Old password is incorrect');
+      }
+    }
 
-    if (isSame)
-      throw new BadRequestException(
-        'New password cannot be the same as the current password',
-      );
+    const isSameAsOld = await bcrypt.compare(newPassword, user.password);
+    if (isSameAsOld) {
+      throw new ConflictException('New password must be different from the old password');
+    }
 
-    user.password = await bcrypt.hash(newPassword, 10);
+    const salt = await bcrypt.genSalt();
+    user.password = await bcrypt.hash(newPassword, salt);
     await this.userRepo.save(user);
 
-    return { message: 'Password reset successfully' };
+    // Send password reset confirmation email
+    this.userEmailService.sendPasswordResetConfirmation(user).catch((error) =>
+      console.error('Password reset confirmation email failed', error),
+    );
+
+    return {
+      message: 'Password reset successfully',
+    };
   }
 
-  async remove(id: number): Promise<void> {
-    const existingUser = await this.findOne({ id });
-    if (!existingUser) throw new NotFoundException('User not found');
-    await this.userRepo.remove(existingUser);
+  async createSuperAdminIfNotExists(): Promise<void> {
+    const existingSuperAdmin = await this.userRepo.findOne({
+      where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+    });
+
+    if (existingSuperAdmin) {
+      return;
+    }
+
+    const superAdmin = this.configService.getOrThrow('app.superAdmin');
+    await this.create({
+      email: superAdmin.email,
+      password: superAdmin.password,
+      level: UserLevels[UserRole.SUPER_ADMIN],
+      firstName: superAdmin.firstName,
+      lastName: superAdmin.lastName
+    });
   }
 }

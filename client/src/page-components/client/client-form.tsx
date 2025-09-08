@@ -1,0 +1,201 @@
+
+// External Libraries
+import { z } from "zod";
+import { useShallow } from 'zustand/shallow';
+import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+// Handlers
+import { FormHandler } from "@/handlers";
+
+// Types
+import { IMessageResponse } from "@/@types/api/response.type";
+import { TDefaultValue } from "@/@types/form/field.type";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { TActionComponentProps } from "@/@types/handler-types";
+import { IUser, TUserData } from "@/@types/user.type";
+import { UserGender, UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+
+
+// Store
+import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+
+// Components
+import { ClientFormModal } from "@/components/admin";
+import { CredentialModal } from "@/components/shared-ui/credential-modal";
+
+// Services
+import { createUser, updateUser } from "@/services/user.api";
+
+
+// Schema
+export const ClientSchema = z.object({
+    // ─── Basic Info ─────────────────────
+    firstName: z.string().min(2, {
+        message: "First name must be at least 2 characters",
+    }),
+    lastName: z.string().min(2, {
+        message: "Last name must be at least 2 characters",
+    }),
+    email: z.string().email({
+        message: "Invalid email address",
+    }),
+    phoneNumber: z.string().min(10, {
+        message: "Phone number must be at least 10 characters",
+    }).optional(),
+
+
+    level: z.number(),
+
+    // ─── Optional Personal Info ─────────
+    gender: z.nativeEnum(UserGender).optional(),
+    address: z.string().optional(),
+    // ─── Client-Specific Info ──────────
+    bio: z.string().optional(),
+});
+
+
+interface IClientFormProps extends TActionComponentProps<any> {
+}
+
+
+interface IClientFormExtraProps {
+    open: boolean,
+    onClose: () => void,
+    isEditing?: boolean
+}
+
+export default function ClientForm({
+    storeKey
+}: IClientFormProps) {
+
+    const queryClient = useQueryClient();
+    const [credentialModalContent, setCredentialModalContent] = useState({
+        open: false,
+        email: "",
+        password: ""
+    });
+
+
+    const INITIAL_VALUES: TDefaultValue<TUserData> = {
+        firstName: { value: "" },
+        lastName: { value: "" },
+        email: { value: "" },
+        phoneNumber: { value: "" },
+        bio: { value: "" },
+        address: { value: "" },
+        gender: { value: UserGender.MALE },
+        level: { value: UserLevels[UserRole.USER] },
+        isActive: { value: true },
+    };
+
+    const singleStoreKey = storeKey + "-single";
+    const singleStore = useRegisteredStore<TSingleHandlerStore<IUser>>(singleStoreKey);
+
+    if (!singleStore) {
+        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    }
+
+    const { action, response, isLoading, reset } = singleStore(useShallow(state => ({
+        action: state.action,
+        response: state.response,
+        isLoading: state.isLoading,
+        reset: state.reset
+    })));
+
+    const isEditing = !!response;
+
+    const getInitialValues = (): typeof INITIAL_VALUES => {
+        if (!response) {
+            return INITIAL_VALUES;
+        }
+
+        const flatResponse = {
+            ...(response || {}),
+            ...(response?.profile || {}),
+        };
+
+
+        const updatedValues = {
+            ...INITIAL_VALUES,
+            ...Object.fromEntries(
+                Object.entries(INITIAL_VALUES).map(([key, original]) => {
+                    const newValue = (flatResponse as any)[key];
+                    return [
+                        key,
+                        {
+                            ...original,
+                            value: newValue !== undefined ? newValue : original.value,
+                        },
+                    ];
+                })
+            ),
+
+        };
+
+
+        return updatedValues;
+    };
+
+    const initialValues = getInitialValues();
+
+    if (isLoading) {
+        return (
+            <div className="absolute inset-0 z-30 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
+    const handleClose = () => {
+        reset();
+        setCredentialModalContent({ open: false, email: "", password: "" });
+    };
+
+    return <>
+
+
+        <FormHandler<TUserData, { user: IUser, message: string } | IMessageResponse, IClientFormExtraProps>
+            mutationFn={isEditing ? updateUser(response.id) : createUser}
+            FormComponent={ClientFormModal}
+            storeKey={storeKey}
+            initialValues={initialValues}
+            validationSchema={ClientSchema}
+            validationMode={EVALIDATION_MODES.OnSubmit}
+            onSuccess={(response) => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+
+
+                if (!isEditing && response && response.user) {
+                    setCredentialModalContent({
+                        open: true,
+                        email: response.user.email,
+                        password: response.user.password
+                    })
+                }
+
+            }}
+            formProps={{
+                open: !!action,
+                onClose: reset,
+                isEditing,
+            }}
+        />
+
+        <CredentialModal
+            open={credentialModalContent.open}
+            onOpenChange={(state: boolean) => {
+                if (!state) {
+                    handleClose();
+                }
+            }}
+            closeModal={() => {
+                handleClose();
+            }}
+            email={credentialModalContent.email}
+            password={credentialModalContent.password}
+        />
+    </>
+
+}

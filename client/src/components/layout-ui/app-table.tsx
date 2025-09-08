@@ -18,30 +18,24 @@ import {
 
 // Custom UI Components
 import { TablePagination } from "@/components/table-ui/table-pagination";
+import { IListPaginationState } from "@/@types/handler-types";
 
-export interface TableBaseProps<T> {
+export interface ITableBaseProps<TData> {
   pageSizeOptions?: number[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    lastPage: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
+  pagination?: IListPaginationState;
   onPageChange?: (page: number) => void;
   onLimitChange?: (limit: number) => void;
-  onRowClick?: (row: T) => void;
-  rowClassName?: (row: T, index: number) => string;
+  onRowClick?: (row: TData) => void;
+  rowClassName?: (row: TData, index: number) => string;
   colClassName?: string;
   showPagination?: boolean;
-  renderFooter?: (table: TanstackTable<T>) => React.ReactNode;
+  renderFooter?: (table: TanstackTable<TData>) => React.ReactNode;
   emptyMessage?: string;
   className?: string;
   showHeader?: boolean;
 }
 
-export interface DataTableProps<T> extends TableBaseProps<T> {
+export interface DataTableProps<T> extends ITableBaseProps<T> {
   table: TanstackTable<T>;
   columns: ColumnDef<T>[];
 }
@@ -62,6 +56,8 @@ export function AppTable<TData>({
   colClassName = "",
   showHeader = true,
 }: DataTableProps<TData>) {
+
+
   return (
     <ShadcnTable className={className}>
       {showHeader && (
@@ -73,9 +69,9 @@ export function AppTable<TData>({
                   {header.isPlaceholder
                     ? null
                     : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
                 </TableHead>
               ))}
             </TableRow>
@@ -109,30 +105,30 @@ export function AppTable<TData>({
 
       {(renderFooter ||
         (showPagination && pagination && onPageChange && onLimitChange)) && (
-        <TableFooter>
-          {renderFooter && (
-            <TableRow>
-              <TableCell colSpan={columns.length}>
-                {renderFooter(table)}
-              </TableCell>
-            </TableRow>
-          )}
+          <TableFooter>
+            {renderFooter && (
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  {renderFooter(table)}
+                </TableCell>
+              </TableRow>
+            )}
 
-          {showPagination && pagination && onPageChange && onLimitChange && (
-            <TableRow>
-              <TableCell colSpan={columns.length}>
-                <TablePagination
-                  table={table}
-                  pageSizeOptions={pageSizeOptions}
-                  pagination={pagination}
-                  onPageChange={onPageChange}
-                  onLimitChange={onLimitChange}
-                />
-              </TableCell>
-            </TableRow>
-          )}
-        </TableFooter>
-      )}
+            {showPagination && pagination && onPageChange && onLimitChange && (
+              <TableRow>
+                <TableCell colSpan={columns.length}>
+                  <TablePagination
+                    table={table}
+                    pageSizeOptions={pageSizeOptions}
+                    pagination={pagination}
+                    onPageChange={onPageChange}
+                    onLimitChange={onLimitChange}
+                  />
+                </TableCell>
+              </TableRow>
+            )}
+          </TableFooter>
+        )}
     </ShadcnTable>
   );
 }

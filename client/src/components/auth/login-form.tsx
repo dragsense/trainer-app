@@ -18,7 +18,7 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { useTypedFormStore } from '@/stores/form/form-store-registry';
+import { TFormHandlerStore, useRegisteredStore } from '@/stores';
 
 
 
@@ -30,10 +30,13 @@ export default function LoginForm({
   storeKey
 }: ILoginFormProps) {
 
-  const loginStore = useTypedFormStore<TLoginData, ILoginResponse>(storeKey);
+    const formStoreKey = storeKey + "-form";
+
+
+  const loginStore = useRegisteredStore<TFormHandlerStore<TLoginData, ILoginResponse>>(formStoreKey);
 
   if (!loginStore) {
-    return (`Form store "${storeKey}" not found. Did you forget to register it?`);
+    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
   }
 
   const isSubmitting = useStore(loginStore, state => state.isSubmitting);

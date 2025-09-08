@@ -8,11 +8,14 @@ export class RoleLevelGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const minLevel = getMinRoleLevel(context.getHandler());
-    if (!minLevel) {
+
+    if (minLevel === undefined ) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
-    return user?.level >= minLevel;
+
+
+    return user?.level <= minLevel;
   }
 }

@@ -6,6 +6,7 @@ import {
   Res,
   HttpStatus,
   UnauthorizedException,
+  Param,
 } from '@nestjs/common';
 
 import { Response } from 'express';
@@ -14,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiParam,
 } from '@nestjs/swagger';
 
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
@@ -78,10 +80,11 @@ export class AuthController {
     type: MessageResponseDto
   })
   @ApiResponse({ status: 409, description: 'The email is already taken' })
-  @Post('register')
+  @Post('signup')
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
+
 
   @ApiOperation({
     summary: 'User logout',
@@ -106,7 +109,7 @@ export class AuthController {
   }
 
 
-  @Post('forgot-password')
+  @Post('send-reset-link')
   @ApiOperation({ summary: 'Request password reset link via email' })
   @ApiBody({ type: ForgotPasswordDto })
   @ApiResponse({

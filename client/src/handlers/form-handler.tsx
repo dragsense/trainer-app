@@ -1,18 +1,16 @@
 // React & Hooks
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect, useMemo } from "react";
+import { z } from "zod";
 
 // External Libraries
-import { DefaultValues, FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { DefaultValues, FieldValues, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 
 // Types
-import { IMessageResponse } from "@/@types/general.type";
-import { EVALIDATION_MODES } from "@/@types/enums/form.enums";
-import { z } from "zod";
-
-// Custom Hooks
-import { useApiMutation } from "@/hooks/use-api-mutation";
+import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { IMessageResponse } from "@/@types/api/response.type";
+import { TDefaultValue } from "@/@types/form/field.type";
 
 // UI Components
 import { Form } from "@/components/ui/form";
@@ -24,17 +22,21 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 
 // Stores
-import { useFormHandlerStore } from "@/stores";
-import { deregisterFormStore, registerFormStore, useTypedFormStore } from "@/stores/form/form-store-registry";
-import { useStore } from "zustand";
+import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
+import { toast } from "sonner";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
-interface FormHandlerProps<TFormData, TResponse, TFormExtraProps> {
+
+export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
   mutationFn: (data: TFormData) => Promise<TResponse | IMessageResponse | void>;
-  FormComponent: React.ComponentType<{ storeKey: string } & TFormExtraProps>;
+  FormComponent: React.ComponentType<{
+    storeKey: string
+  } & TFormExtraProps>;
+
   formProps?: TFormExtraProps;
   onSuccess?: (response: TResponse | IMessageResponse | void) => void;
   onError?: (error: Error) => void;
-  initialValues: Readonly<TFormData>;
+  initialValues: Readonly<TDefaultValue<TFormData>>;
   validationMode?: EVALIDATION_MODES;
   validationSchema: z.ZodType<TFormData, any, TFormData>;
   storeKey: string;
@@ -51,26 +53,57 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
   storeKey,
-}: FormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
+}: IFormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
 
-  let store = useTypedFormStore<TFormData, TResponse>(storeKey);
+  const formStoreKey = storeKey + "-form";
+
+  const values = useMemo(() => {
+    return Object.keys(initialValues)
+      .map((key) => ({
+        [key]: initialValues[key as keyof typeof initialValues].value
+      }))
+      .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as TFormData;
+  }, [initialValues]);
+
+
+  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey);
   if (!store) {
-    store = useFormHandlerStore<TFormData, TResponse>(initialValues);
-    registerFormStore(storeKey, store);
+    store = useFormHandlerStore<TFormData, TResponse>(values, mutationFn);
+    registerStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey, store);
   }
 
 
+  const handleSubmit = async (formData: TFormData) => {
 
-  const mutation = useApiMutation(mutationFn, {
-    onSuccess: (response) => {
+    const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
+      if (!config.notIncluded) {
+        acc[key as keyof TFormData] = formData[key as keyof TFormData] ?? initialValues[key].value;
+      }
+      return acc;
+    }, {} as TFormData);
+
+
+
+    try {
+      store.getState().syncWithMutation({
+        isSubmitting: true,
+        error: null,
+        isSuccess: false,
+        response: null,
+      });
+
+      const response = await mutationFn(submissionData);
+
       store.getState().syncWithMutation({
         isSubmitting: false,
         error: null,
         isSuccess: true,
         response,
       });
-    },
-    onError: (error) => {
+
+      toast.success("Form submitted successfully!");
+      onSuccess?.(response);
+    } catch (error: any) {
       store.getState().syncWithMutation({
         isSubmitting: false,
         error,
@@ -78,58 +111,34 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
         response: null,
       });
 
+      toast.error(`Failed to submit form: ${error.message}`);
+      onError?.(error);
     }
-  });
+  };
 
   useEffect(() => {
+    registerStore(formStoreKey, store);
+    store.getState().setOnSubmit(form.handleSubmit(handleSubmit));
     return () => {
-      mutation.reset();
-      deregisterFormStore(storeKey);
+      deregisterStore(formStoreKey);
       store.getState().reset();
     };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribeStore = store.subscribe(
-      (state) => {
-        if (state.isSuccess && state.response && onSuccess) {
-          console.log(state);
-
-          onSuccess(state.response);
-        }
-        if (state.error && onError) {
-          onError(state.error);
-        }
-      }
-    );
-
-    return unsubscribeStore;
-  }, [onSuccess, onError]);
-
+  }, [formStoreKey]);
 
   const form = useForm<TFormData>({
     resolver: zodResolver(validationSchema),
-    defaultValues: (store.getState().values ?? {}) as DefaultValues<TFormData>,
+    defaultValues: (values || {}) as DefaultValues<TFormData>,
     mode: validationMode,
   });
 
 
-  const onSubmit: SubmitHandler<TFormData> = async (data) => {
-    try {
-      store.getState().syncWithMutation({ isSubmitting: true, error: null, isSuccess: false, response: null });
-      await mutation.mutateAsync(data);
-      store.getState().reset();
-    } finally {
-    }
-  };
 
-  const FormWrapper = ({ children }: { children: ReactNode }) => (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        {children}
-      </form>
-    </Form>
-  );
+  const FormWrapper = ({ children }: { children: ReactNode }) => <Form {...form}>
+
+    <FormErrors />
+    {children}
+  </Form>;
+
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>

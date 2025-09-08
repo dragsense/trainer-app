@@ -3,13 +3,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SessionsService } from './sessions.service';
 import { SessionsController } from './sessions.controller';
 import { Session } from './entities/session.entity';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
-import { Profile } from '../users/profiles/entities/profile.entity';
+import { UsersModule } from '../users/users.module';
+import { RemindersModule } from '../reminders/reminders.module';
+import { SessionSubscriber } from './subscribers/session.subscriber';
+import { BillingsModule } from '../billings/billings.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Session, User, Profile])],
+  imports: [
+    TypeOrmModule.forFeature([Session]),
+    UsersModule,
+    RemindersModule,
+    BillingsModule
+  ],
   controllers: [SessionsController],
-  providers: [SessionsService, UsersService],
+  providers: [SessionsService, SessionSubscriber],
+  exports: [SessionsService],
 })
 export class SessionsModule {}

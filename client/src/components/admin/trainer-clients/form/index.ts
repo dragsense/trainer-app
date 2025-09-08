@@ -1,0 +1,1 @@
+export { default as TrainerClientAssignFormModal } from './trainer-client-assign-form-modal'; 

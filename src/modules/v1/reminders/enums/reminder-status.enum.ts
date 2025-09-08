@@ -4,4 +4,5 @@ export enum ReminderStatus {
   SCHEDULED = 'SCHEDULED',
   CANCELLED = 'CANCELLED',
   FAILED = 'FAILED',
+  RETRY = 'RETRY',
 }

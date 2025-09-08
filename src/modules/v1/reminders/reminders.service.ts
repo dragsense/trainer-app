@@ -1,44 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Reminder } from './entities/reminder.entity';
 import { CreateReminderDto } from './dto/create-reminder.dto';
 import { UpdateReminderDto } from './dto/update-reminder.dto';
 import { ReminderListDto } from './dto/reminder-list.dto';
-import { ReminderStatus } from './enums/reminder-status.enum';
+import { ReminderFrequency, ReminderStatus } from './enums/reminder.enum';
 import { User } from '@/modules/v1/users/entities/user.entity';
 import { PaginationResponse } from '@/interfaces/pagination-response.interface';
 import { MessageResponse } from '@/interfaces/general.interface';
+import { ReminderCreatedEvent, ReminderUpdatedEvent, ReminderDeletedEvent } from './events/reminder.events';
+import { UserLevels, UserRole } from '../users/enums/user.enum';
 
 @Injectable()
 export class RemindersService {
   constructor(
     @InjectRepository(Reminder)
     private readonly reminderRepository: Repository<Reminder>,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async create(user: Pick<User, 'id'>, createReminderDto: CreateReminderDto): Promise<MessageResponse> {
+    // Validate frequency-specific fields
+
     const reminder = this.reminderRepository.create({
       ...createReminderDto,
       creator: { id: user.id },
-      recipient: { id: createReminderDto.recipientId },
+      recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId } : undefined,
       session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
-      payment: createReminderDto.paymentId ? { id: createReminderDto.paymentId } : undefined,
+      billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
       status: ReminderStatus.SCHEDULED,
       sentCount: 0,
       maxAttempts: createReminderDto.maxAttempts || 3,
-      retryInterval: createReminderDto.retryInterval || 60, // default 60 minutes
-      isRecurring: createReminderDto.isRecurring || false,
-      recurringInterval: createReminderDto.recurringInterval || 7, // default 7 days
+      retryInterval: createReminderDto.retryInterval || 60 // default 60 minutes
     });
 
     const savedReminder = await this.reminderRepository.save(reminder);
+
+    // Emit reminder created event
+    this.eventEmitter.emit(
+      'reminder.created',
+      new ReminderCreatedEvent(
+        savedReminder.id,
+        savedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
+        savedReminder.scheduledAt
+      )
+    );
+
     return { message: 'Reminder created successfully' };
   }
 
-  async findAll(user: Pick<User, 'id'>, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
 
+  async findAll(user: User, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
     const {
       page = 1,
       limit = 10,
@@ -54,27 +69,26 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.creator', 'creator')
       .leftJoinAndSelect('reminder.recipient', 'recipient')
       .leftJoinAndSelect('reminder.session', 'session')
-      .leftJoinAndSelect('reminder.payment', 'payment');
 
-    if (user) {
+    if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
     }
 
     if (search) {
-      query.where('reminder.name ILIKE :search', { search: `%${search}%` });
+      query.andWhere('(reminder.message ILIKE :search)', { search: `%${search}%` });
     }
 
     if (filters && typeof filters === 'object') {
       Object.entries(filters).forEach(([key, value]) => {
-        const coercedValue = !isNaN(value as any) ? Number(value) : value;
-        if (coercedValue) {
-          query.andWhere(`reminder.${key} = :${key}`, { [key]: value });
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            query.andWhere(`reminder.${key} && ARRAY[:...${key}]`, { [key]: value });
+          } else {
+            const coercedValue = !isNaN(value as any) ? Number(value) : value;
+            query.andWhere(`reminder.${key} = :${key}`, { [key]: coercedValue });
+          }
         }
       });
-    }
-
-    if (createdAfter) {
-      query.andWhere('reminder.createdAt >= :createdAfter', { createdAfter });
     }
 
     if (createdAfter) {
@@ -93,6 +107,12 @@ export class RemindersService {
       query.andWhere('reminder.updatedAt <= :updatedBefore', { updatedBefore });
     }
 
+    query
+      .orderBy('reminder.scheduledAt', 'ASC')
+      .addOrderBy('reminder.priority', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
     const [results, total] = await query.getManyAndCount();
     const lastPage = Math.ceil(total / limit);
 
@@ -109,23 +129,35 @@ export class RemindersService {
 
   async findOne(user: Pick<User, 'id'>, id: number): Promise<Reminder> {
     const reminder = await this.reminderRepository.findOne({
-      where: { id, creator: { id: user.id } },
-      relations: ['creator', 'recipient', 'session', 'payment'],
+      where: { id },
+      relations: ['creator', 'recipient', 'session'],
     });
 
     if (!reminder) {
       throw new NotFoundException(`Reminder with ID ${id} not found`);
     }
 
-
-    return reminder
+    return reminder;
   }
 
   async update(user: Pick<User, 'id'>, id: number, updateReminderDto: UpdateReminderDto) {
     const reminder = await this.findOne(user, id);
+    const oldStartAt = reminder.scheduledAt;
+
 
     Object.assign(reminder, updateReminderDto);
-    await this.reminderRepository.save(reminder);
+    const updatedReminder = await this.reminderRepository.save(reminder);
+
+    // Emit reminder updated event
+    this.eventEmitter.emit(
+      'reminder.updated',
+      new ReminderUpdatedEvent(
+        updatedReminder.id,
+        updatedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
+        updatedReminder.scheduledAt,
+        oldStartAt
+      )
+    );
 
     return { message: 'Reminder updated successfully' };
   }
@@ -133,6 +165,11 @@ export class RemindersService {
   async remove(user: Pick<User, 'id'>, id: number): Promise<void> {
     const reminder = await this.findOne(user, id);
     await this.reminderRepository.remove(reminder);
-  }
 
+    // Emit reminder deleted event
+    this.eventEmitter.emit(
+      'reminder.deleted',
+      new ReminderDeletedEvent(id)
+    );
+  }
 }

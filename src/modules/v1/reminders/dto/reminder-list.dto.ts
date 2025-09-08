@@ -1,8 +1,8 @@
 import { ListQueryDto } from '@/shared-dto/list-query.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsString, IsNumber, IsDate, IsBoolean } from 'class-validator';
-import { ReminderType } from '../enums/reminder-type.enum';
-import { ReminderStatus } from '../enums/reminder-status.enum';
+import { IsOptional, IsEnum, IsString, IsNumber, IsDate, IsBoolean, IsArray, Min, Max, Matches } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ReminderType, ReminderStatus, ReminderFrequency } from '../enums/reminder.enum';
 
 export class ReminderListDto extends ListQueryDto {
   constructor() {
@@ -30,11 +30,21 @@ export class ReminderListDto extends ListQueryDto {
   status?: ReminderStatus;
 
   @ApiProperty({
+    description: 'Filter by reminder frequency',
+    enum: ReminderFrequency,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(ReminderFrequency)
+  frequency?: ReminderFrequency;
+
+  @ApiProperty({
     description: 'Filter by creator ID',
     required: false,
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   creatorId?: number;
 
   @ApiProperty({
@@ -43,6 +53,7 @@ export class ReminderListDto extends ListQueryDto {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   recipientId?: number;
 
   @ApiProperty({
@@ -51,6 +62,7 @@ export class ReminderListDto extends ListQueryDto {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   sessionId?: number;
 
   @ApiProperty({
@@ -59,10 +71,11 @@ export class ReminderListDto extends ListQueryDto {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   paymentId?: number;
 
   @ApiProperty({
-    description: 'Filter by message',
+    description: 'Filter by message content',
     required: false,
   })
   @IsOptional()
@@ -70,20 +83,46 @@ export class ReminderListDto extends ListQueryDto {
   message?: string;
 
   @ApiProperty({
-    description: 'Filter by scheduled time',
+    description: 'Filter by specific weekdays (0-6, where 0 is Sunday)',
     required: false,
   })
   @IsOptional()
-  @IsDate()
-  scheduledAt?: Date;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  @Max(6, { each: true })
+  weekdays?: number[];
 
   @ApiProperty({
-    description: 'Filter by sent time',
+    description: 'Filter by specific days of month (1-31)',
     required: false,
   })
   @IsOptional()
-  @IsDate()
-  sentAt?: Date;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Min(1, { each: true })
+  @Max(31, { each: true })
+  monthDays?: number[];
+
+  @ApiProperty({
+    description: 'Filter by specific time of day (HH:mm)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'Time of day must be in HH:mm format',
+  })
+  timeOfDay?: string;
+
+  @ApiProperty({
+    description: 'Filter by interval minutes',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  intervalMinutes?: number;
 
   @ApiProperty({
     description: 'Filter by priority',
@@ -91,37 +130,24 @@ export class ReminderListDto extends ListQueryDto {
   })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   priority?: number;
 
   @ApiProperty({
-    description: 'Filter by recurring status',
-    required: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isRecurring?: boolean;
-
-  @ApiProperty({
-    description: 'Filter by delivery method',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  deliveryMethod?: string;
-
-  @ApiProperty({
-    description: 'Filter by start date',
+    description: 'Filter by start date range (start)',
     required: false,
   })
   @IsOptional()
   @IsDate()
-  startDate?: Date;
+  @Type(() => Date)
+  startDateFrom?: Date;
 
   @ApiProperty({
-    description: 'Filter by end date',
+    description: 'Filter by start date range (end)',
     required: false,
   })
   @IsOptional()
   @IsDate()
-  endDate?: Date;
+  @Type(() => Date)
+  startDateTo?: Date;
 }

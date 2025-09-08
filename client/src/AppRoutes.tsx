@@ -1,29 +1,12 @@
-// React & Routing Libraries
+// src/routes/appRouter.tsx
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { ROOT_ROUTE, ADMIN_ROUTES } from "@/config/routes.config";
 
-// Route Configs
-import {
-  PUBLIC_ROUTES,
-  ADMIN_ROUTES,
-  COMMON_ROUTES,
-  ROOT_ROUTE
-} from "@/config/routes.config";
-
-// Pages
-import {
-  LoginPage,
-  NotFound,
-  SignupPage,
-  ForgotPasswordPage,
-  ResetPasswordPage,
-  DashboardPage
-} from "@/pages";
-
-// Layouts
 import { MainLayout, DashboardLayoutWrapper, AuthLayout } from "@/layouts";
-
-// Route Guards
 import { PrivateRoute, PublicRoute } from "@/routes";
+
+// Pages Routes
+import commonRoutes, { authRoutes, adminRoutes, } from "@/pages/routes";
 
 
 const appRouter = createBrowserRouter([
@@ -36,24 +19,7 @@ const appRouter = createBrowserRouter([
         children: [
           {
             element: <AuthLayout />,
-            children: [
-              {
-                path: PUBLIC_ROUTES.LOGIN,
-                element: <LoginPage />,
-              },
-              {
-                path: PUBLIC_ROUTES.SIGNUP,
-                element: <SignupPage />,
-              },
-              {
-                path: PUBLIC_ROUTES.FORGOT_PASSWORD,
-                element: <ForgotPasswordPage />,
-              },
-              {
-                path: PUBLIC_ROUTES.RESET_PASSWORD,
-                element: <ResetPasswordPage />,
-              },
-            ],
+            children: authRoutes,
           },
         ],
       },
@@ -66,22 +32,12 @@ const appRouter = createBrowserRouter([
           },
           {
             element: <DashboardLayoutWrapper />,
-            children: [
-              {
-                path: ADMIN_ROUTES.DASHBOARD,
-                element: <DashboardPage />,
-              }
-            ]
+            children: adminRoutes,
           },
-          // Common authenticated routes
 
-          // 404 route
-          {
-            path: COMMON_ROUTES.NOT_FOUND,
-            element: <NotFound />,
-          },
         ],
       },
+      ...commonRoutes
     ],
   },
 ]);

@@ -1,14 +1,15 @@
 export enum UserRole {
-  ADMIN = 'ADMIN',
+  SUPER_ADMIN = 'SUPER_ADMIN',
   TRAINER = 'TRAINER',
-  CLIENT = 'CLIENT',
+  USER = 'USER',
 }
 
 export const UserLevels = {
-  [UserRole.ADMIN]: 3,
-  [UserRole.TRAINER]: 2,
-  [UserRole.CLIENT]: 1,
+  [UserRole.SUPER_ADMIN]: 0,
+  [UserRole.TRAINER]: 1,
+  [UserRole.USER]: 2,
 };
+
 
 export enum UserGender {
   MALE = 'male',

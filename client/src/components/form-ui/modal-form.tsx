@@ -1,66 +1,97 @@
 // React
 import { ReactNode } from "react";
+import { useShallow } from 'zustand/shallow';
 
 // External Libraries
 import { Loader2 } from "lucide-react";
 
-// Layout Components
-import { AppForm } from "../layout/app-form";
 
-// Utils
+// UI Components
+import { AppDialog } from "@/components/layout-ui/app-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+// Store
+import { TFormHandlerStore } from "@/stores";
+
+// Utility Function
 import { cn } from "@/lib/utils";
-import { AppFormModal } from "../layout/app-form-dialog";
 
-interface FormProps {
+
+type TDialogWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+
+
+const widthMap: Record<string, string> = {
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+};
+
+interface IModalFormProps<TFormData, TResponse> {
   className?: string;
-  isSubmitting?: boolean;
   open: boolean;
   onOpenChange: (state: boolean) => void;
-  error?: string | null;
   title: string;
   description?: string;
-  footerContent: ReactNode;
+  footerContent?: ReactNode;
   children: ReactNode;
-  buttons?: ReactNode;
-  form: any;
-  width?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "full";
+  width?: TDialogWidth;
+  formStore: TFormHandlerStore<TFormData, TResponse>;
 }
 
-export function ModalForm({
+export function ModalForm<TFormData, TResponse>({
   open,
   onOpenChange,
-  isSubmitting,
-  error,
   title,
   description,
   footerContent,
   children,
-  buttons,
-  form,
-  width = "2xl",
-}: FormProps) {
+  width = "lg",
+  formStore,
+}: IModalFormProps<TFormData, TResponse>) {
+
+
+    const { isSubmitting, error,  onSubmit } = formStore(useShallow(state => ({
+      onSubmit: state.onSubmit,
+      isSubmitting: state.isSubmitting,
+      error: state.error
+    })));
+
+
+
   return (
-    <AppFormModal
-      title={title}
-      description={description}
-      open={open}
-      onOpenChange={onOpenChange}
-      width={width}
-      footerContent={footerContent}
-      isSubmitting={isSubmitting}
-      form={form}
-    >
-      {isSubmitting && (
-        <div className="absolute inset-0 bg-background/50 z-10 flex items-center justify-center rounded-lg">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      )}
+    <Dialog  open={open} onOpenChange={onOpenChange}>
+      <DialogContent forceMount
+        className={cn(`max-h-[90vh] overflow-y-auto`, widthMap[width] || "sm:max-w-lg")}
+      >
+        <form onSubmit={onSubmit}>
+          <AppDialog
+            title={title}
+            description={description}
+            footerContent={
+              <div>
+                {footerContent}
 
-      {children}
+                {error && (
+                  <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
+                )}
+              </div>
+            }
+          >
 
-      {error && (
-        <p className="text-sm font-medium text-red-500 my-2">{error}</p>
-      )}
-    </AppFormModal>
+            {isSubmitting && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            )}
+
+            {children}
+
+          </AppDialog>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

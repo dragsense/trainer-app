@@ -1,8 +1,7 @@
 // React
-import { useState } from 'react';
 
 // Types
-import { TForgotPasswordData, IForgotPasswordResponse } from '@/@types/auth.type';
+import { TForgotPasswordData } from '@/@types/auth.type';
 
 // External Libraries
 import { Mail, Loader2 } from 'lucide-react';
@@ -17,7 +16,8 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { useTypedFormStore } from '@/stores/form/form-store-registry';
+import { TFormHandlerStore, useRegisteredStore } from '@/stores';
+import { IMessageResponse } from '@/@types/api/response.type';
 
 interface IForgotPasswordFormProps {
   storeKey: string;
@@ -27,10 +27,12 @@ export default function ForgotPasswordForm({
   storeKey
 }: IForgotPasswordFormProps) {
 
-  const forgotPasswordStore = useTypedFormStore<TForgotPasswordData, IForgotPasswordResponse>(storeKey);
+  const formStoreKey = storeKey + "-form";
+
+  const forgotPasswordStore = useRegisteredStore<TFormHandlerStore<TForgotPasswordData, IMessageResponse>>(formStoreKey);
 
   if (!forgotPasswordStore) {
-    return (`Form store "${storeKey}" not found. Did you forget to register it?`);
+    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
   }
 
   const isSubmitting = useStore(forgotPasswordStore, state => state.isSubmitting);
@@ -51,7 +53,7 @@ export default function ForgotPasswordForm({
   });
 
   return (
-    <CardForm<TForgotPasswordData, IForgotPasswordResponse>
+    <CardForm<TForgotPasswordData, IMessageResponse>
       title="Forgot Password"
       description="Enter your email address and we'll send you instructions to reset your password"
       formStore={forgotPasswordStore}

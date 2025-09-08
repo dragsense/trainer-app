@@ -1,13 +1,4 @@
-// React
-import { useEffect, useState } from "react";
-
-// External Icons
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
-
-// Utils
-import { cn } from "@/lib/utils";
-
-// UI Components
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -22,21 +13,27 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-
-interface AppComboBoxProps<T> {
-  value?: string;
-  onChange: (value: T) => void;
+export interface AppComboBoxProps<T> {
+  value: T;
+  onChange: (value: any) => void;
   items: T[];
   loading?: boolean;
-  disabled?: boolean;
   error?: string | null;
   placeholder?: string;
-  searchPlaceholder?: string;
-  getLabel?: (item: T) => string;
-  getKey?: (item: T) => string;
-  onSearchChange: (searchTerm: string) => void;
-  modal?: boolean
+  getLabel: (item: T) => string;
+  getKey: (item: T) => string;
+  onSearchChange: (search: string) => void;
+  search: string;
+  multiple?: boolean;
+  searchType?: "local" | "api";
+  disabled?: boolean;
+  modal?: boolean;
+  shouldFilter?: boolean
 }
 
 export function AppComboBox<T>({
@@ -45,49 +42,105 @@ export function AppComboBox<T>({
   items,
   loading,
   error,
-  disabled,
   placeholder = "Select...",
-  searchPlaceholder = "Search...",
-  getLabel = (item) => String(item),
-  getKey = (item) => String(item),
+  getLabel,
+  getKey,
+  search,
   onSearchChange,
-  modal = false
+  multiple = false,
+  disabled,
+  modal = false,
+  shouldFilter = true
 }: AppComboBoxProps<T>) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearchChange(search);
-    }, 500);
+  const [popoverWidth, setPopoverWidth] = useState<number | undefined>(undefined);
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (nextOpen && triggerRef.current) {
+      setPopoverWidth(triggerRef.current.offsetWidth);
+    }
+  };
 
-    return () => clearTimeout(timer);
-  }, [search]);
+  // Multi-select logic
+  const selectedKeys = multiple
+    ? (Array.isArray(value) ? value.map(String) : [])
+    : [];
+
+  const selectedItems = multiple
+    ? items.filter((item) => selectedKeys.includes(getKey(item)))
+    : [];
+
+
+
+  const maxTags = 5;
+  const extraCount = multiple ? selectedItems.length - maxTags : 0;
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={modal}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           variant="outline"
-          className="w-full justify-between"
+          className="w-full justify-between min-h-[40px] h-auto flex-nowrap overflow-hidden"
           disabled={disabled}
+          style={{ textAlign: "left" }}
         >
-          {value ? value : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          <span className="flex flex-wrap gap-1 items-center w-full">
+            {multiple ? (
+              <>
+                {selectedItems.length === 0 && (
+                  <span className="text-muted-foreground">{placeholder}</span>
+                )}
+                {selectedItems.slice(0, maxTags).map((item) => (
+                  <Badge
+                    key={getKey(item)}
+                    variant="secondary"
+                    className="truncate max-w-[120px]"
+                    title={getLabel(item)}
+                  >
+                    {getLabel(item)}
+                  </Badge>
+                ))}
+                {extraCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="truncate"
+                    title={selectedItems.slice(maxTags).map(getLabel).join(", ")}
+                  >
+                    +{extraCount} more
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <span>
+                {items.find((item) => getKey(item) === value)
+                  ? getLabel(items.find((item) => getKey(item) === value)!)
+                  : placeholder}
+              </span>
+            )}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
-        <Command>
+      <PopoverContent
+        className="p-0"
+        style={popoverWidth ? { width: popoverWidth } : {}}
+        align="start"
+      >
+        <Command shouldFilter={shouldFilter}>
           <CommandInput
-            placeholder={searchPlaceholder}
+            placeholder="Search..."
             value={search}
+            onValueChange={onSearchChange}
             disabled={disabled}
-            onValueChange={setSearch}
           />
+
+
           <CommandList>
             {loading ? (
               <div className="flex items-center justify-center p-4">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading...
               </div>
             ) : error ? (
@@ -97,25 +150,45 @@ export function AppComboBox<T>({
             ) : items.length === 0 ? (
               <CommandEmpty>No results found</CommandEmpty>
             ) : (
-              <CommandGroup>
-                {items.map((item) => (
-                  <CommandItem
-                    key={getKey(item)}
-                    onSelect={() => {
-                      onChange(item);
-                      setOpen(false);
-                    }}
-                  >
-                    {getLabel(item)}
-                    <Check
-                      className={cn(
-                        "ml-auto h-4 w-4",
-                        value === item ? "opacity-100" : "opacity-0"
+              <div style={{ maxHeight: "300px", overflow: "auto" }}>
+                <CommandGroup>
+                  {items.map((item) => (
+                    <CommandItem
+                      key={getKey(item)}
+                      onSelect={() => {
+                        if (multiple) {
+                          const key = getKey(item);
+                          if (selectedKeys.includes(key)) {
+                            onChange(selectedKeys.filter((k) => k !== key));
+                          } else {
+                            onChange([...selectedKeys, key]);
+                          }
+                        } else {
+                          onChange(getKey(item));
+                          setOpen(false);
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {multiple && (
+                        <Checkbox
+                          checked={selectedKeys.includes(getKey(item))}
+                          className="pointer-events-none"
+                        />
                       )}
-                    />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+                      <span className="ml-2">{getLabel(item)}</span>
+                      {!multiple && (
+                        <Check
+                          className={cn(
+                            "ml-auto h-4 w-4",
+                            value === getKey(item) ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </div>
             )}
           </CommandList>
         </Command>

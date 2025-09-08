@@ -1,0 +1,1 @@
+export { default as TrainerTable } from "./trainer-table";

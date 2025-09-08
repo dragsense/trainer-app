@@ -16,18 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { IListPaginationState } from "@/@types/handler-types";
 
 interface TablePaginationProps<TData> {
   table: Table<TData>;
   pageSizeOptions?: number[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    lastPage: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
+  pagination: IListPaginationState
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
 }

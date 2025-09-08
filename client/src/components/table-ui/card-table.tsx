@@ -9,41 +9,74 @@ import { ColumnDef, Table as TanstackTable } from "@tanstack/react-table";
 import { useTable } from "@/hooks/use-table";
 
 // UI Components
-import { AppTable, TableBaseProps } from "../layout/app-table";
+import { AppTable } from "@/components/layout-ui/app-table";
 import { Card, CardContent, CardHeader } from "../ui/card";
+
+// Types
+import { IListStoreApi } from "@/@types/handler-types";
 
 // Utils
 import { cn } from "@/lib/utils";
 
+// Stores
+import { useStore } from "zustand";
 
-interface CardTableProps<T> {
+
+interface ICardTableProps<TData> {
   MainClassName?: string;
   error?: string | null;
   loading?: boolean;
-  renderToolbar?: (table: TanstackTable<T>) => React.ReactNode;
-  columns: ColumnDef<T>[];
-  data: T[];
+  renderToolbar?: (table: TanstackTable<TData>) => React.ReactNode;
+  columns: ColumnDef<TData>[];
+  listStore: IListStoreApi<TData>;
+  onRowClick?: (row: TData) => void;
+  pageSizeOptions?: number[];
+  rowClassName?: (row: TData, index: number) => string;
+  colClassName?: string;
+  showPagination?: boolean;
+  renderFooter?: (table: TanstackTable<TData>) => React.ReactNode;
+  emptyMessage?: string;
+  className?: string;
+  showHeader?: boolean;
 }
 
 export function CardTable<TData>({
   columns,
-  data,
   MainClassName,
-  loading,
   renderToolbar,
-  error,
-  ...props
-}: CardTableProps<TData> & TableBaseProps<TData>) {
+  listStore,
+  pageSizeOptions,
+  onRowClick,
+  showPagination = true,
+  renderFooter,
+  emptyMessage = "No results found.",
+  className = "",
+  rowClassName,
+  colClassName = "",
+  showHeader = true,
+}: ICardTableProps<TData>) {
+
+  const {
+    response: data,
+    isLoading: loading,
+    error,
+    pagination,
+    setPagination } = useStore(listStore);
+
+  const onPageChange = (page: number) => {
+    setPagination({ page });
+  };
+  const onLimitChange = (limit: number) => {
+    setPagination({ limit });
+  };
+
+
   const { table } = useTable<TData>({
     columns,
-    data,
+    data: data || [],
+    defaultPageSize: pagination.limit || 10,
   });
 
-  const [tableError, setTableError] = useState(error);
-
-  useEffect(() => {
-    setTableError(error);
-  }, [error]);
 
   return (
     <Card className={cn(`py-4 gap-1`, MainClassName)}>
@@ -59,22 +92,25 @@ export function CardTable<TData>({
         )}
 
         <AppTable
-          onRowClick={props.onRowClick}
-          emptyMessage={props.emptyMessage || "No results found."}
-          pagination={props.pagination}
-          onPageChange={props.onPageChange}
-          onLimitChange={props.onLimitChange}
-          rowClassName={props.rowClassName}
-          colClassName={props.colClassName}
-          showPagination={props.showPagination}
+          onRowClick={onRowClick}
+          emptyMessage={emptyMessage || "No results found."}
+          pagination={pagination}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          rowClassName={rowClassName}
+          colClassName={colClassName}
+          showPagination={showPagination}
+          showHeader={showHeader}
+          pageSizeOptions={pageSizeOptions}
+          className={className}
           columns={columns}
           table={table}
           renderFooter={(table) => (
             <>
-              {props.renderFooter && props.renderFooter(table)}
-              {tableError && (
+              {renderFooter && renderFooter(table)}
+              {error && (
                 <p className="text-sm font-medium text-red-500 my-2">
-                  {tableError}
+                  {error.message}
                 </p>
               )}
             </>

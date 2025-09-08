@@ -1,57 +1,207 @@
-// React
 import * as React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Loader2, LogOutIcon } from "lucide-react";
 
 // UI Components
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { NavMain } from "@/components/nav/nav-main";
-import { NavUser } from "@/components/nav/nav-user";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 // Config
+import { navItems } from "@/config/nav.config";
 import { ROOT_ROUTE } from "@/config/routes.config";
 
+// Utils
+import { matchRoutePath } from "@/lib/utils";
+
+// Hooks
+import { useLogout } from "@/hooks/use-logout";
+
+// Assets
+import logo from "@/assets/logos/logo.png";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  logoSrc?: string;
   themeClass?: string;
 }
 
 export function AppSidebar({
-  logoSrc,
   themeClass = "",
   ...props
 }: AppSidebarProps) {
+  const location = useLocation();
+  const { logout, isLoading } = useLogout();
+
+  const [expandedItems, setExpandedItems] = React.useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    const newExpandedItems: Record<string, boolean> = {};
+    navItems.forEach((item) => {
+      if (item.children) {
+        const isChildActive = item.children.some((child) =>
+          matchRoutePath(child.url, location.pathname)
+        );
+        const isParentActive = item.urls.some((url) =>
+          matchRoutePath(url, location.pathname)
+        );
+        newExpandedItems[item.title] =
+          isChildActive || isParentActive || item.title === "Dashboard";
+      }
+    });
+    setExpandedItems(newExpandedItems);
+  }, [location.pathname]);
+
+  const toggleExpanded = (title: string) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
   return (
-    
-      <Sidebar collapsible="offcanvas" themeClass={themeClass} {...props}>
-        <SidebarHeader className="my-10">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                className="data-[slot=sidebar-menu-button]:!p-8 hover:bg-transparent"
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar collapsible="offcanvas" themeClass={themeClass} {...props}>
+          <SidebarHeader className="my-5">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild className="hover:bg-transparent">
+                  <Link to={ROOT_ROUTE} className="h-30">
+                    <img src={logo} className="h-full object-contain" />
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarHeader>
+          <SidebarContent className="mt-2">
+            <SidebarGroup>
+              <SidebarGroupContent className="flex flex-col gap-2">
+                <SidebarMenu>
+                  {navItems.map((item) => {
+                    const hasChildren = item.children && item.children.length > 0;
+                    const isExpanded = expandedItems[item.title];
+
+                    if (hasChildren) {
+                      return (
+                        <Collapsible
+                          key={item.title}
+                          open={isExpanded}
+                          onOpenChange={() => toggleExpanded(item.title)}
+                        >
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                isActive={item.urls?.some((url) =>
+                                  matchRoutePath(url, location.pathname)
+                                )}
+                                tooltip={item.title}
+                                className="cursor-pointer hover:border-l-4 hover:border-primary hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:border-l-4 data-[active=true]:border-primary"
+                              >
+                                {item.icon && <item.icon />}
+                                <span>{item.title}</span>
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <SidebarMenuSub className="ml-4 border-l border-sidebar-border pl-4">
+                                {item.children?.map((child) => (
+                                  <SidebarMenuSubItem key={child.title}>
+                                    <SidebarMenuSubButton
+                                      asChild
+                                      isActive={location.pathname === child.url}
+                                      className="cursor-pointer hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary"
+                                    >
+                                      <Link to={child.url}>
+                                        {child.icon && (
+                                          <child.icon className="h-4 w-4" />
+                                        )}
+                                        <span>{child.title}</span>
+                                      </Link>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      );
+                    }
+
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <Link to={item.urls[0]}>
+                          <SidebarMenuButton
+                            isActive={item.urls?.some((url) =>
+                              matchRoutePath(url, location.pathname)
+                            )}
+                            tooltip={item.title}
+                            className="cursor-pointer hover:border-l-4 hover:border-primary hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:border-l-4 data-[active=true]:border-primary"
+                          >
+                            {item.icon && <item.icon />}
+                            <span>{item.title}</span>
+                          </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <Button
+              onClick={logout}
+              variant="secondary"
+              className="text-primary justify-start gap-2 mb-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOutIcon className="h-4 w-4" />
+              )}
+              {isLoading ? "Logging out..." : "Log out"}
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
+      </div>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-md md:hidden">
+        <div className="flex justify-around">
+          {navItems.map((item) => {
+            const isActive =
+              item.urls?.some((url) => matchRoutePath(url, location.pathname)) ||
+              item.children?.some((child) =>
+                matchRoutePath(child.url, location.pathname)
+              );
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.title}
+                to={item.children?.[0]?.url || item.urls[0]}
+                className={`flex flex-col items-center justify-center py-2 text-xs transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground"
+                }`}
               >
-                <a href={ROOT_ROUTE}>
-                  <img src={logoSrc} />
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent className="mt-2">
-          <NavMain />
-        </SidebarContent>
-        <SidebarFooter>
-          <NavUser />
-        </SidebarFooter>
-      </Sidebar>
-    
+                {Icon && <Icon className="h-5 w-5 mb-0.5" />}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }
