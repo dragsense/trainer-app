@@ -2,14 +2,14 @@ module.exports = {
     apps: [
         {
             name: "trainer-prod",
-            script: "dist/main.js",
+            script: "dist/src/main.js",
             env: {
                 NODE_ENV: "production",
             },
         },
         {
             name: "trainer-dev",
-            script: "dist/main.js",
+            script: "dist/src/main.js",
             env: {
                 NODE_ENV: "development",
             },
