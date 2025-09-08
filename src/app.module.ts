@@ -44,9 +44,13 @@ import { join } from 'path';
     }),
 
     ServeStaticModule.forRoot({
-      rootPath:   join(process.cwd(), 'public'),
-      serveRoot: '/', // or use '/uploads' to serve only uploads
-      
+      rootPath: join(process.cwd(), 'public'),
+      serveRoot: '/public',
+    }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client', 'dist'),
+
     }),
 
     // Cache
