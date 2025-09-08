@@ -71,14 +71,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <AppSidebar
         variant="inset"
         className="p-0"
-        themeClass="dark"
       />
       <SidebarInset
-        className="light w-100"
-        style={{
-          background: "var(--background)",
-          color: "var(--foreground)",
-        }}
+        className="w-100"
+      
       >
         <AppHeader title={title} />
         <div className="flex flex-1 flex-col p-4 lg:px-6">

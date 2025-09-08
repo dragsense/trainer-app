@@ -6,7 +6,7 @@ export NVM_DIR="$HOME/.nvm"
 nvm use node
 
 # install deps
-pnpm install --frozen-lockfile
+pnpm install --no-frozen-lockfile
 
 
 
@@ -15,7 +15,7 @@ cp -f ../shared/.env .env
 cp -f ../shared/.env.development .env.development
 cp -f ../shared/.env.prod client/.env.prod
 
-cd client && pnpm install --frozen-lockfile && pnpm build && cd ..
+cd client && pnpm install --no-frozen-lockfile && pnpm build && cd ..
 
 # build server
 pnpm build
