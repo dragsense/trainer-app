@@ -41,18 +41,19 @@ export function AppHeader({ title }: AppHeaderProps) {
         <div className="flex flex-1 items-center gap-1">
           <SidebarTrigger className="-ml-1 block md:hidden" />
         </div>
-        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
           <NotificationBell />
+        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+        
           <Avatar className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg">
             {/* User image */}
             <AvatarImage src={undefined} alt={firstName} />
 
             {/* Fallback: initials or icon */}
-            <AvatarFallback className="rounded-xxl bg-blue/10 flex items-center justify-center">
+            <AvatarFallback className="rounded-xxl bg-foreground/2 flex items-center justify-center">
               {firstName ? (
                 firstName.substring(0, 2).toUpperCase() // show initials
               ) : (
-                <User className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" /> // show icon if no name
+                <User className="w-4 h-4 sm:w-6 sm:h-6 " /> // show icon if no name
               )}
             </AvatarFallback>
           </Avatar>
