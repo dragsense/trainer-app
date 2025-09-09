@@ -21,6 +21,7 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 export interface IReminderFormModalProps {
   storeKey: string;
@@ -396,6 +397,8 @@ export default function ReminderFormModal({
       <div className="space-y-6">
         {categorizedContent}
       </div>
+
+       <FormErrors />
     </ModalForm>
   );
 }

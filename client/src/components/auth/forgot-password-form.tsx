@@ -18,6 +18,7 @@ import { useInput } from '@/hooks/use-input';
 import { useStore } from 'zustand';
 import { TFormHandlerStore, useRegisteredStore } from '@/stores';
 import { IMessageResponse } from '@/@types/api/response.type';
+import { FormErrors } from '../shared-ui/form-errors';
 
 interface IForgotPasswordFormProps {
   storeKey: string;
@@ -77,6 +78,8 @@ export default function ForgotPasswordForm({
       <div className="flex flex-col gap-4 w-full">
         {inputs}
       </div>
+
+      <FormErrors /> 
     </CardForm>
   );
 }

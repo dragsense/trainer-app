@@ -12,6 +12,7 @@ import { IUser, TUserData } from "@/@types/user.type";
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 export interface ITrainerFormModalProps {
@@ -222,6 +223,8 @@ export default function TrainerFormModal({
           </div>
         </div>
       </div>
+
+       <FormErrors />
     </ModalForm>
 
   </>

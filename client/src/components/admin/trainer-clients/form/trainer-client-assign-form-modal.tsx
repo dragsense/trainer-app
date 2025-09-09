@@ -18,6 +18,7 @@ import { IUser } from "@/@types/user.type";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 export interface ITrainerClientAssignFormModalProps {
@@ -133,6 +134,8 @@ export default function TrainerClientAssignFormModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 {inputs}
             </div>
+
+             <FormErrors />
         </ModalForm>
     );
 }

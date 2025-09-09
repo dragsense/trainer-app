@@ -15,6 +15,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface IAppSettingCardFormProps {
     storeKey: string;
@@ -70,6 +71,8 @@ export default function AppSettingCardForm({ storeKey }: IAppSettingCardFormProp
                     {inputs}
                 </div>
             </div>
+
+             <FormErrors />
         </CardForm>
     );
 }

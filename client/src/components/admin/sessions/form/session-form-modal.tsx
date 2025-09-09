@@ -20,6 +20,7 @@ import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/p
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 
@@ -268,6 +269,8 @@ export default function SessionFormModal({
         </div>
 
       </div>
+
+       <FormErrors />
     </ModalForm>
 
   </>

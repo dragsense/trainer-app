@@ -15,6 +15,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface INotificationSettingCardFormProps {
     storeKey: string;
@@ -122,6 +123,8 @@ export default function NotificationSettingCardForm({ storeKey }: INotificationS
                     </div>
                 </div>
             </div>
+
+           <FormErrors />  
         </CardForm>
     );
 }

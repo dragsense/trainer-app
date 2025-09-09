@@ -13,6 +13,7 @@ import { TFieldConfig } from "@/@types/form/field.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface PasswordChangeData {
     currentPassword: string;
@@ -88,6 +89,8 @@ export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
             <div className="space-y-4">
                 {inputs}
             </div>
+
+             <FormErrors />
         </CardForm>
     );
 }

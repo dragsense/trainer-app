@@ -14,6 +14,7 @@ import { IStripeConnectCreateResponse, TCreateStripeConnectData } from "@/@types
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface IStripeConnectFormModalFormProps {
     storeKey: string;
@@ -97,6 +98,8 @@ export default function StripeConnectFormModalForm({
                     {inputs}
                 </div>
             </div>
+
+            <FormErrors /> 
         </ModalForm>
     );
 }

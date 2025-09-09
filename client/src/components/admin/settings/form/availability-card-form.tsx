@@ -17,6 +17,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 export const DAYS_OF_WEEK: { key: TDayKey; label: string }[] = [
     { key: "monday", label: "Monday" },
@@ -260,6 +261,8 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
                     </Button>
                 </div>
             </div>
+
+             <FormErrors />
         </CardForm>
     );
 }

@@ -18,6 +18,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { Loader2 } from "lucide-react";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface IPaymentMethodConfigFormModalProps {
     storeKey: string;
@@ -114,6 +115,8 @@ export default function PaymentMethodConfigFormModal({ storeKey, open, onClose, 
                     {inputs}
                 </div>
             </div>
+
+             <FormErrors />
         </ModalForm>
     );
 }

@@ -13,6 +13,7 @@ import { IUser, TUserData } from "@/@types/user.type";
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 export interface IClientFormModalProps {
@@ -194,5 +195,7 @@ export default function ClientFormModal({
         </div>
       </div>
     </div>
+
+     <FormErrors />
   </ModalForm>
 }

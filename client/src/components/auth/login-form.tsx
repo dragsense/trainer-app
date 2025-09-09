@@ -19,6 +19,7 @@ import { useInput } from '@/hooks/use-input';
 // Stores
 import { useStore } from 'zustand';
 import { TFormHandlerStore, useRegisteredStore } from '@/stores';
+import { FormErrors } from '../shared-ui/form-errors';
 
 
 
@@ -107,7 +108,7 @@ export default function LoginForm({
       <div className="flex flex-col gap-4 w-full">
         {inputs}
       </div>
-
+ <FormErrors />
     </CardForm>
 
   );

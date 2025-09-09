@@ -19,6 +19,7 @@ import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 // Custom Components
 import ProfileImageUpload from "@/components/shared-ui/profile-image-upload";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 interface IProfileCardFormProps {
     storeKey: string;
@@ -135,6 +136,8 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 {inputs}
             </div>
+
+             <FormErrors />
         </CardForm>
     );
 }
