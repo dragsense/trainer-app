@@ -20,7 +20,7 @@ interface ISessionsAnalyticsCardProps {
 }
 
 export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ data, loading = false }) => {
-  if (!loading && (!data || !data.timeline || data.timeline.length === 0)) {
+  if (!loading && (!data || !data.timeline)) {
     return null;
   }
 
