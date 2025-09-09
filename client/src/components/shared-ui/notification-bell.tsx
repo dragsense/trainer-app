@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { Bell, X, Check, Trash2, AlertCircle } from 'lucide-react';
+import { Bell, X, Check, Trash2, AlertCircle, User2, UserCheck, User } from 'lucide-react';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead, useDeleteNotification, useUnreadCount } from '@/hooks/use-notifications';
 import { INotification } from '@/@types/notification.type';
 import { NotificationType } from '#/modules/v1/notifications/enums/notification.enum';
@@ -16,9 +16,9 @@ import { useQuery } from '@tanstack/react-query';
 const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
         case NotificationType.NEW_USER:
-            return '👤';
+            return <User className='w-4 h-4' />;
         case NotificationType.USER_UPDATED:
-            return '📝';
+            return <UserCheck className='w-4 h-4' />;
 
         case NotificationType.INVOICE_GENERATED:
             return '📄';
@@ -63,7 +63,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onNotification
 
     return (
         <div
-            className={`p-3 border-b last:border-b-0 ${isUnread ? 'bg-blue-50' : ''} cursor-pointer hover:bg-gray-50 transition-colors`}
+            className={`p-3 border-b last:border-b-0 ${isUnread ? 'bg-secondary/20' : ''} cursor-pointer hover:bg-secondary/10 transition-colors`}
             onClick={handleClick}
         >
             <div className="flex items-start gap-3">
@@ -73,10 +73,10 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onNotification
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>
+                            <p className={`text-sm font-medium ${isUnread ? 'text-foreground' : 'text-foreground/80'}`}>
                                 {notification.title}
                             </p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 {notification.message}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
@@ -98,7 +98,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onNotification
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onDelete(notification.id)}
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500"
                             >
                                 <Trash2 className="h-3 w-3" />
                             </Button>
@@ -161,7 +161,7 @@ export default function NotificationBell() {
     return (
         <div className="flex items-center gap-2">
             {/* Debug info */}
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
                 {isLoading ? 'Loading...' : ``}
             </div>
 
@@ -200,17 +200,17 @@ export default function NotificationBell() {
                         {!appSettings?.allowNotification ? (
                             <div className="p-4 text-center">
                                 <AlertCircle className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-                                <p className="text-sm text-gray-600 mb-1">Global notifications are disabled</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm text-muted-foreground mb-1">Global notifications are disabled</p>
+                                <p className="text-xs text-muted-foreground">
                                     Enable notifications in your app settings to receive updates
                                 </p>
                             </div>
                         ) : isLoading ? (
-                            <div className="p-4 text-center text-gray-500">
+                            <div className="p-4 text-center text-muted-foreground">
                                 Loading notifications...
                             </div>
                         ) : notifications.length === 0 ? (
-                            <div className="p-4 text-center text-gray-500">
+                            <div className="p-4 text-center text-muted-foreground">
                                 No notifications
                             </div>
                         ) : (
