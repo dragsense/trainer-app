@@ -22,14 +22,12 @@ export default function NotificationSettingsPage() {
     const STORE_KEY = 'notification-settings';
 
     return (
-        <PageInnerLayout Header={<Header />}>
             <SingleHandler<INotificationSetting>
                 queryFn={fetchNotificationSettings}
                 storeKey={STORE_KEY}
                 SingleComponent={NotificationSettingsForm}
                 enabled={true}
             />
-        </PageInnerLayout>
     );
 }
 

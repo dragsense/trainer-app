@@ -27,8 +27,7 @@ export default function BillingsPage() {
 
   const STORE_KEY = 'billing';
 
-  return (
-    <PageInnerLayout Header={<Header />}>
+  return (<>
       <SingleHandler<IBilling>
         queryFn={fetchBilling}
         deleteFn={deleteBilling}
@@ -56,7 +55,7 @@ export default function BillingsPage() {
         ListComponent={BillingTable}
         storeKey={STORE_KEY}
       />
-    </PageInnerLayout>
+    </>
   );
 }
 

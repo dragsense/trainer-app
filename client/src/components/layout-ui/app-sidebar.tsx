@@ -75,12 +75,13 @@ export function AppSidebar({
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar collapsible="offcanvas" themeClass={themeClass} {...props}>
-          <SidebarHeader className="my-5">
+          <SidebarHeader >
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="hover:bg-transparent">
                   <Link to={ROOT_ROUTE} className="h-13">
                     <img src={logo} className="h-full object-contain" />
+                    <span className="text-900 text-xl uppercase">Formance</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -89,7 +90,7 @@ export function AppSidebar({
           <SidebarContent className="mt-2">
             <SidebarGroup>
               <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu>
+                <SidebarMenu className="gap-3">
                   {navItems.map((item) => {
                     const hasChildren = item.children && item.children.length > 0;
                     const isExpanded = expandedItems[item.title];
@@ -108,9 +109,9 @@ export function AppSidebar({
                                   matchRoutePath(url, location.pathname)
                                 )}
                                 tooltip={item.title}
-                                className="cursor-pointer hover:border-l-4 hover:border-primary hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:border-l-4 data-[active=true]:border-primary"
+                                className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl"
                               >
-                                {item.icon && <item.icon />}
+                                {item.icon && <item.icon className="group-data-[active=true]:text-background"   />}
                                 <span>{item.title}</span>
                               </SidebarMenuButton>
                             </CollapsibleTrigger>
@@ -121,11 +122,11 @@ export function AppSidebar({
                                     <SidebarMenuSubButton
                                       asChild
                                       isActive={location.pathname === child.url}
-                                      className="cursor-pointer hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:font-medium data-[active=true]:text-primary"
+                                      className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl"
                                     >
                                       <Link to={child.url}>
                                         {child.icon && (
-                                          <child.icon className="h-4 w-4" />
+                                          <child.icon className="group-data-[active=true]:text-background hover:text-background"  />
                                         )}
                                         <span>{child.title}</span>
                                       </Link>
@@ -147,9 +148,9 @@ export function AppSidebar({
                               matchRoutePath(url, location.pathname)
                             )}
                             tooltip={item.title}
-                            className="cursor-pointer hover:border-l-4 hover:border-primary hover:bg-primary/10 data-[active=true]:bg-primary/10 data-[active=true]:border-l-4 data-[active=true]:border-primary"
+                            className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl"
                           >
-                            {item.icon && <item.icon />}
+                            {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background"  />}
                             <span>{item.title}</span>
                           </SidebarMenuButton>
                         </Link>
@@ -172,7 +173,7 @@ export function AppSidebar({
               ) : (
                 <LogOutIcon className="h-4 w-4" />
               )}
-              {isLoading ? "Logging out..." : "Log out"}
+              {isLoading ? "Logging out..." : "Log out"} 
             </Button>
           </SidebarFooter>
         </Sidebar>

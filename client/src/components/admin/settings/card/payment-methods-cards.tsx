@@ -100,18 +100,18 @@ export default function PaymentMethodsCards({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6">
+      <div className="grid gap-2">
         {paymentMethods?.map((method) => (
-          <AppCard key={method.id} className="overflow-hidden"
+          <AppCard key={method.id} className="overflow-hidden gap-1"
 
             header={
               <>
                 <div className="flex items-center flex-wrap justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-top space-x-4">
                     {getPaymentMethodIcon(method.key)}
                     <div>
-                      <CardTitle className="text-lg">{method.name}</CardTitle>
-                      <p className="text-sm text-gray-500">Type: {method.key}</p>
+                      <CardTitle className="text-md">{method.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">Type: {method.key}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">

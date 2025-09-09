@@ -22,14 +22,12 @@ export default function AvailabilityPage() {
     const STORE_KEY = 'availability';
 
     return (
-        <PageInnerLayout Header={<Header />}>
-            <SingleHandler<IUserAvailability>
-                queryFn={fetchMyAvailability}
-                storeKey={STORE_KEY}
-                SingleComponent={AvailabilityForm}
-                enabled={true}
-            />
-        </PageInnerLayout>
+        <SingleHandler<IUserAvailability>
+            queryFn={fetchMyAvailability}
+            storeKey={STORE_KEY}
+            SingleComponent={AvailabilityForm}
+            enabled={true}
+        />
     );
 }
 

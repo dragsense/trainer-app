@@ -35,11 +35,11 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
 
 
   const header = (
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-semibold">Reminders Analytics</h3>
+    <div className="flex flex-wrap items-center justify-between">
+      <h3 className="text-md font-semibold">Reminders Analytics</h3>
       <div className="text-sm text-muted-foreground flex items-center gap-1">
-        <span>Success Rate:</span>
-        <span className="font-medium text-green-600">
+        <span className='text-sm'>Success Rate:</span>
+        <span className="font-medium text-sm text-green-600">
           {data?.timeline?.[0]?.successRate?.toFixed(1) || 0}%
         </span>
       </div>
@@ -52,16 +52,16 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
       loading={loading}
       className="hover:shadow-md transition-shadow"
     >
-      <div className="space-y-6">
+      <div className="space-y-2">
         {/* Overview Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <StatCard
             title="Total Reminders"
             value={data?.reminderTypes?.reduce((sum, type) => sum + type.count, 0) || 0}
             icon={<div className="bg-blue-100 p-2 rounded-full hidden md:block"><Mail className="h-4 w-4 text-blue-600" /></div>}
             trend={5.2} // Example trend value
           />
-          <StatCard
+       {/*    <StatCard
             title="Successful"
             value={data?.reminderTypes?.reduce((sum, type) => sum + type.successfulCount, 0) || 0}
             icon={<div className="bg-green-100 p-2 rounded-full hidden md:block"><CheckCircle2 className="h-4 w-4 text-green-600" /></div>}
@@ -78,7 +78,7 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
             value={data?.timeline?.[0]?.failedReminders || 0}
             icon={<div className="bg-red-100 p-2 rounded-full hidden md:block"><AlertCircle className="h-4 w-4 text-red-600" /></div>}
             trend={1.5}
-          />
+          /> */}
         </div>
 
       
@@ -90,7 +90,7 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
               <div key={type.type} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {reminderTypeIcons[type.type as keyof typeof reminderTypeIcons] || reminderTypeIcons.DEFAULT}
-                  <span className="capitalize font-medium">{type.type.toLowerCase()}</span>
+                  <span className="capitalize text-sm">{type.type.toLowerCase()}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">

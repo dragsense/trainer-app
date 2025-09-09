@@ -50,30 +50,29 @@ export const BillingOverview = ({
       {/* Header */}
       <AppCard
         header={
-          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">Billing Analytics</h2>
-              <p className="text-muted-foreground">{isAdmin ? "Platform" : "Your"} billing overview for August 2025</p>
+              <h2 className="text-md font-semibold tracking-tight">Billing Analytics</h2>
+              <p className="text-muted-foreground text-sm">{isAdmin ? "Platform" : "Your"} billing overview for August 2025</p>
             </div>
-          </div>
+          
         }
       >
         <Tabs defaultValue="overview">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 gap-2">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="revenue">Revenue</TabsTrigger>
             <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-2">
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5  gap-4 mb-6">
               <AppCard
-                header={<span className="text-sm font-medium text-blue-600">Total Billings</span>}
+                header={<span className="text-sm font-medium text-secondary">Total Billings</span>}
                 footer={`${analyticsData.summary.total_billings} invoices`}
               >
-                <div className="text-2xl font-bold text-blue-700">{formatCurrency(analyticsData.revenue.total / 100)}</div>
+                <div className="text-2xl font-bold text-secondary">{formatCurrency(analyticsData.revenue.total / 100)}</div>
               </AppCard>
 
               <AppCard
@@ -104,10 +103,10 @@ export const BillingOverview = ({
               </AppCard>
 
               <AppCard
-                header={<span className="text-sm font-medium text-purple-600">Overdue</span>}
+                header={<span className="text-sm font-medium text-red-800">Overdue</span>}
                 footer={`${analyticsData.summary.overdue_billings} late`}
               >
-                <div className="text-2xl font-bold text-purple-700">
+                <div className="text-2xl font-bold text-red-900">
                   {formatCurrency(analyticsData.summary.total_overdue / 100)}
                 </div>
               </AppCard>
@@ -201,10 +200,9 @@ export const BillingOverview = ({
 
           {/* Breakdown Tab */}
           <TabsContent value="breakdown" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <AppCard
                 header={<span className="text-sm font-medium">Revenue by Type</span>}
-                footer="Distribution across billing types"
               >
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -254,7 +252,6 @@ export const BillingOverview = ({
 
               <AppCard
                 header={<span className="text-sm font-medium">Payment Methods</span>}
-                footer="Distribution by payment type"
               >
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -287,7 +284,6 @@ export const BillingOverview = ({
 
               <AppCard
                 header={<span className="text-sm font-medium">Currency Breakdown</span>}
-                footer="Revenue by currency type"
               >
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">

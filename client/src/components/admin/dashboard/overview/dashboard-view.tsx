@@ -8,20 +8,22 @@ import { DashboardControls } from './dashboard-controls';
 import CompactDashboard from './compact-dashboard';
 
 // Types
-import { ICombinedDashboardData } from '@/@types/dashboard.type';
+import { ICombinedDashboardData, Period } from '@/@types/dashboard.type';
+import { DateRange } from 'react-day-picker';
 
 interface IDashboardViewProps {
   storeKey: string;
+  period: Period,
+  customRange?: DateRange
 }
 
 
-export const DashboardView: React.FC<IDashboardViewProps> = ({ storeKey }) => {
+export const DashboardView: React.FC<IDashboardViewProps> = ({ storeKey, period, customRange }) => {
   const singleStoreKey = storeKey + "-single";
 
 
   // Local state for filters
-  const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
-  const [customDate, setCustomDate] = useState<string>('');
+
 
   // Get the store
   const singleStore = useRegisteredStore<TSingleHandlerStore<ICombinedDashboardData>>(singleStoreKey);
@@ -46,16 +48,7 @@ export const DashboardView: React.FC<IDashboardViewProps> = ({ storeKey }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
-      <DashboardControls
-        period={period}
-        setPeriod={setPeriod}
-        customDate={customDate}
-        setCustomDate={setCustomDate}
-      />
-
-      <CompactDashboard data={data} error={error} isLoading={false} />
-
+      <CompactDashboard data={data} error={error} period={period} customRange={customRange} isLoading={false} />
     </div >
   );
 };

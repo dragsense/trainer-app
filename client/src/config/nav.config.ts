@@ -38,12 +38,12 @@ export const navItems: {
             urls: [ADMIN_ROUTES.SESSIONS],
             icon: Calendar,
         },
-         {
+        {
             title: "Billings",
             urls: [ADMIN_ROUTES.BILLINGS],
             icon: Banknote,
         },
-      
+
         {
             title: "Reminders",
             urls: [ADMIN_ROUTES.REMINDERS],
@@ -79,7 +79,7 @@ export const navItems: {
                     title: "Notifications",
                     url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
                 },
-                
+
                 {
                     title: "Payment Methods",
                     url: ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
@@ -92,7 +92,9 @@ export const navItems: {
                     title: "Stripe Connect",
                     url: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
                 },
-            
+
             ]
         }
     ];
+
+

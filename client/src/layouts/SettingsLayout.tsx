@@ -17,7 +17,7 @@ export default function SettingsLayout() {
     const location = useLocation();
 
     return (
-        <div className="flex flex-col min-h-screen md:flex-row">
+        <div className="flex flex-col gap-2 min-h-screen md:flex-row">
             {/* Sidebar for Desktop */}
             <div className="hidden md:block w-64 shadow-sm border-r">
                 <div className="p-6 border-b">
@@ -39,8 +39,8 @@ export default function SettingsLayout() {
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                                     isActive
-                                        ? "bg-primary/10 text-primary"
-                                        : "text-muted-foreground hover:bg-muted/50"
+                                        ? "bg-secondary/10 text-secondary"
+                                        : "text-muted-foreground/50 hover:bg-muted/50"
                                 )}
                             >
                                 <Icon className="h-5 w-5" />
@@ -56,13 +56,11 @@ export default function SettingsLayout() {
 
             {/* Main Content */}
             <div className="flex-1 overflow-auto mb-16 md:mb-0">
-                <div className="md:p-4">
                     <Outlet />
-                </div>
             </div>
 
             {/* Bottom Nav for Mobile */}
-            <nav className="fixed bottom-10 left-0 right-0 z-50 border-t shadow-md md:hidden">
+            <nav className="fixed bottom-10 left-0 right-0 z-50 border-t shadow-md md:hidden bg-foreground">
                 <div className="flex justify-around">
                     {settingsNavItems.map((item) => {
                         const Icon = item.icon;
@@ -74,7 +72,7 @@ export default function SettingsLayout() {
                                 to={item.href}
                                 className={cn(
                                     "flex flex-col items-center justify-center py-2 text-xs transition-colors",
-                                    isActive ? "text-primary" : "text-muted-foreground"
+                                    isActive ? "text-secondary" : "text-background/50"
                                 )}
                             >
                                 <Icon className="h-5 w-5 mb-0.5" />

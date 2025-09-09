@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 
 // Config
-import { ADMIN_ROUTES } from "@/config/routes.config";
+import { ADMIN_ROUTES, ROUTE_TITLES } from "@/config/routes.config";
 
 
 // Layout Components
@@ -25,26 +25,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const ROUTE_TITLES: Record<string, string> = {
-  [ADMIN_ROUTES.DASHBOARD]: "Dashboard",
-  [ADMIN_ROUTES.TRAINERS]: "Trainers",
-  [ADMIN_ROUTES.CLIENTS]: "Clients",
-  [ADMIN_ROUTES.TRAINER_CLIENTS]: "Trainer Clients",
-  [ADMIN_ROUTES.SESSIONS]: "Sessions",
-  [ADMIN_ROUTES.REMINDERS]: "Reminders",
-  [ADMIN_ROUTES.BILLINGS]: "Billings",
-  [ADMIN_ROUTES.STRIPE_INVOICES]: "Stripe Invoices",
-  [ADMIN_ROUTES.STRIPE_TRANSACTIONS]: "Stripe Transactions",
-  [ADMIN_ROUTES.SETTINGS]: "Settings",
-  [ADMIN_ROUTES.SETTINGS_PROFILE]: "Settings | Profile",
-  [ADMIN_ROUTES.SETTINGS_NOTIFICATIONS]: "Settings | Notifications",
-  [ADMIN_ROUTES.SETTINGS_APP]: "Settings | App Settings",
-  [ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS]: "Settings | Payment Methods",
-  [ADMIN_ROUTES.SETTINGS_AVAILABILITY]: "Settings | Availability",
-  [ADMIN_ROUTES.SETTINGS_SECURITY]: "Settings | Security",
-  [ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT]: "Settings | Stripe Connect",
 
-};
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
@@ -68,20 +49,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider>
+
       <AppSidebar
         variant="inset"
-        className="p-0"
       />
       <SidebarInset
         className="w-100"
-      
+
       >
         <AppHeader title={title} />
+
         <div className="flex flex-1 flex-col p-4 lg:px-6">
+
           <div className="@container/main flex flex-1 flex-col gap-2">
             {children}
           </div>
+
+
         </div>
+
+
+        <footer className="text-center py-2 text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Trainer App
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );

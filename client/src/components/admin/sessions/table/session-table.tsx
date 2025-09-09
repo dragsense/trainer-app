@@ -115,14 +115,14 @@ export default function SessionTable({
   const renderFilters = (
     <>
       <TableDateFilter
-        placeholder="Joined After"
+        placeholder="Created After"
         value={filters.joinedAfter ? new Date(filters.joinedAfter) : undefined}
         onSelect={(date) =>
           handleFilterChange("joinedAfter", date?.toISOString())
         }
       />
       <TableDateFilter
-        placeholder="Joined Before"
+        placeholder="Created Before"
         value={filters.joinedBefore ? new Date(filters.joinedBefore) : undefined}
         onSelect={(date) =>
           handleFilterChange("joinedBefore", date?.toISOString())

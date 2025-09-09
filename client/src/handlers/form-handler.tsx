@@ -24,7 +24,6 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 // Stores
 import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
 import { toast } from "sonner";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
@@ -135,7 +134,6 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
 
   const FormWrapper = ({ children }: { children: ReactNode }) => <Form {...form}>
 
-    <FormErrors />
     {children}
   </Form>;
 

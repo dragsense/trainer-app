@@ -16,12 +16,15 @@ import { ADMIN_ROUTES } from "@/config/routes.config";
 export default function BillingPage() {
     return (
         <PageInnerLayout Header={<Header />}>
+            <div className="space-y-2">
+            <BillingTypeTabs/>
             <Outlet />
+            </div>
         </PageInnerLayout>
     );
 }
 
-const Header = () => {
+const BillingTypeTabs = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -58,7 +61,7 @@ const Header = () => {
             onValueChange={(val) => navigate(val)}
             className="w-full"
         >
-            <TabsList className="w-full grid grid-cols-4">
+            <TabsList className="w-full grid grid-cols-1 md:grid-cols-4">
                 {tabs.map(tab => (
                     <TabsTrigger key={tab.to} value={tab.to} className="flex items-center gap-2">
                         <tab.icon className="w-4 h-4" />
@@ -69,3 +72,6 @@ const Header = () => {
         </Tabs>
     );
 };
+
+
+const Header = () => null;

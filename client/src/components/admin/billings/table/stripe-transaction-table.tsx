@@ -99,17 +99,7 @@ export default function StripeTransactionTable({
 
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-bold">Transaction</h2>
-                    <p className="text-muted-foreground">
-                        iew all Stripe charges, payments, and refunds
-                    </p>
-                </div>
-            </div>
-
+      
             <CardTable<IStripeTransaction>
                 listStore={listStore}
                 columns={transactionColumns}
@@ -159,6 +149,5 @@ export default function StripeTransactionTable({
                 emptyMessage="No transactions found."
                 showPagination
             />
-        </div>
     );
 } 

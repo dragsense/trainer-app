@@ -21,7 +21,6 @@ export default function PaymentMethodsPage() {
     const STORE_KEY = 'paymentMethod';
 
     return (
-        <PageInnerLayout Header={<Header />}>
             <SingleHandler<IPaymentMethod[]>
                 queryFn={fetchPaymentMethods}
                 storeKey={STORE_KEY}
@@ -40,7 +39,6 @@ export default function PaymentMethodsPage() {
             />
 
 
-        </PageInnerLayout>
     );
 }
 

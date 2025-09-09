@@ -78,3 +78,26 @@ export const COMMON_ROUTES = {
   UNAUTHORIZED: "/unauthorized",
 } as const;
 export type CommonRoute = keyof typeof COMMON_ROUTES;
+
+
+
+export const ROUTE_TITLES: Record<string, string> = {
+    [ADMIN_ROUTES.DASHBOARD]: "Dashboard",
+    [ADMIN_ROUTES.TRAINERS]: "Trainers",
+    [ADMIN_ROUTES.CLIENTS]: "Clients",
+    [ADMIN_ROUTES.TRAINER_CLIENTS]: "Trainer Clients",
+    [ADMIN_ROUTES.SESSIONS]: "Sessions",
+    [ADMIN_ROUTES.REMINDERS]: "Reminders",
+    [ADMIN_ROUTES.BILLINGS]: "Billings",
+    [ADMIN_ROUTES.STRIPE_INVOICES]: "Billings",
+    [ADMIN_ROUTES.STRIPE_TRANSACTIONS]: "Billings",
+    [ADMIN_ROUTES.SETTINGS]: "Settings",
+    [ADMIN_ROUTES.SETTINGS_PROFILE]: "Settings | Profile",
+    [ADMIN_ROUTES.SETTINGS_NOTIFICATIONS]: "Settings | Notifications",
+    [ADMIN_ROUTES.SETTINGS_APP]: "Settings | App Settings",
+    [ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS]: "Settings | Payment Methods",
+    [ADMIN_ROUTES.SETTINGS_AVAILABILITY]: "Settings | Availability",
+    [ADMIN_ROUTES.SETTINGS_SECURITY]: "Settings | Security",
+    [ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT]: "Settings | Stripe Connect",
+
+};

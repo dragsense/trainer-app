@@ -22,14 +22,12 @@ export default function AppSettingsPage() {
     const STORE_KEY = 'app-settings';
 
     return (
-        <PageInnerLayout Header={<Header />}>
             <SingleHandler<IAppSetting>
                 queryFn={fetchAppSettings}
                 storeKey={STORE_KEY}
                 SingleComponent={AppSettingsForm}
                 enabled={true}
             />
-        </PageInnerLayout>
     );
 }
 

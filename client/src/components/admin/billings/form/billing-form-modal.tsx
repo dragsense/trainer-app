@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { LineItemInput } from "./line-item-input";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 
@@ -193,6 +194,8 @@ export default function BillingFormModal({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {inputs}
       </div>
+
+         <FormErrors />
     </ModalForm>
 
   </>

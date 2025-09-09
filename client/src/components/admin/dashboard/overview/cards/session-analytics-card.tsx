@@ -31,10 +31,10 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
 
   // Colors for session types in charts
   const COLORS = {
-    totalSessions: '#3b82f6', // blue
-    completedSessions: '#22c55e', // green
-    scheduledSessions: '#f59e0b', // amber
-    cancelledSessions: '#ef4444', // red
+    totalSessions: '#C6FF00',
+    completedSessions: '#81fdad',
+    scheduledSessions: '#00c2ff',
+    cancelledSessions: '#FFE2E5',
   };
 
   // Tooltip formatter for currency and numbers
@@ -48,19 +48,19 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
   return (
     <AppCard
       header={
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Sessions Analytics</h3>
+        <div className="flex flex-wrap items-center justify-between">
+          <h3 className="text-md font-semibold">Sessions Analytics</h3>
           <p className="text-sm text-muted-foreground">{periodLabel}</p>
         </div>
+
       }
       loading={loading}
       className="col-span-full hover:shadow-md transition-shadow"
     >
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
         {/* Timeline Line Chart */}
-        <div className="border rounded-lg p-4">
-          <h4 className="font-semibold mb-4">Sessions Over Time</h4>
-          <ResponsiveContainer width="100%" height={250}>
+        <div className="border rounded-lg p-1 h-100">
+          <ResponsiveContainer width="100%" >
             <LineChart data={data?.timeline}>
               <XAxis
                 dataKey="period"
@@ -69,7 +69,7 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
               />
               <YAxis allowDecimals={false} />
               <Tooltip formatter={tooltipFormatter} />
-              <Legend verticalAlign="top" height={36} />
+             
               <Line
                 type="monotone"
                 dataKey="totalSessions"
@@ -99,12 +99,13 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
                 strokeWidth={2}
                 name="Cancelled"
               />
+               <Legend verticalAlign="top" height={36} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Summary cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <StatCard
             title="Total Potential Revenue"
             value={data?.timeline.reduce((acc, item) => acc + item.totalPotentialRevenue / 100, 0) || 0}
@@ -130,9 +131,12 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
           />
         </div>
 
-        {/* Session Types Breakdown */}
-        {data && <div className="border rounded-lg p-4">
-          <h4 className="font-semibold mb-4">Session Types Breakdown</h4>
+       
+      </div>
+
+       {/* Session Types Breakdown */}
+        {data && <div className="border rounded-lg p-1 mt-2">
+          <h5 className="font-normal mb-4 text-sm">Session Types Breakdown</h5>
           {data.sessionTypes.length === 0 && <p className="text-sm text-muted-foreground">No session types data.</p>}
           {data.sessionTypes.length > 0 && (
             <ResponsiveContainer width="100%" height={200}>
@@ -157,18 +161,17 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
                   }}
                 />
                 <Legend />
-                <Bar dataKey="count" fill="#3b82f6" name="Count" />
-                <Bar dataKey="averagePrice" fill="#22c55e" name="Avg Price">
+                <Bar dataKey="count" fill="#C6FF00" name="Count" />
+                <Bar dataKey="averagePrice" fill="#00c2ff" name="Avg Price">
                   {/* Optional: Different colors per bar */}
                   {data.sessionTypes.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill="#22c55e" />
+                    <Cell key={`cell-${index}`} fill="#00c2ff" />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>}
-      </div>
     </AppCard>
   );
 };
@@ -184,13 +187,18 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, isCurrency, isPercent
   const formattedValue = isCurrency
     ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
     : isPercentage
-    ? `${value.toFixed(1)}%`
-    : value;
+      ? `${value.toFixed(1)}%`
+      : value;
 
   return (
-    <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col items-start gap-2">
-      <p className="text-sm text-muted-foreground font-medium">{title}</p>
+    <AppCard
+      header={
+        <h3 className="text-sm text-muted-foreground font-medium">{title}</h3>
+      }
+
+    >
       <p className="text-3xl font-bold">{formattedValue}</p>
-    </div>
+    </AppCard>
+
   );
 };

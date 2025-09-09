@@ -123,14 +123,14 @@ export default function BillingTable({
   const renderFilters = (
     <>
       <TableDateFilter
-        placeholder="Joined After"
+        placeholder="Created After"
         value={filters.joinedAfter ? new Date(filters.joinedAfter) : undefined}
         onSelect={(date) =>
           handleFilterChange("joinedAfter", date?.toISOString())
         }
       />
       <TableDateFilter
-        placeholder="Joined Before"
+        placeholder="Created Before"
         value={filters.joinedBefore ? new Date(filters.joinedBefore) : undefined}
         onSelect={(date) =>
           handleFilterChange("joinedBefore", date?.toISOString())
@@ -140,58 +140,59 @@ export default function BillingTable({
   );
 
   return (
-    <CardTable<IBilling>
-      listStore={listStore}
-      columns={tableColumns}
-      renderToolbar={() => (
-        <div className="flex flex-col xl:flex-row xl:items-center gap-2">
-          <h3 className="text-bold">Billings</h3>
 
-          <div className="flex flex-1 justify-between items-center gap-2">
-            <div className="flex-1 flex items-center gap-2">
-              <Input
-                placeholder="Search billings..."
-                value={filters.search || ""}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-                className="max-w-sm"
-              />
-              <div className="xl:hidden flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    collisionPadding={20}
-                    align="start"
-                    className="w-64 p-2"
-                  >
-                    <div className="flex flex-col gap-2">{renderFilters}</div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="hidden xl:flex items-center gap-2">
-                {renderFilters}
-              </div>
+      <CardTable<IBilling>
+        listStore={listStore}
+        columns={tableColumns}
+        renderToolbar={() => (
+          <div className="flex flex-col xl:flex-row xl:items-center gap-2">
+            <h3 className="text-bold">Billings</h3>
 
-              {hasActiveFilters && (
-                <Button variant="outline" onClick={handleClearFilters}>
-                  <XIcon />{" "}
-                  <span className="hidden lg:inline">Clear Filters</span>
-                </Button>
-              )}
+            <div className="flex flex-1 justify-between items-center gap-2">
+              <div className="flex-1 flex items-center gap-2">
+                <Input
+                  placeholder="Search billings..."
+                  value={filters.search || ""}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  className="max-w-sm"
+                />
+                <div className="xl:hidden flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      collisionPadding={20}
+                      align="start"
+                      className="w-64 p-2"
+                    >
+                      <div className="flex flex-col gap-2">{renderFilters}</div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="hidden xl:flex items-center gap-2">
+                  {renderFilters}
+                </div>
+
+                {hasActiveFilters && (
+                  <Button variant="outline" onClick={handleClearFilters}>
+                    <XIcon />{" "}
+                    <span className="hidden lg:inline">Clear Filters</span>
+                  </Button>
+                )}
+              </div>
+              <Button
+                onClick={handleCreate}
+              >
+                <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
+              </Button>
             </div>
-            <Button
-              onClick={handleCreate}
-            >
-              <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
-            </Button>
           </div>
-        </div>
-      )}
-      emptyMessage="No billings found."
-      showPagination
-    />
+        )}
+        emptyMessage="No billings found."
+        showPagination
+      />
   );
 }

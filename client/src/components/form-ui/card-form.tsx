@@ -46,7 +46,7 @@ export function CardForm<TFormData, TResponse>({
         <AppCard
           header={
             <>
-              <h2 className="text-2xl font-semibold">{title}</h2>
+              <h2 className="text-md font-semibold">{title}</h2>
               {description && <p className="text-sm text-muted-foreground">{description}</p>}
             </>
           }

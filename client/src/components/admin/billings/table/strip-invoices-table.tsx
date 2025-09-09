@@ -99,23 +99,12 @@ export default function StripeInvoiceTable({
 
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-bold">Invoices</h2>
-                    <p className="text-muted-foreground">
-                        Manage Stripe invoices and payment tracking
-                    </p>
-                </div>
-            </div>
-
             <CardTable<IStripeInvoice>
                 listStore={listStore}
                 columns={invoiceColumns}
                 renderToolbar={() => (
                     <div className="flex flex-col xl:flex-row xl:items-center gap-2">
-                        <h3 className="text-bold">Billings</h3>
+                        <h3 className="text-bold">Invoices</h3>
 
                         <div className="flex flex-1 justify-between items-center gap-2">
                             <div className="flex-1 flex items-center gap-2">
@@ -159,6 +148,5 @@ export default function StripeInvoiceTable({
                 emptyMessage="No billings found."
                 showPagination
             />
-        </div>
     );
 } 

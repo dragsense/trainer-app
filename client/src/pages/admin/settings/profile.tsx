@@ -22,14 +22,13 @@ export default function ProfilePage() {
     const STORE_KEY = 'profile';
 
     return (
-        <PageInnerLayout Header={<Header />}>
-            <SingleHandler<IProfile>
-                queryFn={fetchProfile}
-                storeKey={STORE_KEY}
-                SingleComponent={ProfileForm}
-                enabled={true}
-            />
-        </PageInnerLayout>
+        <SingleHandler<IProfile>
+            queryFn={fetchProfile}
+            storeKey={STORE_KEY}
+            SingleComponent={ProfileForm}
+            enabled={true}
+        />
+
     );
 }
 

@@ -65,15 +65,7 @@ export default function StripeConnectInfoCard({ storeKey }: IStripeConnectInfoCa
   }
 
   return (<>
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Stripe Connect</h1>
-        <p className="text-muted-foreground mt-1">
-          Connect your Stripe account to receive payments directly from clients
-        </p>
-      </div>
-
-
+    <div className="space-y-2">
       <AppCard>
         <div className="flex flex-wrap items-center justify-between mb-6">
           <div className="flex flex-wrap items-center gap-3">

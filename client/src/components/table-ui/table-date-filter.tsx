@@ -1,4 +1,4 @@
-import { DatePicker } from "@/components/ui/date-picker";
+import { DatePicker } from "@/components/shared-ui/date-picker";
 
 interface TableDateFilterProps {
   placeholder?: string;

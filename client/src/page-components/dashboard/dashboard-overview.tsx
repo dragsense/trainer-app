@@ -10,15 +10,26 @@ import { DashboardView } from '@/components/admin';
 import { fetchCombinedDashboardData } from '@/services/dashboard.api';
 
 // Types
-import { ICombinedDashboardData } from '@/@types/dashboard.type';
+import { ICombinedDashboardData, Period } from '@/@types/dashboard.type';
+import { DateRange } from 'react-day-picker';
 
-const DashboardOverview: React.FC = () => {
+
+interface DashboardOverviewProps {
+  period: Period
+  customRange?: DateRange
+}
+
+const DashboardOverview: React.FC<DashboardOverviewProps> = ({ period, customRange }) => {
   return (
-    <SingleHandler<ICombinedDashboardData, ICombinedDashboardData>
-      queryFn={() => fetchCombinedDashboardData()}
+    <SingleHandler<ICombinedDashboardData, DashboardOverviewProps>
+      queryFn={() => fetchCombinedDashboardData({ period })}
       storeKey="dashboardOverview"
       SingleComponent={DashboardView}
       enabled={true}
+      singleProps={{
+        customRange,
+        period
+      }}
     />
   );
 };

@@ -17,7 +17,6 @@ import { getStripeConnectStatus, deleteStripeConnect } from "@/services/setting.
 export default function StripeConnectPage() {
 
   return (
-    <div className="space-y-6">
       <SingleHandler<IStripeConnectStatus>
         queryFn={getStripeConnectStatus}
         deleteFn={deleteStripeConnect}
@@ -29,6 +28,5 @@ export default function StripeConnectPage() {
           comp: StripeConnectForm
         }]}
       />
-    </div>
   );
 }

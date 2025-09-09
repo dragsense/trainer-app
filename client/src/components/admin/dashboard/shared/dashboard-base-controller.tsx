@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/components/shared-ui/date-picker';
 import { RefreshCw, Download } from 'lucide-react';
 
 interface IDashboardBaseControllerProps {
