@@ -36,18 +36,25 @@ export function AppHeader({ title }: AppHeaderProps) {
   const email = user?.email || "Unknown";
 
   return (
-    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-20 shrink-0 items-center gap-2 transition-[width,height] ease-linear">
-      <div className="flex w-full flex-row  items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
-        <div className="flex w-full items-center gap-1">
+    <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-20 flex h-20  shrink-0 items-center gap-2 transition-[width,height] ease-linear">
+      <div className="flex flex-row w-full  items-center justify-between gap-1 px-4 lg:gap-2 lg:px-6">
+        <div className="flex flex-1 items-center gap-1">
           <SidebarTrigger className="-ml-1 block md:hidden" />
           <h1 className="text-lg md:text-2xl font-semibold">{title}</h1>
         </div>
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <NotificationBell />
-          <Avatar className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg ">
-            <AvatarImage src={navLogo} alt={firstName} />
-            <AvatarFallback className="rounded-xxl bg-blue/10">
-              {firstName?.substring(0, 2).toLocaleUpperCase()}
+          <NotificationBell />
+          <Avatar className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg">
+            {/* User image */}
+            <AvatarImage src={undefined} alt={firstName} />
+
+            {/* Fallback: initials or icon */}
+            <AvatarFallback className="rounded-xxl bg-blue/10 flex items-center justify-center">
+              {firstName ? (
+                firstName.substring(0, 2).toUpperCase() // show initials
+              ) : (
+                <User className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" /> // show icon if no name
+              )}
             </AvatarFallback>
           </Avatar>
           <div className="hidden sm:grid flex-1 text-left text-sm leading-tight">

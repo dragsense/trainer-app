@@ -79,7 +79,7 @@ export function AppSidebar({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="hover:bg-transparent">
-                  <Link to={ROOT_ROUTE} className="h-30">
+                  <Link to={ROOT_ROUTE} className="h-13">
                     <img src={logo} className="h-full object-contain" />
                   </Link>
                 </SidebarMenuButton>
@@ -164,7 +164,7 @@ export function AppSidebar({
             <Button
               onClick={logout}
               variant="secondary"
-              className="text-primary justify-start gap-2 mb-2"
+              className="justify-start gap-2 mb-2"
               disabled={isLoading}
             >
               {isLoading ? (
