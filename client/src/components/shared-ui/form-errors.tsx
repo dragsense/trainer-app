@@ -22,7 +22,7 @@ export function FormErrors() {
     if (errorMessages.length === 0) return null;
 
     return (
-        <div className="bg-red-200 text-red-400 p-1 my-2">
+        <div className="bg-red-100 text-red-700 text-sm p-2 mt-2 rounded">
             <strong>Please fix the following errors:</strong>
             <ul style={{ marginLeft: "1.25rem", listStyleType: "disc" }}>
                 {errorMessages.map((msg, idx) => (
