@@ -10,13 +10,13 @@ export default function AuthLayout() {
 
       {/* Left Panel */}
       <div className="flex flex-col items-center justify-center gap-1">
-        <img src={logo} alt="Trainer App Logo" className="w-6 md:w-6" />
-        <h1 className="text-3xl font-bold text-center">Welcome to Trainer App</h1>
+        <img src={logo} alt="FORMANCE Logo" className="w-6 md:w-6" />
+        <h1 className="text-3xl font-bold text-center">Welcome to FORMANCE</h1>
         <p className="text-center text-sm max-w-sm">
           Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.
         </p>
         <a
-          href="https://linkedin.com/company/your-linkedin"
+          href="https://linkedin.com/company/formance"
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-primary/100 underline underline-offset-4"

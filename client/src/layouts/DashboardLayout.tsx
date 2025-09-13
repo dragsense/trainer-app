@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
         <footer className="text-center py-2 text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Trainer App
+          © {new Date().getFullYear()} FORMANCE
         </footer>
       </SidebarInset>
     </SidebarProvider>
