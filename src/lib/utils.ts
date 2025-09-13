@@ -1,3 +1,4 @@
+import { AnalyticsPeriod } from '@/modules/v1/dashboard/enums/dashboard-analytics.enum';
 import { UserLevels } from '@/modules/v1/users/enums/user.enum';
 
 
@@ -18,6 +19,4 @@ export const getUserRole = (level: number, cap: boolean = false): string => {
 
 export const capitalize = (str: string): string =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-
-
 

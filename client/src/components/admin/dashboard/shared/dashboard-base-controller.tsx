@@ -45,7 +45,7 @@ export const DashboardBaseController: React.FC<IDashboardBaseControllerProps> = 
       {/* Custom Date Picker */}
       <DatePicker
         value={customDate ? new Date(customDate) : undefined}
-        onSelect={(date) => onCustomDateChange(date ? date.toISOString().split('T')[0] : '')}
+        onSelect={(date) => onCustomDateChange(date ? date.toLocaleString().split('T')[0] : '')}
         placeholder="Custom date"
       />
       

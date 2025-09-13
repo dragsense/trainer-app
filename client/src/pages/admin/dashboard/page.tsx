@@ -1,50 +1,71 @@
-import { Period } from "@/@types/dashboard.type"
-import { DashboardControls } from "@/components/admin"
+// External Libraries
+// Types
+import { ICombinedDashboardData } from "@/@types/dashboard.type"
+import { AnalyticsPeriod } from "#/modules/v1/dashboard/enums/dashboard-analytics.enum";
+
+// Handlers
+import { SingleHandler } from '@/handlers';
+
+// Components
+import { DashboardControls, DashboardView, IExtraProps } from "@/components/admin"
+
+// Layouts
 import { PageInnerLayout } from "@/layouts"
-import { DashboardOverview } from "@/page-components/dashboard"
-import { useState } from "react"
-import type { DateRange } from "react-day-picker"
+
+// API
+import { fetchCombinedDashboardData } from "@/services/dashboard.api";
+
+// Stores
+import { TSingleHandlerStore } from "@/stores";
+
 
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState<Period>("month")
-  const [customRange, setCustomRange] = useState<DateRange | undefined>()
 
   return (
-    <PageInnerLayout
-      Header={
-        <Header
-          period={period}
-          setPeriod={setPeriod}
-          customRange={customRange}
-          setCustomRange={setCustomRange}
-        />
-      }
-    >
-      <DashboardOverview period={period} customRange={customRange}  />
-    </PageInnerLayout>
+
+    <SingleHandler<ICombinedDashboardData, IExtraProps>
+      queryFn={(_, params) => fetchCombinedDashboardData(params)}
+      storeKey="dashboardOverview"
+      SingleComponent={({ storeKey, store }) => {
+
+
+        if (!store) {
+          return <div>Dashboard store "{storeKey}" not found. Did you forget to register it?</div>;
+        }
+
+        return <PageInnerLayout
+          Header={
+            <Header
+              store={store}
+            />
+          }
+        >
+          <DashboardView storeKey={storeKey} store={store} />
+        </PageInnerLayout>
+
+      }}
+      enabled={true}
+      singleProps={{
+        period: AnalyticsPeriod.MONTH,
+      }}
+      initialParams={{
+        period: AnalyticsPeriod.MONTH,
+        customRange: undefined
+      }}
+    />
+
+
   )
 }
 
+
 interface HeaderProps {
-  period: Period
-  setPeriod: React.Dispatch<React.SetStateAction<Period>>
-  customRange?: DateRange
-  setCustomRange: React.Dispatch<React.SetStateAction<DateRange | undefined>>
+  store: TSingleHandlerStore<ICombinedDashboardData, IExtraProps>
 }
 
 const Header = ({
-  period,
-  setPeriod,
-  customRange,
-  setCustomRange,
+  store
 }: HeaderProps) => (
-  <DashboardControls
-    period={period}
-    setPeriod={setPeriod}
-    customRange={customRange}
-    setCustomRange={(fromDate, toDate) =>
-      fromDate ? setCustomRange({ from: fromDate, to: toDate }) : setCustomRange(undefined)
-    }
-  />
+  <DashboardControls store={store} />
 )

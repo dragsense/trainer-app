@@ -96,7 +96,7 @@ export default function ResetPasswordForm({
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Remember your password?{' '}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-secondary hover:underline">
                 Login
               </Link>
             </p>

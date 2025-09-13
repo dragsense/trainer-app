@@ -17,17 +17,14 @@ import {
 interface ISessionsAnalyticsCardProps {
   data: ISessionsAnalytics | null;
   loading?: boolean;
+  dynamicDateLabel?: string;
 }
 
-export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ data, loading = false }) => {
+export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ data, loading = false, dynamicDateLabel }) => {
   if (!loading && (!data || !data.timeline)) {
     return null;
   }
 
-  // Format period nicely
-  const periodLabel = data?.period
-    ? `${data.period.charAt(0).toUpperCase() + data.period.slice(1)} Overview`
-    : '';
 
   // Colors for session types in charts
   const COLORS = {
@@ -48,9 +45,9 @@ export const SessionsAnalyticsCard: React.FC<ISessionsAnalyticsCardProps> = ({ d
   return (
     <AppCard
       header={
-        <div className="flex flex-wrap items-center justify-between">
+        <div className="flex flex-wrap items-start justify-between">
           <h3 className="text-md font-semibold">Sessions Analytics</h3>
-          <p className="text-sm text-muted-foreground">{periodLabel}</p>
+          <p className="text-xs text-muted-foreground">{dynamicDateLabel}</p>
         </div>
 
       }

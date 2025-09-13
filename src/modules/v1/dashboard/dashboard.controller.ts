@@ -5,39 +5,43 @@ import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
 import { UserLevels, UserRole } from '../users/enums/user.enum';
 import { MinRoleLevel } from '@/decorators/level.decorator';
 import { RoleLevelGuard } from '@/guards/level.guard';
+import { DashboardAnalyticsDto } from './dto/dashboard-analytics.dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 export class DashboardController {
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) { }
 
   @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard statistics overview' })
   @ApiResponse({ status: 200, description: 'Dashboard statistics retrieved successfully' })
-  async getDashboardStats(@Req() req: any) {
-    return this.dashboardService.getDashboardStats(req.user);
+  async getDashboardStats(@Req() req: any,
+    @Query() query: DashboardAnalyticsDto,
+  ) {
+    return this.dashboardService.getDashboardStats(req.user, query);
   }
 
- @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Get('sessions/analytics')
   @ApiOperation({ summary: 'Get sessions analytics' })
   @ApiResponse({ status: 200, description: 'Sessions analytics retrieved successfully' })
   @ApiQuery({ name: 'period', required: false, enum: ['daily', 'weekly', 'monthly'], description: 'Time period for session analysis' })
   async getSessionsAnalytics(
     @Req() req: any,
-    @Query('period') period?: string,
+    @Query() query: DashboardAnalyticsDto,
   ) {
-    return this.dashboardService.getSessionsAnalytics(req.user, period);
+    return this.dashboardService.getSessionsAnalytics(req.user, query);
   }
 
   @MinRoleLevel(UserLevels[UserRole.TRAINER])
   @Get('reminders/analytics')
   @ApiOperation({ summary: 'Get reminders analytics' })
   @ApiResponse({ status: 200, description: 'Reminders analytics retrieved successfully' })
-  async getRemindersAnalytics(@Req() req: any) {
-    return this.dashboardService.getRemindersAnalytics(req.user);
+  async getRemindersAnalytics(@Req() req: any,
+    @Query() query: DashboardAnalyticsDto) {
+    return this.dashboardService.getRemindersAnalytics(req.user, query);
   }
 
 
@@ -46,11 +50,10 @@ export class DashboardController {
   @Get('billing/analytics')
   @ApiOperation({ summary: 'Get comprehensive billing analytics' })
   @ApiResponse({ status: 200, description: 'Billing analytics retrieved successfully' })
-  @ApiQuery({ name: 'period', required: false, enum: ['daily', 'weekly', 'monthly', 'yearly'], description: 'Time period for billing analysis' })
   async getBillingAnalytics(
     @Req() req: any,
-    @Query('period') period?: string,
+    @Query() query: DashboardAnalyticsDto
   ) {
-    return this.dashboardService.getBillingAnalytics(req.user, period);
+    return this.dashboardService.getBillingAnalytics(req.user, query);
   }
 }

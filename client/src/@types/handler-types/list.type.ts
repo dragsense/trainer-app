@@ -27,7 +27,13 @@ export interface IListHandlerBaseState<TResponse> {
   itemAction: TItemActionProps | null;
 }
 
-export interface IListHandlerState<TResponse> extends IListHandlerBaseState<TResponse>, IListQueryState {
+export interface IListHandlerState<TResponse, TExtra extends Record<string, any> = {}> extends IListHandlerBaseState<TResponse>, IListQueryState {
+  
+  extra: Partial<TExtra>;
+
+  setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
+  resetExtra: () => void;
+
   setFilters: (filters: Record<string, any>) => void;
   setSort: (sortBy: string, sortOrder: 'ASC' | 'DESC') => void;
   setSearch: (search: string) => void;

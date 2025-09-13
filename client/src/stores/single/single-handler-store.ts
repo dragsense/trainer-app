@@ -9,8 +9,8 @@ import { TQueryParams } from '@/@types/api/param.type';
 // Config
 import { config } from '@/config';
 
-export const useSingleHandlerStore = <TResponse>(name: string, initialParams: TQueryParams = {}) => {
-    return create<ISingleHandlerState<TResponse>>()(
+export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(name: string, initialParams: TQueryParams = {}, initialExtra: Partial<TExtra> = {}) => {
+    return create<ISingleHandlerState<TResponse, TExtra>>()(
         devtools(
             (set) => ({
                 name,
@@ -21,17 +21,32 @@ export const useSingleHandlerStore = <TResponse>(name: string, initialParams: TQ
                 response: null,
                 action: '',
 
+                extra: initialExtra,
+
                 // State setters
                 setIsLoading: (isLoading) => set({ isLoading }),
                 setError: (error) => set({ error }),
                 setResponse: (response) => set({ response }),
                 setParams: (params) => set({ params }),
 
+
                 setAction: (action: string, id: number = 0) => {
                     set({ id, action });
                 },
 
-        
+                setExtra: (key, value) =>
+                    set((state) => ({
+                        extra: {
+                            ...state.extra,
+                            [key]: value,
+                        },
+                    })),
+
+                resetExtra: () =>
+                    set({
+                        extra: initialExtra,
+                    }),
+
 
                 syncWithQuery: ({ isLoading, error, isSuccess, response }) => {
                     set({
@@ -59,4 +74,4 @@ export const useSingleHandlerStore = <TResponse>(name: string, initialParams: TQ
     );
 };
 
-export type TSingleHandlerStore<TResponse> = ReturnType<typeof useSingleHandlerStore<TResponse>>;
+export type TSingleHandlerStore<TResponse, TExtra extends Record<string, any>> = ReturnType<typeof useSingleHandlerStore<TResponse, TExtra>>;

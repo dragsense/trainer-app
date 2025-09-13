@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   Select,
   SelectContent,
@@ -8,35 +8,40 @@ import {
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/shared-ui/date-picker"
 import type { DateRange } from "react-day-picker"
+import { ICombinedDashboardData } from "@/@types/dashboard.type"
+import { AnalyticsPeriod } from "#/modules/v1/dashboard/enums/dashboard-analytics.enum";
+
+import { IExtraProps } from "./dashboard-view"
+import { TSingleHandlerStore } from "@/stores"
 
 interface IDashboardControlsProps {
-  period: "day" | "week" | "month" | "year"
-  setPeriod: (period: "day" | "week" | "month" | "year") => void
-  customRange?: DateRange
-  setCustomRange: (fromDate?: Date, toDate?: Date) => void
+  store: TSingleHandlerStore<ICombinedDashboardData, IExtraProps>
 }
 
 export const DashboardControls: React.FC<IDashboardControlsProps> = ({
-  period,
-  setPeriod,
-  customRange,
-  setCustomRange,
+  store
 }) => {
+
+  const period = store((state) => state.extra.period)
+  const customRange = store((state) => state.extra.customRange)
+  const setExtra = store((state) => state.setExtra)
+
   const handleDateSelect = (date: Date | DateRange | undefined) => {
 
     if (!date) {
-      setCustomRange()
+      setExtra('customRange')
       return;
     }
 
     if (date instanceof Date) {
-      setCustomRange(date)
+      setExtra('customRange', { from: date })
     } else if ("from" in date) {
       const { from, to } = date
+
       if (from && to) {
-        setCustomRange(from, to)
+        setExtra('customRange', { from, to })
       } else if (from) {
-        setCustomRange(from)
+        setExtra('customRange', { from })
       }
     }
   }
@@ -53,8 +58,8 @@ export const DashboardControls: React.FC<IDashboardControlsProps> = ({
 
         <Select
           value={period}
-          onValueChange={(value: "day" | "week" | "month" | "year") =>
-            setPeriod(value)
+          onValueChange={(value: AnalyticsPeriod) =>
+            setExtra('period', value)
           }
         >
           <SelectTrigger className="w-32 bg-secondary">

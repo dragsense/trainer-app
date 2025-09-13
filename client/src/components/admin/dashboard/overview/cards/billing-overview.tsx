@@ -27,14 +27,14 @@ interface IBillingOverviewProps {
   data: IBillingAnalytics | null;
   loading?: boolean;
   isAdmin?: boolean;
-  onPeriodChange?: (period: string) => void;
+  dynamicDateLabel?: string;
 }
 
 export const BillingOverview = ({
   data: analyticsData,
   isAdmin = false,
   loading = false,
-  onPeriodChange = () => { }
+  dynamicDateLabel,
 }: IBillingOverviewProps) => {
 
   if (!analyticsData) return <div className="p-4 text-center">No billing data available</div>;
@@ -52,7 +52,7 @@ export const BillingOverview = ({
         header={
             <div>
               <h2 className="text-md font-semibold tracking-tight">Billing Analytics</h2>
-              <p className="text-muted-foreground text-sm">{isAdmin ? "Platform" : "Your"} billing overview for August 2025</p>
+              <p className="text-muted-foreground text-sm">{isAdmin ? "Platform" : "Your"} {dynamicDateLabel}</p>
             </div>
           
         }

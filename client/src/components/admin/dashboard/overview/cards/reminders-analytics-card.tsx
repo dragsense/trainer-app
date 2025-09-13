@@ -25,9 +25,11 @@ const reminderTypeIcons = {
 interface IRemindersAnalyticsCardProps {
   data: IRemindersAnalytics | null;
   loading?: boolean;
+    dynamicDateLabel?: string;
+
 }
 
-export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({ data, loading = false }) => {
+export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({ data, loading = false, dynamicDateLabel }) => {
   if (!loading && (!data || !data.reminderTypes)) {
     return null;
   }
@@ -35,8 +37,11 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
 
 
   const header = (
-    <div className="flex flex-wrap items-center justify-between">
+    <div className="flex flex-wrap items-start justify-between">
+      <div>
       <h3 className="text-md font-semibold">Reminders Analytics</h3>
+      <p className='text-xs text-muted-foreground'>{dynamicDateLabel}</p>
+      </div>
       <div className="text-sm text-muted-foreground flex items-center gap-1">
         <span className='text-sm'>Success Rate:</span>
         <span className="font-medium text-sm text-green-600">

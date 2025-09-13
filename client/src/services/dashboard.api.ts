@@ -3,6 +3,8 @@ import { apiRequest } from "@/utils/fetcher";
 
 // Types
 import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
+import { TQueryParams } from "@/@types/api/param.type";
+import { generateQueryParams } from "@/utils";
 
 // Constants
 const DASHBOARD_API_PATH = "/dashboard";
@@ -12,41 +14,38 @@ export const fetchDashboardStats = (): Promise<IDashboardStats> =>
   apiRequest(`${DASHBOARD_API_PATH}/stats`, "GET");
 
 // Sessions Analytics
-export const fetchSessionsAnalytics = (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-}): Promise<ISessionsAnalytics> => {
-  const queryParams = params?.period ? `?period=${params.period}` : '';
-  return apiRequest(`${DASHBOARD_API_PATH}/sessions/analytics${queryParams}`, "GET");
+export const fetchSessionsAnalytics = (params: TQueryParams): Promise<ISessionsAnalytics> => {
+  const queryParams = new URLSearchParams();
+
+  generateQueryParams(queryParams, params);
+
+  return apiRequest(`${DASHBOARD_API_PATH}/sessions/analytics?${queryParams.toString()}`, "GET");
 };
 
 
 // Reminders Analytics
-export const fetchRemindersAnalytics = (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-}): Promise<IRemindersAnalytics> => {
-  const queryParams = params?.period ? `?period=${params.period}` : '';
-  return apiRequest(`${DASHBOARD_API_PATH}/reminders/analytics${queryParams}`, "GET");
+export const fetchRemindersAnalytics = (params: TQueryParams): Promise<IRemindersAnalytics> => {
+  const queryParams = new URLSearchParams();
+
+  generateQueryParams(queryParams, params);
+
+
+  return apiRequest(`${DASHBOARD_API_PATH}/reminders/analytics?${queryParams.toString()}`, "GET");
 };
 
 
 // Billing Analytics
-export const fetchBillingAnalytics = (params?: {
-  period?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-}): Promise<IBillingAnalytics> => {
+export const fetchBillingAnalytics = (params: TQueryParams): Promise<IBillingAnalytics> => {
   const queryParams = new URLSearchParams();
 
-  if (params?.period) queryParams.append("period", params.period);
+  generateQueryParams(queryParams, params);
 
-  const queryString = queryParams.toString();
-  return apiRequest(`${DASHBOARD_API_PATH}/billing/analytics${queryString ? `?${queryString}` : ''}`, "GET");
+
+  return apiRequest(`${DASHBOARD_API_PATH}/billing/analytics?${queryParams.toString()}`, "GET");
 };
 
 // Combined dashboard query function
-export const fetchCombinedDashboardData = async (params?: {
-  period?: 'day' | 'week' | 'month' | 'year';
-  date?: string;
-}): Promise<ICombinedDashboardData> => {
-  const { period = 'month' } = params || {};
+export const fetchCombinedDashboardData = async (params: TQueryParams): Promise<ICombinedDashboardData> => {
 
   const [
     stats,
@@ -55,11 +54,9 @@ export const fetchCombinedDashboardData = async (params?: {
     billing
   ] = await Promise.all([
     fetchDashboardStats(),
-    fetchRemindersAnalytics({ period }),
-    fetchSessionsAnalytics({ period }),
-    fetchBillingAnalytics({
-      period: period === 'day' ? 'daily' : period === 'week' ? 'weekly' : period === 'month' ? 'monthly' : 'yearly'
-    })
+    fetchRemindersAnalytics(params),
+    fetchSessionsAnalytics(params),
+    fetchBillingAnalytics(params)
   ]);
 
   return {

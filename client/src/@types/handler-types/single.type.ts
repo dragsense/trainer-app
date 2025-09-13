@@ -10,12 +10,18 @@ export interface ISingleHandlerBaseState<TResponse> {
 
 }
 
-export interface ISingleHandlerState<TResponse> extends ISingleHandlerBaseState<TResponse> {
+export interface ISingleHandlerState<TResponse, TExtra extends Record<string, any> = {}> extends ISingleHandlerBaseState<TResponse> {
 
   id: number;
   name: string,
   params: TQueryParams;
   action: string;
+
+  extra: Partial<TExtra>;
+
+  setExtra: <K extends keyof TExtra>(key: K, value?: TExtra[K]) => void;
+  resetExtra: () => void;
+
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse) => void;

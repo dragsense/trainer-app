@@ -14,8 +14,13 @@ export interface IFormHandlerBaseState<TResponse> {
 
 
 
-export interface IFormHandlerState<TFormData, TResponse> extends IFormHandlerBaseState<TResponse> {
+export interface IFormHandlerState<TFormData, TResponse, TExtra extends Record<string, any> = {}> extends IFormHandlerBaseState<TResponse> {
   values: TFormData;
+
+  extra: Partial<TExtra>;
+
+  setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
+  resetExtra: () => void;
 
   setIsSubmitting: (isSubmitting: boolean) => void;
   setError: (error: Error | null) => void;

@@ -4,8 +4,6 @@ import { io } from 'socket.io-client';
 
 export const SOCKET_API_URL = config.baseUrl || 'http://localhost:5000';
 
-console.log('🔧 Socket URL:', SOCKET_API_URL);
-
 interface ServerToClientEvents {
   connect_error: (error: Error) => void;
   disconnect: (reason: string) => void;

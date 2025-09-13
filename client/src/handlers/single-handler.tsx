@@ -28,11 +28,13 @@ import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore
 
 // Hooks
 import { useApiQuery } from "@/hooks/use-api-query";
+import { pickKeys } from "@/utils";
+import { useShallow } from "zustand/shallow";
 
 
 export interface ISingleHandlerProps<
   IData,
-  TSingleExtraProps,
+  TExtraProps extends Record<string, any> = {},
 > {
   storeKey: string;
   listStoreKey?: string;
@@ -42,14 +44,14 @@ export interface ISingleHandlerProps<
   queryFn: (id: number, queryParams: TQueryParams) => Promise<IData>;
   deleteFn?: (id: number) => Promise<void>;
   onDeleteSuccess?: () => void;
-  SingleComponent: React.ComponentType<{ storeKey: string } & TSingleExtraProps>;
-  actionComponents?: IActionComponent<TSingleExtraProps>[];
-  singleProps?: TSingleExtraProps;
+  SingleComponent: React.ComponentType<{ storeKey: string, store: TSingleHandlerStore<IData, TExtraProps> }>;
+  actionComponents?: IActionComponent<TExtraProps>[];
+  singleProps?: TExtraProps;
 }
 
 export function SingleHandler<
   IData,
-  TSingleExtraProps = any,
+  TExtraProps extends Record<string, any> = {}
 >({
   name = "Item",
   initialParams = {},
@@ -63,7 +65,7 @@ export function SingleHandler<
   actionComponents = []
 }: ISingleHandlerProps<
   IData,
-  TSingleExtraProps
+  TExtraProps
 >) {
 
   const { confirm, dialogProps } = useConfirm();
@@ -71,10 +73,10 @@ export function SingleHandler<
 
   const singleStoreKey = storeKey + "-single";
 
-  let store = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
+  let store = useRegisteredStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey);
   if (!store) {
-    store = useSingleHandlerStore<IData>(name, initialParams);
-    registerStore<TSingleHandlerStore<IData>>(singleStoreKey, store);
+    store = useSingleHandlerStore<IData>(name, initialParams, singleProps || {});
+    registerStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey, store);
   }
 
   useEffect(() => {
@@ -85,7 +87,11 @@ export function SingleHandler<
 
   const id = store((state) => state.id);
 
-  const queryKey = [singleStoreKey, id];
+  const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
+  ));
+
+
+  const queryKey = [singleStoreKey, id, JSON.stringify(filteredExtra)];
 
 
   useApiQuery<IData>(
@@ -93,7 +99,12 @@ export function SingleHandler<
     async (params) => {
       store.setState({ isLoading: true });
       try {
-        const response = await queryFn(id, params);
+
+
+        const response = await queryFn(id, {
+          ...params,
+          ...filteredExtra,
+        });
 
         store.setState({
           isLoading: false,
@@ -115,7 +126,10 @@ export function SingleHandler<
 
       }
     },
-    initialParams,
+    {
+      ...initialParams,
+      ...filteredExtra
+    },
     {
       enabled: !!id || enabled,
     }
@@ -184,14 +198,14 @@ export function SingleHandler<
         {SingleComponent && (
           <SingleComponent
             storeKey={storeKey}
-            {...(singleProps as TSingleExtraProps)}
+            store={store}
           />
         )}
 
-        <ActionComponentHandler<IData, TSingleExtraProps>
+        <ActionComponentHandler<IData, TExtraProps>
           actionComponents={actionComponents}
           storeKey={storeKey}
-          listProps={singleProps as TSingleExtraProps}
+          listProps={singleProps as TExtraProps}
         />
 
         <ConfirmDialog {...dialogProps} />

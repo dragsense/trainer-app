@@ -1,4 +1,4 @@
-// Dashboard Statistics Overview
+
 export interface IDashboardStats {
   overview: {
     totalClients: number;
@@ -19,8 +19,6 @@ export interface IDashboardStats {
     averageSessionsPerClient: number;
   };
 }
-
-// Revenue Analytics
 
 
 // Sessions Analytics
@@ -43,7 +41,6 @@ export interface ISessionsAnalytics {
   }[];
 }
 
-
 // Reminders Analytics
 export interface IRemindersAnalytics {
   timeline: {
@@ -61,8 +58,6 @@ export interface IRemindersAnalytics {
     successRate: number;
   }[];
 }
-
-
 
 
 export interface RevenueStats {
@@ -101,9 +96,6 @@ export interface SummaryStats {
   average_billing_amount: number;
   average_paid_amount: number;
 }
-
-
-
 
 export interface TypeDistributionItem {
   type: string;
@@ -162,4 +154,3 @@ export interface ICombinedDashboardData {
 }
 
 
-export type Period = "day" | "week" | "month" | "year"

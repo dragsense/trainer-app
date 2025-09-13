@@ -19,12 +19,11 @@ import {
 import { AppCard } from "@/components/layout-ui/app-card"
 
 // Types
-import { ICombinedDashboardData, Period } from "@/@types/dashboard.type"
+import { ICombinedDashboardData } from "@/@types/dashboard.type"
 import { BillingOverview, RemindersAnalyticsCard, SessionsAnalyticsCard } from "./cards"
 import { useAuthUser } from "@/hooks/use-auth-user"
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum"
 import { Button } from "@/components/ui/button"
-import { DateRange } from "react-day-picker"
 import { formatCurrency } from "@/lib/utils"
 
 import RevenueIcon from '@/assets/icons/revenue.png';
@@ -32,14 +31,12 @@ import PendingPymentsIcon from '@/assets/icons/payments.png';
 import TrainersIcon from '@/assets/icons/trainers.png';
 import ClientsIcon from '@/assets/icons/clients.png';
 import { Progress } from "@/components/ui/progress"
+import { TSingleHandlerStore } from "@/stores"
+import { IExtraProps } from "./dashboard-view"
 
 
 interface CompactDashboardProps {
-    data?: ICombinedDashboardData | null
-    isLoading: boolean,
-    error?: Error | null,
-    period: Period,
-    customRange?: DateRange
+    store: TSingleHandlerStore<ICombinedDashboardData, IExtraProps>
 }
 
 // Compact metric display
@@ -174,7 +171,15 @@ const ClientDashboardPlaceholder = () => {
 };
 
 
-export default function CompactDashboard({ data, error, isLoading, period, customRange }: CompactDashboardProps) {
+export default function CompactDashboard({ store }: CompactDashboardProps) {
+
+    const period = store((state) => state.extra.period)
+    const customRange = store((state) => state.extra.customRange)
+    const isLoading = store((state) => state.isLoading)
+    const data = store((state) => state.response)
+    const error = store((state) => state.error)
+
+
     if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -216,10 +221,11 @@ export default function CompactDashboard({ data, error, isLoading, period, custo
 
 
 
-  const periodLabel = period
-    ? `${period.charAt(0).toUpperCase() + period.slice(1)} Overview`
-    : '';
+    const periodLabel = period
+        ? `${period.charAt(0).toUpperCase() + period.slice(1)} Overview`
+        : '';
 
+    const dynamicDateLabel = customRange ? `${customRange.from?.toDateString()} - ${customRange.to?.toDateString()}` : periodLabel
 
     const { stats, billing, reminders, sessions } = data;
     const { overview, metrics } = stats;
@@ -254,7 +260,7 @@ export default function CompactDashboard({ data, error, isLoading, period, custo
                         header={
                             <div>
                                 <h2 className="font-semibold text-md">Summary</h2>
-                                <p className="text-sm text-muted-foreground">{customRange ? `${customRange.from?.toDateString()} - ${customRange.to?.toDateString()}` : periodLabel}</p>
+                                <p className="text-xs text-muted-foreground">{dynamicDateLabel}</p>
                             </div>
                         }
                     >
@@ -310,60 +316,60 @@ export default function CompactDashboard({ data, error, isLoading, period, custo
                         </div>
                     </AppCard>
 
-                   
+
                 </div>
 
 
-                    <KPICard
-                        title="Performance Overview"
-                        subtitle={customRange ? `${customRange.from?.toDateString()} - ${customRange.to?.toDateString()}` : periodLabel}
-                        metrics={[
-                            {
-                                label: "Session Completion",
-                                value: metrics.sessionCompletionRate,
-                                status:
-                                    metrics.sessionCompletionRate > 80 ? "good" : metrics.sessionCompletionRate > 50 ? "warning" : "danger",
-                                icon: <Calendar className="h-3 w-3" />,
-                            },
-                            {
-                                label: "Client Engagement",
-                                value: +activeClientRate,
-                                status:
-                                    Number.parseFloat(activeClientRate) > 80
-                                        ? "good"
-                                        : Number.parseFloat(activeClientRate) > 60
-                                            ? "warning"
-                                            : "danger",
-                                icon: <Users className="h-3 w-3" />,
-                            },
+                <KPICard
+                    title="Performance Overview"
+                    subtitle={dynamicDateLabel}
+                    metrics={[
+                        {
+                            label: "Session Completion",
+                            value: metrics.sessionCompletionRate,
+                            status:
+                                metrics.sessionCompletionRate > 80 ? "good" : metrics.sessionCompletionRate > 50 ? "warning" : "danger",
+                            icon: <Calendar className="h-3 w-3" />,
+                        },
+                        {
+                            label: "Client Engagement",
+                            value: +activeClientRate,
+                            status:
+                                Number.parseFloat(activeClientRate) > 80
+                                    ? "good"
+                                    : Number.parseFloat(activeClientRate) > 60
+                                        ? "warning"
+                                        : "danger",
+                            icon: <Users className="h-3 w-3" />,
+                        },
 
-                            {
-                                label: "Session Utilization",
-                                value: +sessionUtilization,
-                                status:
-                                    Number.parseFloat(sessionUtilization) > 80
-                                        ? "good"
-                                        : Number.parseFloat(sessionUtilization) > 60
-                                            ? "warning"
-                                            : "danger",
-                                icon: <Calendar className="h-3 w-3" />,
-                            },
+                        {
+                            label: "Session Utilization",
+                            value: +sessionUtilization,
+                            status:
+                                Number.parseFloat(sessionUtilization) > 80
+                                    ? "good"
+                                    : Number.parseFloat(sessionUtilization) > 60
+                                        ? "warning"
+                                        : "danger",
+                            icon: <Calendar className="h-3 w-3" />,
+                        },
 
-                        ]}
-                        alert={
-                            metrics.sessionCompletionRate === 0 && overview.totalSessions > 0
-                                ? "No sessions completed yet - check session management"
-                                : metrics.paymentSuccessRate === 0 && overview.totalBillings > 0
-                                    ? "Payment processing needs attention"
-                                    : Number.parseFloat(billingPendingRate) > 50
-                                        ? `${billingPendingRate}% of billings are pending`
-                                        : overview.totalReminders > 5
-                                            ? "High number of pending reminders"
-                                            : undefined
-                        }
-                    />
+                    ]}
+                    alert={
+                        metrics.sessionCompletionRate === 0 && overview.totalSessions > 0
+                            ? "No sessions completed yet - check session management"
+                            : metrics.paymentSuccessRate === 0 && overview.totalBillings > 0
+                                ? "Payment processing needs attention"
+                                : Number.parseFloat(billingPendingRate) > 50
+                                    ? `${billingPendingRate}% of billings are pending`
+                                    : overview.totalReminders > 5
+                                        ? "High number of pending reminders"
+                                        : undefined
+                    }
+                />
 
-                    {/*  <AppCard>
+                {/*  <AppCard>
                         <h3 className="font-semibold text-sm mb-3 text-blue-700">People & Engagement</h3>
                         <div className="space-y-1">
                             {user?.level === UserLevels[UserRole.SUPER_ADMIN] && <MetricRow
@@ -397,12 +403,12 @@ export default function CompactDashboard({ data, error, isLoading, period, custo
             <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
 
                 <div>
-                    <SessionsAnalyticsCard data={sessions} loading={isLoading} />
+                    <SessionsAnalyticsCard dynamicDateLabel={dynamicDateLabel} data={sessions} loading={isLoading} />
                 </div>
-                <RemindersAnalyticsCard data={reminders} loading={isLoading} />
+                <RemindersAnalyticsCard dynamicDateLabel={dynamicDateLabel} data={reminders} loading={isLoading} />
             </div>
 
-            <BillingOverview isAdmin={user?.level === UserLevels[UserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
+            <BillingOverview dynamicDateLabel={dynamicDateLabel} isAdmin={user?.level === UserLevels[UserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
 
 
 

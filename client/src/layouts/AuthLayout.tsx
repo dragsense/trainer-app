@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-[1fr_1fr] gap-10 p-4">
+    <div className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 gap-10 p-4">
 
       {/* Left Panel */}
       <div className="flex flex-col items-center justify-center gap-1">
@@ -19,7 +19,7 @@ export default function AuthLayout() {
           href="https://linkedin.com/company/formance"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-primary/100 underline underline-offset-4"
+          className="text-sm text-secondary underline underline-offset-4"
         >
           Visit our LinkedIn
         </a>
