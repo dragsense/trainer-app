@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 
 // Components
-import { CardForm } from "@/components/form-ui/card-form";
+import {  Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
@@ -14,6 +14,7 @@ import { TFieldConfig } from "@/@types/form/field.type";
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 interface PasswordChangeData {
     currentPassword: string;
@@ -80,17 +81,25 @@ export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
     );
 
     return (
-        <CardForm
-            title="Change Password"
-            description="Update your account password for security"
-            footerContent={footerContent}
-            formStore={formStore}
+        <AppCard
+            header={
+                <>
+                    <h2 className="text-md font-semibold">Change Password</h2>
+                    <p className="text-sm text-muted-foreground">Update your account password for security</p>
+                </>
+            }
+            footer={footerContent}
         >
-            <div className="space-y-4">
-                {inputs}
-            </div>
+            <Form
+               
+                formStore={formStore}
+            >
+                <div className="space-y-4">
+                    {inputs}
+                </div>
 
-             <FormErrors />
-        </CardForm>
+                <FormErrors />
+            </Form>
+        </AppCard>
     );
 }

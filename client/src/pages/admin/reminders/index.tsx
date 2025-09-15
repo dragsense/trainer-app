@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { ReminderTable, ReminderViewModal } from "@/components/admin";
+import { ReminderList, ReminderViewModal } from "@/components/admin";
 import { ReminderForm } from "@/page-components";
 
 
@@ -34,7 +34,7 @@ export default function RemindersPage() {
         deleteFn={deleteReminder}
         storeKey={STORE_KEY}
         onDeleteSuccess={() => queryReminder.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
-        SingleComponent={ReminderViewModal}
+        SingleComponent={({ storeKey, store }) => <ReminderViewModal storeKey={storeKey} store={store} />}
         actionComponents={[
           {
             action: 'createOrUpdate',
@@ -45,7 +45,7 @@ export default function RemindersPage() {
 
       <ListHandler<IReminder>
         queryFn={fetchReminders}
-        ListComponent={ReminderTable}
+        ListComponent={ReminderList}
         storeKey={STORE_KEY}
       />
     </PageInnerLayout>

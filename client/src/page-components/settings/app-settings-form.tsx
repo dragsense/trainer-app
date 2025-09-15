@@ -1,53 +1,34 @@
-
 // External Libraries
 import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
-
-// Handlers
-import { FormHandler } from "@/handlers";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Types
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
-import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
 import { IAppSetting, TAppSettingData } from "@/@types/setting.type";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore, TFormHandlerStore, useRegisteredStore } from "@/stores";
 
 // Components
-import { AppSettingCardForm } from "@/components/admin";
+import AppSettingCardForm from "@/components/admin/settings/form/app-setting-card-form";
 
 // Services
 import { updateAppSettings } from "@/services/setting.api";
 
-
-
-
 // Schema
 export const AppSettingsSchema = z.object({
     allowNotification: z.boolean().optional(),
-
 });
 
+interface IAppSettingsFormProps extends TActionComponentProps<any> {}
 
-interface IAppSettingsFormProps extends TActionComponentProps<any> {
-}
-
-
-interface IAppSettingsFormExtraProps {
-}
-
-export default function AppSettingsForm({
-    storeKey
-}: IAppSettingsFormProps) {
-
-
+export default function AppSettingsForm({ storeKey }: IAppSettingsFormProps) {
     const INITIAL_VALUES: TDefaultValue<TAppSettingData> = {
         allowNotification: { value: true },
-
     };
 
     const singleStoreKey = storeKey + "-single";
@@ -63,24 +44,27 @@ export default function AppSettingsForm({
         isLoading: state.isLoading,
     })));
 
-    if (!response)
-        return <div>AppSettings not found</div>
+    if (!response) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading app settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     const getInitialValues = (): typeof INITIAL_VALUES => {
         if (!response) {
             return INITIAL_VALUES;
         }
 
-        const flatResponse = {
-            ...(response || {})
-        };
-
-
         const updatedValues = {
             ...INITIAL_VALUES,
             ...Object.fromEntries(
                 Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
+                    const newValue = (response as any)[key];
                     return [
                         key,
                         {
@@ -90,9 +74,7 @@ export default function AppSettingsForm({
                     ];
                 })
             ),
-
         };
-
 
         return updatedValues;
     };
@@ -101,24 +83,27 @@ export default function AppSettingsForm({
 
     if (isLoading) {
         return (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading app settings...</p>
+                </div>
             </div>
         );
     }
 
-
-
-    return <>
-        <FormHandler<TAppSettingData, IMessageResponse, IAppSettingsFormExtraProps>
+    return (
+        <FormHandler<TAppSettingData, IMessageResponse>
             mutationFn={updateAppSettings}
             FormComponent={AppSettingCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
             validationSchema={AppSettingsSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
+            onSuccess={(response) => {
+                // Refresh the app settings data
+                singleStore.getState().refetch();
+            }}
         />
-
-    </>
-
+    );
 }

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Types 
-import { IListHandlerState, IListPaginationState } from '@/@types/handler-types/list.type';
+import { IListHandlerBaseState, IListHandlerState, IListPaginationState } from '@/@types/handler-types/list.type';
 
 // Config
 import { config } from '@/config';
@@ -17,8 +17,8 @@ const initialPaginationState: IListPaginationState = {
   hasPrevPage: false
 };
 
-export const useListHandlerStore = <TResponse>(initialFilters: Record<string, any> = {}) => {
-  return create<IListHandlerState<TResponse>>()(
+export const useListHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(initialFilters: Record<string, any> = {}, initialExtra: TExtra = {} as TExtra) => {
+  return create<IListHandlerState<TResponse, TExtra>>()(
     devtools(
       (set) => ({
         // Base state
@@ -28,6 +28,8 @@ export const useListHandlerStore = <TResponse>(initialFilters: Record<string, an
         isSuccess: false,
         pagination: initialPaginationState,
         itemAction: null,
+
+        extra: initialExtra,
 
         // Query state
         filters: initialFilters,
@@ -47,12 +49,25 @@ export const useListHandlerStore = <TResponse>(initialFilters: Record<string, an
         setResponse: (response) => set({ response }),
 
         // Item action setter 
-        setItemAction: (action) => set({ itemAction: action })
-        ,
+        setItemAction: (action) => set({ itemAction: action }),
+
+        setExtra: (key, value) =>
+          set((state) => ({
+            extra: {
+              ...state.extra,
+              [key]: value,
+            },
+          })),
+
+        resetExtra: () =>
+          set({
+            extra: initialExtra,
+          }),
+
 
         // Query sync
         syncWithQuery: ({ isLoading, error, isSuccess, response, pagination }) => {
-          const update: Partial<IListHandlerState<TResponse>> = {
+          const update: Partial<IListHandlerBaseState<TResponse>> = {
             isLoading,
             error,
             isSuccess
@@ -85,4 +100,4 @@ export const useListHandlerStore = <TResponse>(initialFilters: Record<string, an
   );
 };
 
-export type TListHandlerStore<TResponse> = ReturnType<typeof useListHandlerStore<TResponse>>;
+export type TListHandlerStore<TResponse, TExtra extends Record<string, any>> = ReturnType<typeof useListHandlerStore<TResponse, TExtra>>;

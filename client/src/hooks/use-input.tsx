@@ -1,10 +1,5 @@
-
-
-import { useState } from "react";
+import React, { JSX, useState } from "react";
 import { ChevronDownIcon, Star } from "lucide-react";
-
-
-// UI Components
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -16,45 +11,30 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
-
-// Utilities
-import { cn } from "@/lib/utils";
-
-// Types
-import type { TFieldConfig } from "@/@types/form/field.type";
-import { EORDER_CLASSES } from "@/enums/general.enum";
-
-// App Layout Components
 import { AppSelect } from "@/components/layout-ui/app-select";
 import { useWatch } from "react-hook-form";
+import { cn } from "@/lib/utils";
+import type { TFieldConfig, TCustomInputWrapper } from "@/@types/form/field.type";
+import { EORDER_CLASSES } from "@/enums/general.enum";
+import { flatten } from "@nestjs/common";
 
-interface UseInputProps {
-  fields: TFieldConfig[];
+interface UseInputProps<T> {
+  fields: TFieldConfig<T>[];
   showRequiredAsterisk?: boolean;
   layout?: "vertical" | "horizontal";
 }
 
-export function useInput({
+export function useInput<T>({
   fields,
   showRequiredAsterisk,
   layout = "vertical",
-}: UseInputProps) {
-
-
+}: UseInputProps<T>) {
   const convertValue = (input: unknown, type?: string): any => {
-
-                console.log(input)
-
-
     const getValue = (val: any) => {
       if (val === "") return val;
       if (type === "number") return Number(val ?? 0);
@@ -63,90 +43,62 @@ export function useInput({
       return val;
     };
 
-    let rawValue: any =
-      input && typeof input === "object" && "target" in input
-        ? (input as any).target.value
-        : input;
+    const rawValue: any =
+      input && typeof input === "object" && "target" in input ? (input as any).target.value : input;
 
-
-    return Array.isArray(rawValue)
-      ? rawValue.map(getValue)
-      : getValue(rawValue);
+    return Array.isArray(rawValue) ? rawValue.map(getValue) : getValue(rawValue);
   };
 
+  const renderField = (field: TFieldConfig<any>, parentName?: string): JSX.Element | JSX.Element[] => {
+    const fieldName = parentName ? `${parentName}.${field.name}` : field.name;
+    const values = useWatch();
+    const [open, setOpen] = useState<boolean>(false);
+
+    const isVisible = field.visible ? field.visible({ values }) : true;
+    const isDisabled = typeof field.disabled === "function" ? field.disabled({ values }) : field.disabled;
+
+    const onChangeHandler = (value: any) => {
+      const parsed = convertValue(value, field.valueType);
+      field?.onChange?.(parsed);
+      return parsed;
+    };
 
 
-  const inputs = fields.map((field, index) => {
+    const commonClass = cn(
+      field.startAdornment && "pl-10",
+      field.endAdornment && "pr-10",
+      field.className
+    );
 
-    const fieldLayout = field.layout || layout;
-    const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
-    const inputFlex = labelOrderClass === EORDER_CLASSES.First ? "flex-1" : "";
+    if (field.type === "nested") {
+      return field.subFields.map((subField) => renderField(subField, fieldName)) as JSX.Element[];
+
+    }
 
     return (
       <FormField
-        key={field.id}
-        name={field.name}
-
+        key={fieldName}
+        name={fieldName}
         render={({ field: controllerField }) => {
-
-          const [open, setOpen] = useState<boolean>(false);
-          const values = useWatch();
-
-          const isVisible = field.visible ? field.visible({ values }) : true;
-          const isDisabled = typeof field.disabled === "function" ? field.disabled({ values }) : field.disabled;
-
-          const onChangeHandler = (value: any) => {
-            const parsed = convertValue(value, field.valueType);
-            console.log(parsed)
-            controllerField.onChange(parsed);
-            field?.onChange?.(parsed);
-          };
-
-          const commonClass = cn(
-            field.startAdornment && "pl-10",
-            field.endAdornment && "pr-10",
-            field.className
-          );
-
           const renderInput = () => {
+
             switch (field.type) {
               case "textarea":
                 return (
                   <Textarea
                     {...controllerField}
-                    onChange={onChangeHandler}
+                    onChange={(e) => controllerField.onChange(onChangeHandler(e.target.value))}
                     placeholder={field.placeholder}
                     disabled={isDisabled}
                     className={commonClass}
                   />
                 );
-
               case "select":
-                return (
-                  <AppSelect
-                    value={controllerField.value || []}
-                    onChange={onChangeHandler}
-                    options={field.options || []}
-                  />
-                );
+                return <AppSelect value={controllerField.value} onChange={(value) => controllerField.onChange(onChangeHandler(value))} options={field.options || []} />;
               case "multiSelect":
-                return (
-                  <AppSelect
-                    value={controllerField.value || []}
-                    onChange={onChangeHandler}
-                    options={field.options || []}
-                    multiple={true}
-                  />
-                );
-
+                return <AppSelect value={controllerField.value || []} onChange={(value) => controllerField.onChange(onChangeHandler(value))} options={field.options || []} multiple />;
               case "switch":
-                return (
-                  <Switch
-                    checked={controllerField.value}
-                    onCheckedChange={onChangeHandler}
-                    disabled={isDisabled}
-                  />
-                );
+                return <Switch checked={controllerField.value} onCheckedChange={controllerField.onChange} disabled={isDisabled} />;
               case "rating":
                 return (
                   <div className="flex gap-1">
@@ -222,6 +174,7 @@ export function useInput({
                         {controllerField.value
                           ? new Date(controllerField.value).toLocaleDateString()
                           : "Select date"}
+                          
                         <ChevronDownIcon />
                       </Button>
                     </PopoverTrigger>
@@ -297,21 +250,14 @@ export function useInput({
                 );
 
               case "custom":
-                return field.Component ? (
-                  <field.Component
-                    value={controllerField.value}
-                    onChange={onChangeHandler}
-                    disabled={isDisabled}
-                  />
-                ) : null;
-
+                return field.Component ? <field.Component value={controllerField.value} onChange={(value) => controllerField.onChange(onChangeHandler(value))} disabled={isDisabled} /> : null;
               default:
                 return (
                   <Input
                     {...controllerField}
-                    value={controllerField.value?.toString() || ""}
+                    value={controllerField.value}
                     type={field.type}
-                    onChange={onChangeHandler}
+                    onChange={(e) => controllerField.onChange(onChangeHandler(e.target.value))}
                     placeholder={field.placeholder}
                     disabled={isDisabled}
                     className={commonClass}
@@ -319,6 +265,10 @@ export function useInput({
                 );
             }
           };
+
+          const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
+          const fieldLayout = field.layout || layout;
+          const inputFlex = labelOrderClass === EORDER_CLASSES.First ? "flex-1" : "";
 
           return (
             <FormItem>
@@ -332,41 +282,28 @@ export function useInput({
                 {field.label && (
                   <FormLabel className={`text-muted-foreground ${labelOrderClass}`}>
                     {field.label}
-                    {showRequiredAsterisk && field.required && (
-                      <span className="text-red-500">*</span>
-                    )}
+                    {showRequiredAsterisk && field.required && <span className="text-red-500">*</span>}
                   </FormLabel>
                 )}
 
                 <FormControl className={inputFlex}>
                   <div className="relative">
-                    {field.startAdornment && (
-                      <div className="absolute left-3 top-2.5 flex items-center pointer-events-none">
-                        {field.startAdornment}
-                      </div>
-                    )}
-
+                    {field.startAdornment && <div className="absolute left-3 top-2.5 flex items-center pointer-events-none">{field.startAdornment}</div>}
                     {renderInput()}
-
-                    {field.endAdornment && field.type !== "select" && (
-                      <div className="absolute right-3 top-2.5 flex items-center">
-                        {field.endAdornment}
-                      </div>
-                    )}
+                    {field.endAdornment && field.type !== "select" && <div className="absolute right-3 top-2.5 flex items-center">{field.endAdornment}</div>}
                   </div>
                 </FormControl>
               </div>
-
               <FormMessage />
-              {field.bottomAdornment && (
-                <FormDescription>{field.bottomAdornment}</FormDescription>
-              )}
+              {field.bottomAdornment && <FormDescription>{field.bottomAdornment}</FormDescription>}
             </FormItem>
           );
         }}
       />
     );
-  });
+  };
+
+  const inputs = flatten(fields.map((field) => renderField(field))) as JSX.Element[];
 
   return { inputs };
 }

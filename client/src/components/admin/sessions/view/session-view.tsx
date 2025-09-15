@@ -8,16 +8,19 @@ import { ISession } from "@/@types/session.type";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Components
-import SessionTable from "../table/session-table";
+import SessionList from "../list/session-list";
 import SessionCalendar from "../calendar/session-calendar";
+
+// Stores
+import { TListHandlerStore } from "@/stores";
 
 interface ISessionViewProps {
   storeKey: string;
+  store: TListHandlerStore<ISession, any>;
 }
 
-export default function SessionView({ storeKey }: ISessionViewProps) {
+export default function SessionView({ storeKey, store }: ISessionViewProps) {
   const [activeTab, setActiveTab] = useState("table");
-
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -27,7 +30,7 @@ export default function SessionView({ storeKey }: ISessionViewProps) {
       </TabsList>
       
       <TabsContent value="table" className="space-y-4">
-        <SessionTable storeKey={storeKey} />
+        <SessionList storeKey={storeKey} store={store} />
       </TabsContent>
       
       <TabsContent value="calendar" className="space-y-4">

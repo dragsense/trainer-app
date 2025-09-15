@@ -24,15 +24,20 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 // Stores
 import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
 import { toast } from "sonner";
+import { TQueryParams } from "@/@types/api/param.type";
+import { useShallow } from "zustand/shallow";
+import { pickKeys, unwrapValues } from "@/utils";
 
 
-export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
-  mutationFn: (data: TFormData) => Promise<TResponse | IMessageResponse | void>;
+export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Record<string, any> = {}> {
+  initialParams?: TQueryParams;
+
+  mutationFn: (data: TFormData, params?: TQueryParams) => Promise<TResponse | IMessageResponse | void>;
   FormComponent: React.ComponentType<{
-    storeKey: string
-  } & TFormExtraProps>;
-
-  formProps?: TFormExtraProps;
+    storeKey: string,
+    store: TFormHandlerStore<TFormData, TResponse, TExtraProps>
+  }>;
+  formProps?: TExtraProps;
   onSuccess?: (response: TResponse | IMessageResponse | void) => void;
   onError?: (error: Error) => void;
   initialValues: Readonly<TDefaultValue<TFormData>>;
@@ -42,7 +47,9 @@ export interface IFormHandlerProps<TFormData, TResponse, TFormExtraProps> {
 }
 
 
-export function FormHandler<TFormData extends FieldValues, TResponse = any, TFormExtraProps extends Record<string, any> = {}>({
+export function FormHandler<TFormData extends FieldValues, TResponse = any, TExtraProps extends Record<string, any> = {}>({
+  initialParams = {},
+
   mutationFn,
   FormComponent,
   formProps,
@@ -52,34 +59,34 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
   validationMode = EVALIDATION_MODES.OnChange,
   validationSchema,
   storeKey,
-}: IFormHandlerProps<TFormData, TResponse, TFormExtraProps>) {
+}: IFormHandlerProps<TFormData, TResponse, TExtraProps>) {
 
   const formStoreKey = storeKey + "-form";
 
   const values = useMemo(() => {
-    return Object.keys(initialValues)
-      .map((key) => ({
-        [key]: initialValues[key as keyof typeof initialValues].value
-      }))
-      .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as TFormData;
+
+    return unwrapValues(initialValues) as TFormData;
   }, [initialValues]);
 
 
-  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey);
+  let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey);
   if (!store) {
-    store = useFormHandlerStore<TFormData, TResponse>(values, mutationFn);
-    registerStore<TFormHandlerStore<TFormData, TResponse>>(formStoreKey, store);
+    store = useFormHandlerStore<TFormData, TResponse, TExtraProps>(values, formProps || {} as TExtraProps);
+    registerStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey, store);
   }
+
+  const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
+  ));
 
 
   const handleSubmit = async (formData: TFormData) => {
 
     const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
       if (!config.notIncluded) {
-        acc[key as keyof TFormData] = formData[key as keyof TFormData] ?? initialValues[key].value;
+        acc[key] = formData[key] ?? config.value;
       }
       return acc;
-    }, {} as TFormData);
+    }, {} as Record<string, any>) as TFormData;
 
 
 
@@ -91,7 +98,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
         response: null,
       });
 
-      const response = await mutationFn(submissionData);
+      const response = await mutationFn(submissionData, { ...initialParams, filteredExtra });
 
       store.getState().syncWithMutation({
         isSubmitting: false,
@@ -143,7 +150,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TFor
       <FormWrapper>
         <FormComponent
           storeKey={storeKey}
-          {...(formProps ?? {} as TFormExtraProps)} />
+          store={store} />
       </FormWrapper>
     </ErrorBoundary >
   );

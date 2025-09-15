@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 
 // Custom UI Components
-import { TablePagination } from "@/components/table-ui/table-pagination";
+import { Pagination } from "@/components/shared-ui/pagination";
 import { IListPaginationState } from "@/@types/handler-types";
 
 export interface ITableBaseProps<TData> {
@@ -82,13 +82,13 @@ export function AppTable<TData>({
         {table.getRowModel().rows?.length ? (
           table.getRowModel().rows.map((row, index) => (
             <TableRow
-              key={row.id}
+              key={row.id + "_" + index}
               data-state={row.getIsSelected() && "selected"}
               className={rowClassName?.(row.original, index)}
               onClick={() => onRowClick?.(row.original)}
             >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className={colClassName}>
+              {row.getVisibleCells().map((cell, index) => (
+                <TableCell key={cell.id + "_" + index} className={colClassName}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
@@ -117,8 +117,8 @@ export function AppTable<TData>({
             {showPagination && pagination && onPageChange && onLimitChange && (
               <TableRow>
                 <TableCell colSpan={columns.length}>
-                  <TablePagination
-                    table={table}
+                  <Pagination
+                    datalength={table.getRowModel().rows?.length || 0}
                     pageSizeOptions={pageSizeOptions}
                     pagination={pagination}
                     onPageChange={onPageChange}

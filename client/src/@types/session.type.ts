@@ -7,7 +7,7 @@ import { IUser } from "./user.type";
 export interface ISession extends Omit<Session, 'clients'>, GeneralBaseEntity {
     clientCount: number;
     trainer: IUser;
-    clients: number[];
+    clients: IUser[];
 }
 
 export type TSessionData = CreateSessionDto;

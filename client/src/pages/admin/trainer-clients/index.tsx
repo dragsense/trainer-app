@@ -8,8 +8,9 @@ import { ITrainerClient } from "@/@types/trainer-client.type";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { TrainerClientTable } from "@/components/admin";
+import { TrainerClientList } from "@/components/admin";
 import { TrainerClientAssignForm } from "@/page-components";
+import { TrainerClientViewModal } from "@/components/admin/trainer-clients/view";
 
 // API
 import { fetchTrainerClientById, fetchTrainerClients, removeTrainerClientAssignment } from "@/services/trainer-client.api";
@@ -38,7 +39,7 @@ export default function TrainerClientsPage() {
                 deleteFn={removeTrainerClientAssignment}
                 storeKey={STORE_KEY}
                 onDeleteSuccess={() => queryTrainerClient.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
-                SingleComponent={() => null}
+                SingleComponent={({ storeKey, store }) => <TrainerClientViewModal storeKey={storeKey} store={store} />}
                 actionComponents={[
                     {
                         action: 'createOrUpdate',
@@ -49,7 +50,7 @@ export default function TrainerClientsPage() {
 
             <ListHandler<ITrainerClient>
                 queryFn={(params) => fetchTrainerClients(params, { trainerId, clientId })}
-                ListComponent={TrainerClientTable}
+                ListComponent={TrainerClientList}
                 storeKey={STORE_KEY}
             />
         </PageInnerLayout>

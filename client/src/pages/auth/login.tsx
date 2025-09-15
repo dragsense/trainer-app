@@ -1,11 +1,10 @@
 // External Libraries
 import { z } from "zod";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Types
-import { TLoginData } from "@/@types/auth.type";
+import { TLoginData, ILoginResponse } from "@/@types/auth.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
@@ -24,20 +23,16 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters")
 });
 
-
-
-export default function Login() {
-
-  const queryReminder = useQueryClient();
+export default function LoginPage() {
+  const queryClient = useQueryClient();
 
   const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
     email: { value: "" },
     password: { value: "" },
   };
 
-
   return (
-    <FormHandler<TLoginData, void>
+    <FormHandler<TLoginData, ILoginResponse>
       mutationFn={login}
       FormComponent={LoginForm}
       initialValues={LOGIN_INITIAL_VALUES}
@@ -45,10 +40,8 @@ export default function Login() {
       validationSchema={loginSchema}
       onSuccess={() => {
         toast.success('Login successful')
-        queryReminder.invalidateQueries({ queryKey: ["me"] });
-
-      }
-      }
+        queryClient.invalidateQueries({ queryKey: ["me"] });
+      }}
       onError={(error) => toast.error('Login failed: ' + error?.message)}
       storeKey="login"
     />

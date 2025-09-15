@@ -17,7 +17,7 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
   params: TQueryParams;
   action: string;
 
-  extra: Partial<TExtra>;
+  extra: TExtra;
 
   setExtra: <K extends keyof TExtra>(key: K, value?: TExtra[K]) => void;
   resetExtra: () => void;
@@ -33,5 +33,5 @@ export interface ISingleHandlerState<TResponse, TExtra extends Record<string, an
   reset: () => void;
 }
 
-export type ISingleStoreApi<TResponse> = StoreApi<ISingleHandlerState<TResponse>>;
+export type ISingleStoreApi<TResponse, TExtra extends Record<string, any>> = StoreApi<ISingleHandlerState<TResponse, TExtra>>;
 

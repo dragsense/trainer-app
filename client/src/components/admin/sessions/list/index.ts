@@ -1,0 +1,1 @@
+export { default as SessionTable } from "./session-list";

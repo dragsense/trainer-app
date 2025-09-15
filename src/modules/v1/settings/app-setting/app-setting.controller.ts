@@ -3,6 +3,7 @@ import { AppSettingService } from './app-setting.service';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
+import { AppSetting } from './entities/app-setting.entity';
 
 @ApiTags('App Setting')
 @UseGuards(JwtAuthGuard)
@@ -11,23 +12,39 @@ import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
 export class AppSettingController {
   constructor(private readonly appSettingService: AppSettingService) { }
 
-  
   @Get()
-  @ApiOperation({ summary: 'Get current user app setting' })
-  @ApiResponse({ status: 200, description: 'App setting returned successfully.' })
-  @ApiResponse({ status: 404, description: 'Not Found' })
-  async getMyAppSetting(@Req() req: any) {
+  @ApiOperation({ summary: 'Get current user app settings' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'App settings returned successfully.',
+    type: AppSetting
+  })
+  @ApiResponse({ status: 404, description: 'App settings not found' })
+  async getMyAppSetting(@Req() req: any): Promise<AppSetting> {
     const userId = req.user.id;
     return this.appSettingService.getAppSettingByUserId(userId);
   }
 
   @Patch()
-  @ApiOperation({ summary: 'Update allowNotification for current user' })
+  @ApiOperation({ summary: 'Update app settings for current user' })
   @ApiBody({
-   type: UpdateAppSettingDto,
-   description: 'Update app setting for the current user',
+    type: UpdateAppSettingDto,
+    description: 'Update app settings for the current user',
   })
-  @ApiResponse({ status: 200, description: 'allowNotification updated successfully.' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'App settings updated successfully.',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'App settings updated successfully'
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - Invalid data' })
   async updateAppSetting(
     @Req() req: any,
     @Body() settingDto: UpdateAppSettingDto,

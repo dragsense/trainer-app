@@ -2,12 +2,13 @@
 import { ListQueryDto } from "@/shared-dto/list-query.dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional } from "class-validator";
+import { IsInt, IsOptional, IsDateString, IsString } from "class-validator";
 
 export class TrainerClientListDto extends ListQueryDto {
 
     @ApiPropertyOptional({
-        description: 'Search by trainerId',
+        description: 'Filter by trainer ID',
+        example: 1,
     })
     @IsOptional()
     @Type(() => Number)
@@ -15,11 +16,91 @@ export class TrainerClientListDto extends ListQueryDto {
     trainerId?: number;
 
     @ApiPropertyOptional({
-        description: 'Search by clientId',
+        description: 'Filter by client ID',
+        example: 1,
     })
     @IsOptional()
     @Type(() => Number)
     @IsInt()
     clientId?: number;
 
+    @ApiPropertyOptional({
+        description: 'Filter by trainer email',
+        example: 'trainer@example.com',
+    })
+    @IsOptional()
+    @IsString()
+    trainerEmail?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by client email',
+        example: 'client@example.com',
+    })
+    @IsOptional()
+    @IsString()
+    clientEmail?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by trainer first name',
+        example: 'John',
+    })
+    @IsOptional()
+    @IsString()
+    trainerFirstName?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by trainer last name',
+        example: 'Doe',
+    })
+    @IsOptional()
+    @IsString()
+    trainerLastName?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by client first name',
+        example: 'Jane',
+    })
+    @IsOptional()
+    @IsString()
+    clientFirstName?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by client last name',
+        example: 'Smith',
+    })
+    @IsOptional()
+    @IsString()
+    clientLastName?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by assignment date (from)',
+        example: '2024-01-01',
+    })
+    @IsOptional()
+    @IsDateString()
+    assignedDateFrom?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by assignment date (to)',
+        example: '2024-12-31',
+    })
+    @IsOptional()
+    @IsDateString()
+    assignedDateTo?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by trainer specialty',
+        example: 'Weight Training',
+    })
+    @IsOptional()
+    @IsString()
+    trainerSpecialty?: string;
+
+    @ApiPropertyOptional({
+        description: 'Filter by client fitness goal',
+        example: 'Weight Loss',
+    })
+    @IsOptional()
+    @IsString()
+    clientGoal?: string;
 }

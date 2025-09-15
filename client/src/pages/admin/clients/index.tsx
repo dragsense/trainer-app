@@ -1,3 +1,4 @@
+
 import { useQueryClient } from "@tanstack/react-query";
 
 // Types
@@ -7,9 +8,8 @@ import { IUser } from "@/@types/user.type";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { ClientTable } from "@/components/admin";
-import { ClientView } from "@/components/admin/clients";
-import { ClientForm, TrainerClientAssignForm } from "@/page-components";
+import { UserList, ClientView } from "@/components/admin";
+import { UserForm, TUserExtraProps, TrainerClientAssignForm } from "@/page-components";
 
 
 // API
@@ -32,7 +32,7 @@ export default function ClientsPage() {
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <SingleHandler<IUser>
+      <SingleHandler<IUser, TUserExtraProps>
         queryFn={fetchUser}
         deleteFn={deleteUser}
         storeKey={STORE_KEY}
@@ -41,18 +41,21 @@ export default function ClientsPage() {
         actionComponents={[
           {
             action: 'createOrUpdate',
-            comp: ClientForm
+            comp: UserForm
           },
           {
-            action: 'assignTrainer',
+            action: 'assignClient',
             comp: TrainerClientAssignForm
           },
         ]}
+        singleProps={{
+          level: UserLevels[UserRole.USER],
+        }}
       />
 
       <ListHandler<IUser>
         queryFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
-        ListComponent={ClientTable}
+        ListComponent={UserList}
         storeKey={STORE_KEY}
       />
     </PageInnerLayout>

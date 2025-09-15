@@ -4,63 +4,44 @@ import { useState } from 'react';
 // Types
 import { TSignupData } from '@/@types/auth.type';
 import { IMessageResponse } from '@/@types/api/response.type';
+import { TFormHandlerStore } from '@/stores';
+import { THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
-import { Eye, EyeOff, Mail, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Loader2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Components
 import { Button } from '@/components/ui/button';
-import { CardForm } from '@/components/form-ui/card-form';
+import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { TFormHandlerStore, useRegisteredStore } from '@/stores';
 import { FormErrors } from '../shared-ui/form-errors';
+import { AppCard } from '../layout-ui/app-card';
 
-interface ISignupFormProps {
-  storeKey: string
+interface ISignupFormProps extends THandlerComponentProps<TFormHandlerStore<TSignupData, IMessageResponse, any>> {
 }
 
 export default function SignupForm({
-  storeKey
+  storeKey,
+  store,
 }: ISignupFormProps) {
-
-  const formStoreKey = storeKey + "-form";
-
-  const signupStore = useRegisteredStore<TFormHandlerStore<TSignupData, IMessageResponse>>(formStoreKey);
-
-  if (!signupStore) {
-    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
+  if (!store) {
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(signupStore, state => state.isSubmitting);
+  const isSubmitting = useStore(store, state => state.isSubmitting);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { inputs } = useInput({
     fields: [
-      {
-        id: "firstName",
-        name: "firstName",
-        label: "First Name",
-        placeholder: "John",
-        type: "text",
-        required: true,
-      },
-      {
-        id: "lastName",
-        name: "lastName",
-        label: "Last Name",
-        placeholder: "Doe",
-        type: "text",
-        required: true,
-      },
-
+      // ─── Basic Account Info ──────────────
       {
         id: 'email',
         name: 'email',
@@ -101,19 +82,41 @@ export default function SignupForm({
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         )
-      }
+      },
+
+      // ─── Profile Information ──────────────
+      {
+        id: "firstName",
+        name: "firstName",
+        label: "First Name",
+        placeholder: "John",
+        type: "text",
+        startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
+        required: true,
+      },
+      {
+        id: "lastName",
+        name: "lastName",
+        label: "Last Name",
+        placeholder: "Doe",
+        type: "text",
+        startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
+        required: true,
+      },
     ],
     showRequiredAsterisk: true
   });
 
   return (
-    <CardForm<TSignupData, IMessageResponse>
-      title="Sign Up"
-      description="Create your account with your email and password"
-      formStore={signupStore}
-      footerContent={
+    <AppCard
+      header={
+        <>
+          <h2 className="text-md font-semibold">Sign Up</h2>
+          <p className="text-sm text-muted-foreground">Create your account with your email and password</p>
+        </>
+      }
+      footer={
         <div className="flex flex-col gap-4 w-full">
-
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign Up
@@ -129,11 +132,29 @@ export default function SignupForm({
         </div>
       }
     >
-      <div className="flex flex-col gap-4 w-full">
-        {inputs}
-      </div>
+      <Form<TSignupData, IMessageResponse>
+        formStore={store}
+      >
+        <div className="space-y-6">
+          {/* Account Information Section */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Account Information</h3>
+            <div className="space-y-4">
+              {inputs.slice(0, 3)}
+            </div>
+          </div>
 
-       <FormErrors />
-    </CardForm>
+          {/* Profile Information Section */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Profile Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {inputs.slice(3)}
+            </div>
+          </div>
+        </div>
+
+        <FormErrors />
+      </Form>
+    </AppCard>
   );
 }

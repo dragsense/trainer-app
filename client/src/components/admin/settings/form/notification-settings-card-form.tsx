@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 
 // Components
-import { CardForm } from "@/components/form-ui/card-form";
+import { Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
@@ -10,12 +10,13 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import {  TNotificationSettingData } from "@/@types/setting.type";
+import { TNotificationSettingData } from "@/@types/setting.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 interface INotificationSettingCardFormProps {
     storeKey: string;
@@ -24,18 +25,16 @@ interface INotificationSettingCardFormProps {
 export default function NotificationSettingCardForm({ storeKey }: INotificationSettingCardFormProps) {
     const formStoreKey = storeKey + "-form";
 
-    // Move store calls to top level
     const formStore = useRegisteredStore<TFormHandlerStore<TNotificationSettingData, IMessageResponse>>(formStoreKey);
 
-    // Handle missing stores after hooks are called
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
-
     const isSubmitting = formStore(state => state.isSubmitting);
 
-     const fields: TFieldConfig[] = [
+    const fields: TFieldConfig<TNotificationSettingData>[] = [
+        // ─── General Notifications ──────────────
         {
             id: "emailNotifications",
             name: "emailNotifications",
@@ -43,6 +42,8 @@ export default function NotificationSettingCardForm({ storeKey }: INotificationS
             type: "switch",
             required: false,
         },
+        
+        // ─── User Management Notifications ─────
         {
             id: "newUserNotifications",
             name: "newUserNotifications",
@@ -57,6 +58,8 @@ export default function NotificationSettingCardForm({ storeKey }: INotificationS
             type: "switch",
             required: false,
         },
+        
+        // ─── Business Notifications ─────
         {
             id: "billingNotifications",
             name: "billingNotifications",
@@ -81,50 +84,63 @@ export default function NotificationSettingCardForm({ storeKey }: INotificationS
     const footerContent: ReactNode = (
         <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Settings"}
+                {isSubmitting ? "Saving..." : "Save Notification Settings"}
             </Button>
         </div>
     );
 
     return (
-        <CardForm
-            title="Notificationlication Settings"
-            description="Configure general notificationlication preferences"
-            footerContent={footerContent}
-            formStore={formStore}
+        <AppCard
+            header={
+                <>
+                    <h2 className="text-md font-semibold">Notification Settings</h2>
+                    <p className="text-sm text-muted-foreground">Configure your notification preferences</p>
+                </>
+            }
+            footer={footerContent}
         >
-             <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6">
-                    <div className="space-y-3">
-                        {inputs[0]}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 ml-4">
-                            Receive notifications via email for important updates and alerts
-                        </p>
+            <Form formStore={formStore}>
+                <div className="space-y-6">
+                    {/* General Notifications Section */}
+                    <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">General Notifications</h3>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                {inputs.slice(0, 1)}
+                                <p className="text-sm text-muted-foreground ml-6">
+                                    Receive notifications via email for important updates and alerts
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {inputs[1]}
-                     
+                    {/* User Management Section */}
+                    <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">User Management</h3>
+                        <div className="space-y-4">
+                            {inputs.slice(1, 3).map((input, index) => (
+                                <div key={index} className="space-y-2">
+                                    {input}
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {inputs[2]}
-                    
-                    </div>
-
-                    <div className="space-y-3">
-                        {inputs[3]}
-                     
-                    </div>
-
-                    <div className="space-y-3">
-                        {inputs[4]}
-                      
+                    {/* Business Notifications Section */}
+                    <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">Business Notifications</h3>
+                        <div className="space-y-4">
+                            {inputs.slice(3).map((input, index) => (
+                                <div key={index} className="space-y-2">
+                                    {input}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-           <FormErrors />  
-        </CardForm>
+                <FormErrors />
+            </Form>
+        </AppCard>
     );
 }

@@ -9,7 +9,7 @@ import { TQueryParams } from '@/@types/api/param.type';
 // Config
 import { config } from '@/config';
 
-export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(name: string, initialParams: TQueryParams = {}, initialExtra: Partial<TExtra> = {}) => {
+export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(name: string, initialParams: TQueryParams = {}, initialExtra: TExtra = {} as TExtra) => {
     return create<ISingleHandlerState<TResponse, TExtra>>()(
         devtools(
             (set) => ({
@@ -34,11 +34,11 @@ export const useSingleHandlerStore = <TResponse, TExtra extends Record<string, a
                     set({ id, action });
                 },
 
-                setExtra: (key, value) =>
+                setExtra: (key: string, value: any) =>
                     set((state) => ({
                         extra: {
                             ...state.extra,
-                            [key]: value,
+                            ...(typeof value !== "function" ? { [key]: value } : {}),
                         },
                     })),
 

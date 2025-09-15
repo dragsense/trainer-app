@@ -1,6 +1,9 @@
 // src/routes/auth.routes.tsx
 import { PUBLIC_ROUTES } from "@/config/routes.config";
-import { LoginPage, SignupPage, ForgotPasswordPage, ResetPasswordPage } from ".";
+import LoginPage from "./login";
+import SignupPage from "./signup";
+import ForgotPasswordPage from "./forgot-password";
+import ResetPasswordPage from "./reset-password";
 
 const authRoutes = [
   {

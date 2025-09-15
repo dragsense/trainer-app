@@ -3,6 +3,9 @@ import { useState } from 'react';
 
 // Types
 import { TResetPasswordData } from '@/@types/auth.type';
+import { IMessageResponse } from '@/@types/api/response.type';
+import { TFormHandlerStore } from '@/stores';
+import { THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -10,34 +13,28 @@ import { Link } from 'react-router-dom';
 
 // Components
 import { Button } from '@/components/ui/button';
-import { CardForm } from '@/components/form-ui/card-form';
+import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { TFormHandlerStore, useRegisteredStore } from '@/stores';
-import { IMessageResponse } from '@/@types/api/response.type';
 import { FormErrors } from '../shared-ui/form-errors';
+import { AppCard } from '../layout-ui/app-card';
 
-interface IResetPasswordFormProps {
-  storeKey: string
+interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TResetPasswordData, IMessageResponse, any>> {
 }
 
 export default function ResetPasswordForm({
-  storeKey
+  storeKey,
+  store,
 }: IResetPasswordFormProps) {
-
-  const formStoreKey = storeKey + "-form";
-
-  const resetPasswordStore = useRegisteredStore<TFormHandlerStore<TResetPasswordData, IMessageResponse>>(formStoreKey);
-
-  if (!resetPasswordStore) {
-    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
+  if (!store) {
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(resetPasswordStore, state => state.isSubmitting);
+  const isSubmitting = useStore(store, state => state.isSubmitting);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,32 +80,39 @@ export default function ResetPasswordForm({
   });
 
   return (
-    <CardForm<TResetPasswordData, IMessageResponse>
-      title="Reset Password"
-      description="Enter your new password to reset your account"
-      formStore={resetPasswordStore}
-      footerContent={
-        <div className="flex flex-col gap-4 w-full">
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Reset Password
-          </Button>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Remember your password?{' '}
-              <Link to="/login" className="text-secondary hover:underline">
-                Login
-              </Link>
-            </p>
+    <AppCard
+      header={
+        <>
+          <h2 className="text-md font-semibold">Reset Password</h2>
+          <p className="text-sm text-muted-foreground">Enter your new password to reset your account</p>
+        </>
+      }
+      footer={
+       <div className="flex flex-col gap-4 w-full">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Reset Password
+            </Button>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Remember your password?{' '}
+                <Link to="/login" className="text-secondary hover:underline">
+                  Login
+                </Link>
+              </p>
+            </div>
           </div>
-        </div>
       }
     >
-      <div className="flex flex-col gap-4 w-full">
-        {inputs}
-      </div>
+      <Form<TResetPasswordData, IMessageResponse>
+        formStore={store}
+      >
+        <div className="flex flex-col gap-4 w-full">
+          {inputs}
+        </div>
 
-      <FormErrors /> 
-    </CardForm>
+        <FormErrors />
+      </Form>
+    </AppCard>
   );
 }

@@ -1,20 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { PaginationMetaDto } from '@/shared-dto/pagination.dto';
 import { SessionStatus, SessionType } from '../enums/session.enum';
+import { User } from '../../users/entities/user.entity';
+import { Profile } from '../../users/profiles/entities/profile.entity';
 
-export class UserBasicDto {
-  @ApiProperty()
-  id: number;
-
-  @ApiProperty()
-  email: string;
-
-  @ApiProperty()
-  firstName: string;
-
-  @ApiProperty()
-  lastName: string;
+export class UserBasicDto extends OmitType(User, ['password'] as const) {
+  @ApiProperty({ type: () => Profile })
+  profile: Profile;
 }
 
 export class PaymentBasicDto {
@@ -42,13 +35,13 @@ export class SessionResponseDto {
   type: SessionType;
 
   @ApiProperty()
-  startTime: Date;
+  dateTime: Date;
 
   @ApiProperty()
   duration: number;
 
   @ApiProperty()
-  price: number;
+  pricePerClient: number;
 
   @ApiProperty()
   currency: string;
@@ -62,9 +55,6 @@ export class SessionResponseDto {
   @ApiPropertyOptional()
   location?: string;
 
-  @ApiPropertyOptional()
-  maxParticipants?: number;
-
   @ApiProperty()
   requirePrepayment: boolean;
 
@@ -77,23 +67,11 @@ export class SessionResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  @ApiProperty()
-  createdById: number;
-
-  @ApiProperty()
-  updatedById: number;
-
-  @ApiProperty({ type: () => UserBasicDto })
-  createdBy: UserBasicDto;
-
   @ApiProperty({ type: () => UserBasicDto })
   trainer: UserBasicDto;
 
-  @ApiProperty({ type: () => UserBasicDto })
-  client: UserBasicDto;
-
-  @ApiPropertyOptional({ type: () => [PaymentBasicDto] })
-  payments?: PaymentBasicDto[];
+  @ApiProperty({ type: () => [UserBasicDto] })
+  clients: UserBasicDto[];
 
   @ApiProperty()
   isPaid: boolean;

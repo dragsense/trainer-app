@@ -1,19 +1,22 @@
 import React from "react";
 
 // Types
-import { TActionComponentProps, IActionComponent } from "@/@types/handler-types";
-import { useStore } from "zustand";
+import { THandlerComponentProps, IActionComponent } from "@/@types/handler-types";
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 
-interface ActionComponentRendererProps<TListActionProps> {
-  actionComponents?: IActionComponent<TListActionProps>[];
+
+interface ActionComponentRendererProps<
+  TData,
+  TListActionProps extends Record<string, any> = {}
+> {
+  actionComponents?: IActionComponent<TSingleHandlerStore<TData, TListActionProps>>[];
   storeKey: string;
-  listProps: TListActionProps;
+  store: TSingleHandlerStore<TData, TListActionProps>;
 }
 
-const useActionComponentsMap = <TListActionProps,>(
-  components: IActionComponent<TListActionProps>[] | undefined
+const useActionComponentsMap = <TData, TListActionProps extends Record<string, any> = {}>(
+  components: IActionComponent<TSingleHandlerStore<TData, TListActionProps>>[] | undefined
 ) => {
   return React.useMemo(() => {
     if (!components) return null;
@@ -21,42 +24,39 @@ const useActionComponentsMap = <TListActionProps,>(
     return components.reduce((acc, extra) => {
       acc[extra.action] = extra.comp;
       return acc;
-    }, {} as Record<string, React.ComponentType<TActionComponentProps<TListActionProps>>>);
+    }, {} as Record<string, React.ComponentType<THandlerComponentProps<TSingleHandlerStore<TData, TListActionProps>>>>);
   }, [components]);
 };
 
-export const ActionComponentHandler = <IData, TListActionProps,>({
+export const ActionComponentHandler = <
+  IData,
+  TListActionProps extends Record<string, any> = {}
+>({
   actionComponents,
   storeKey,
-  listProps
-}: ActionComponentRendererProps<TListActionProps>) => {
+  store,
+}: ActionComponentRendererProps<IData, TListActionProps>) => {
+  const actionComponentsMap = useActionComponentsMap<IData, TListActionProps>(actionComponents);
 
-  const actionComponentsMap = useActionComponentsMap(actionComponents);
-
-  const singleStoreKey = storeKey + "-single";
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IData>>(singleStoreKey);
-
-  if (!singleStore) {
-    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+  if (!store) {
+    return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const action = singleStore(state => state.action);
+  const action = store((state) => state.action);
+
 
   return React.useMemo(() => {
     if (!action || !actionComponentsMap) return null;
 
     const ActionComp = actionComponentsMap[action];
-
     if (!ActionComp) return null;
-
 
     return (
       <ActionComp
-        key={`action-comp-${action}-${singleStoreKey}`}
+        key={`action-comp-${action}-${storeKey}`}
         storeKey={storeKey}
-        action={action}
-        {...listProps}
+        store={store}
       />
     );
-  }, [action, singleStoreKey, listProps]);
+  }, [action, actionComponentsMap, storeKey]);
 };

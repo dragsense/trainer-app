@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 
 // UI Components
-import { CardForm } from "@/components/form-ui/card-form";
+import {Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
@@ -18,6 +18,7 @@ import { IMessageResponse } from "@/@types/api/response.type";
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 export const DAYS_OF_WEEK: { key: TDayKey; label: string }[] = [
     { key: "monday", label: "Monday" },
@@ -63,7 +64,7 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
         }, {} as Record<TDayKey, number>)
     );
 
-        console.log('Weekly schedule:', timeSlotCounts);
+    console.log('Weekly schedule:', timeSlotCounts);
 
     const [unavailableCount, setUnavailableCount] = useState(unavailablePeriods?.length || 1);
 
@@ -177,20 +178,26 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
     );
 
     return (
-        <CardForm
-            title="Update Availability"
-            description="Set your weekly schedule and unavailable periods"
-            footerContent={footerContent}
-            formStore={formStore}
+        <AppCard
+            header={
+                <>
+                    <h2 className="text-md font-semibold">Update Availability</h2>
+                    <p className="text-sm text-muted-foreground">Set your weekly schedule and unavailable periods</p>
+                </>
+            }
+            footer={footerContent}
         >
-            <div className="space-y-8">
-                {DAYS_OF_WEEK.map((day) => {
-                    return (
-                        <div key={day.key} className="border p-4 rounded-md">
-                            <h4 className="font-medium mb-2">{day.label}</h4>
-                            {inputs.find((i) => i.props.name === `weeklySchedule.${day.key}.enabled`)}
+            <Form
+                formStore={formStore}
+            >
+                <div className="space-y-8">
+                    {DAYS_OF_WEEK.map((day) => {
+                        return (
+                            <div key={day.key} className="border p-4 rounded-md">
+                                <h4 className="font-medium mb-2">{day.label}</h4>
+                                {inputs.find((i) => i.props.name === `weeklySchedule.${day.key}.enabled`)}
 
-                           
+
                                 <>
                                     {Array.from({ length: timeSlotCounts[day.key] }).map((_, idx) => (
                                         <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end mt-2">
@@ -226,43 +233,45 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
                                         <Plus className="w-4 h-4 mr-1" /> Add Time Slot
                                     </Button>
                                 </>
-                           
-                        </div>
-                    );
-                })}
 
-                <div className="border p-4 rounded-md">
-                    <h4 className="font-medium mb-2">Unavailable Periods</h4>
-                    {Array.from({ length: unavailableCount }).map((_, idx) => (
-                        <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end mt-2">
-                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].startDate`)}
-                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].endDate`)}
-                            {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].reason`)}
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removeUnavailablePeriod(idx)}
-                                disabled={unavailableCount === 1}
-                            >
-                                <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                        </div>
-                    ))}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="mt-2"
-                        onClick={addUnavailablePeriod}
-                        disabled={unavailableCount >= MAX_UNAVAILABLE}
-                    >
-                        <Plus className="w-4 h-4 mr-1" /> Add Period
-                    </Button>
+                            </div>
+                        );
+                    })}
+
+                    <div className="border p-4 rounded-md">
+                        <h4 className="font-medium mb-2">Unavailable Periods</h4>
+                        {Array.from({ length: unavailableCount }).map((_, idx) => (
+                            <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end mt-2">
+                                {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].startDate`)}
+                                {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].endDate`)}
+                                {inputs.find((i) => i.props.name === `unavailablePeriods[${idx}].reason`)}
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeUnavailablePeriod(idx)}
+                                    disabled={unavailableCount === 1}
+                                >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                </Button>
+                            </div>
+                        ))}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={addUnavailablePeriod}
+                            disabled={unavailableCount >= MAX_UNAVAILABLE}
+                        >
+                            <Plus className="w-4 h-4 mr-1" /> Add Period
+                        </Button>
+                    </div>
                 </div>
-            </div>
 
-             <FormErrors />
-        </CardForm>
+                <FormErrors />
+            </Form>
+
+        </AppCard>
     );
 }

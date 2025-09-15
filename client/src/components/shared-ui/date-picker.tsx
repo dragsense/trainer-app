@@ -73,7 +73,13 @@ export function DatePicker({
   if (mode === "range") {
     const { from, to } = internalValue as DateRange
     if (from && to) {
-      return `${format(from, "PPP")} - ${format(to, "PPP")}`
+
+
+      if (from.getTime() !== to.getTime()) {
+        return `${format(from, "PPP")} - ${format(to, "PPP")}`
+      } else {
+        return format(from, "PPP") 
+      }
     }
     if (from) {
       return format(from, "PPP")
@@ -130,6 +136,7 @@ export function DatePicker({
             if (toDate && date > toDate) return true
             return false
           }}
+          captionLayout="dropdown"
         />
       </PopoverContent>
     </Popover>

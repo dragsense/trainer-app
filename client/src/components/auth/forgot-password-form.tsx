@@ -2,6 +2,9 @@
 
 // Types
 import { TForgotPasswordData } from '@/@types/auth.type';
+import { IMessageResponse } from '@/@types/api/response.type';
+import { TFormHandlerStore } from '@/stores';
+import { THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
 import { Mail, Loader2 } from 'lucide-react';
@@ -9,34 +12,28 @@ import { Link } from 'react-router-dom';
 
 // Components
 import { Button } from '@/components/ui/button';
-import { CardForm } from '@/components/form-ui/card-form';
+import { Form } from '@/components/form-ui/form';
 
 // Hooks
 import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { TFormHandlerStore, useRegisteredStore } from '@/stores';
-import { IMessageResponse } from '@/@types/api/response.type';
 import { FormErrors } from '../shared-ui/form-errors';
+import { AppCard } from '../layout-ui/app-card';
 
-interface IForgotPasswordFormProps {
-  storeKey: string;
+interface IForgotPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TForgotPasswordData, IMessageResponse, any>> {
 }
 
 export default function ForgotPasswordForm({
-  storeKey
+  storeKey,
+  store,
 }: IForgotPasswordFormProps) {
-
-  const formStoreKey = storeKey + "-form";
-
-  const forgotPasswordStore = useRegisteredStore<TFormHandlerStore<TForgotPasswordData, IMessageResponse>>(formStoreKey);
-
-  if (!forgotPasswordStore) {
-    return (`Form store "${formStoreKey}" not found. Did you forget to register it?`);
+  if (!store) {
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(forgotPasswordStore, state => state.isSubmitting);
+  const isSubmitting = useStore(store, state => state.isSubmitting);
 
   const { inputs } = useInput({
     fields: [
@@ -54,11 +51,15 @@ export default function ForgotPasswordForm({
   });
 
   return (
-    <CardForm<TForgotPasswordData, IMessageResponse>
-      title="Forgot Password"
-      description="Enter your email address and we'll send you instructions to reset your password"
-      formStore={forgotPasswordStore}
-      footerContent={
+
+    <AppCard
+      header={
+        <>
+          <h2 className="text-md font-semibold">Forgot Password</h2>
+          <p className="text-sm text-muted-foreground">Enter your email address and we'll send you instructions to reset your password</p>
+        </>
+      }
+      footer={
         <div className="flex flex-col gap-4 w-full">
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -75,11 +76,16 @@ export default function ForgotPasswordForm({
         </div>
       }
     >
-      <div className="flex flex-col gap-4 w-full">
-        {inputs}
-      </div>
 
-      <FormErrors /> 
-    </CardForm>
+      <Form<TForgotPasswordData, IMessageResponse>
+        formStore={store}
+      >
+        <div className="flex flex-col gap-4 w-full">
+          {inputs}
+        </div>
+
+        <FormErrors />
+      </Form>
+    </AppCard>
   );
 }

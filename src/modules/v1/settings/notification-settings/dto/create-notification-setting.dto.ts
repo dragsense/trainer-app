@@ -1,9 +1,7 @@
-export class CreateAppSettingDto {}
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsOptional,
-  ValidateNested,
 } from 'class-validator';
 
 export class CreateNotificationSettingDto {

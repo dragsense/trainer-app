@@ -33,6 +33,9 @@ import { useLogout } from "@/hooks/use-logout";
 // Assets
 import logo from "@/assets/logos/logo.png";
 
+// Components
+import { MobileBottomNav } from "./mobile-bottom-nav";
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   themeClass?: string;
 }
@@ -74,8 +77,12 @@ export function AppSidebar({
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <Sidebar collapsible="offcanvas" themeClass={themeClass} {...props}>
-          <SidebarHeader >
+        <Sidebar 
+          collapsible="offcanvas" 
+          themeClass={themeClass} 
+          {...props}
+        >
+          <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild className="hover:bg-transparent">
@@ -109,10 +116,10 @@ export function AppSidebar({
                                   matchRoutePath(url, location.pathname)
                                 )}
                                 tooltip={item.title}
-                                className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl"
+                                className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                               >
-                                {item.icon && <item.icon className="group-data-[active=true]:text-background"   />}
-                                <span>{item.title}</span>
+                                {item.icon && <item.icon className="group-data-[active=true]:text-background h-6 w-6" />}
+                                <span className="font-medium">{item.title}</span>
                               </SidebarMenuButton>
                             </CollapsibleTrigger>
                             <CollapsibleContent>
@@ -122,13 +129,13 @@ export function AppSidebar({
                                     <SidebarMenuSubButton
                                       asChild
                                       isActive={location.pathname === child.url}
-                                      className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl"
+                                      className="group cursor-pointer text-muted-foreground/50 p-4 rounded-xl hover:bg-muted/50 transition-all duration-200"
                                     >
                                       <Link to={child.url}>
                                         {child.icon && (
-                                          <child.icon className="group-data-[active=true]:text-background hover:text-background"  />
+                                          <child.icon className="group-data-[active=true]:text-background hover:text-background h-5 w-5" />
                                         )}
-                                        <span>{child.title}</span>
+                                        <span className="font-medium">{child.title}</span>
                                       </Link>
                                     </SidebarMenuSubButton>
                                   </SidebarMenuSubItem>
@@ -148,10 +155,10 @@ export function AppSidebar({
                               matchRoutePath(url, location.pathname)
                             )}
                             tooltip={item.title}
-                            className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl"
+                            className="group cursor-pointer text-muted-foreground/50 p-6 rounded-xl hover:bg-muted/50 transition-all duration-200"
                           >
-                            {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background"  />}
-                            <span>{item.title}</span>
+                            {item.icon && <item.icon className="group-data-[active=true]:text-background hover:text-background h-6 w-6" />}
+                            <span className="font-medium">{item.title}</span>
                           </SidebarMenuButton>
                         </Link>
                       </SidebarMenuItem>
@@ -165,7 +172,7 @@ export function AppSidebar({
             <Button
               onClick={logout}
               variant="secondary"
-              className="justify-start gap-2 mb-2"
+              className="justify-start gap-2 mb-2 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -180,29 +187,7 @@ export function AppSidebar({
       </div>
 
       {/* Mobile Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-md md:hidden">
-        <div className="flex justify-around">
-          {navItems.map((item) => {
-            const isActive =
-              item.urls?.some((url) => matchRoutePath(url, location.pathname)) ||
-              item.children?.some((child) =>
-                matchRoutePath(child.url, location.pathname)
-              );
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.title}
-                to={item.children?.[0]?.url || item.urls[0]}
-                className={`flex flex-col items-center justify-center py-2 text-xs transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {Icon && <Icon className="h-5 w-5 mb-0.5" />}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <MobileBottomNav />
     </>
   );
 }

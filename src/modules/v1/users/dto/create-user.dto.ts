@@ -11,15 +11,16 @@ import {
   IsUrl,
   IsArray,
   MinLength,
-  IsBoolean
+  IsBoolean,
+  ValidateNested
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import { UserLevels, UserRole } from '../enums/user.enum';
 import { UserLevelType, UserLevelValues } from '../entities/user.entity';
 import { CreateProfileDto } from '../profiles/dto/create-profile.dto';
+import { Type } from 'class-transformer';
 
-export class CreateUserDto extends CreateProfileDto {
+export class CreateUserDto {
   @ApiProperty({ example: 'email@example.com', description: 'User email' })
   @IsString()
   @IsNotEmpty()
@@ -49,5 +50,10 @@ export class CreateUserDto extends CreateProfileDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiProperty({ type: CreateProfileDto })
+  @ValidateNested()
+  @Type(() => CreateProfileDto)
+  profile: CreateProfileDto;
 
 }

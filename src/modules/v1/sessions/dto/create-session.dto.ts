@@ -11,13 +11,36 @@ import {
   Matches,
   IsDate,
   IsDateString,
-  IsArray
+  IsArray,
+  ValidateNested
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { SessionType } from '../enums/session.enum';
 import { BillingCurrency } from '../../billings/enums/billing.enum';
 import { PaymentMethodType } from '../../settings/payment-methods/enums/payment-method-type.enum';
+
+export class TrainerDto {
+  @ApiProperty({
+    description: 'ID of the trainer for the session',
+    example: 1
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  id: number;
+}
+
+export class ClientsDto {
+  @ApiProperty({
+    example: [1, 2, 3],
+    description: 'IDs of clients assigned to the session',
+  })
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Type(() => Number)
+  ids: number[];
+}
 
 export class CreateSessionDto {
   @ApiProperty({
@@ -118,21 +141,13 @@ export class CreateSessionDto {
   @Min(1)
   cancellationDeadline?: number = 24;
 
-  @ApiProperty({
-    description: 'ID of the trainer for the session',
-    example: 1
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  @Type(() => Number)
-  trainerId: number;
+  @ApiProperty({ type: () => TrainerDto })
+  @ValidateNested()
+  @Type(() => TrainerDto)
+  trainer: TrainerDto;
 
-  @ApiProperty({
-    example: [1, 2, 3],
-    description: 'IDs of client assigned to the session',
-  })
-  @IsArray()
-  @IsNumber({}, { each: true })
-  @Type(() => Number)
-  clientIds: number[];
+  @ApiProperty({ type: () => ClientsDto })
+  @ValidateNested()
+  @Type(() => ClientsDto)
+  clients: ClientsDto;
 }

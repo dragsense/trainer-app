@@ -8,7 +8,8 @@ import {
   IsDate,
   IsEnum,
   Min,
-  Max
+  Max,
+  IsDateString
 } from 'class-validator';
 import { UserGender } from '../../enums/user.enum';
 import { Type } from 'class-transformer';
@@ -33,7 +34,7 @@ export class CreateProfileDto {
 
   @ApiProperty({ example: '1990-01-01' })
   @IsOptional()
-  @IsDate()
+  @IsDateString()
   dateOfBirth?: Date;
 
   @ApiProperty({ enum: UserGender, example: UserGender.MALE })

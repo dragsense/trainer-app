@@ -116,6 +116,127 @@ export class StripeTransactionService {
     }
   }
 
+  async listPaymentIntentsWithFilters(filters: {
+    search?: string;
+    status?: string;
+    customerId?: string;
+    currency?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    paymentIntentId?: string;
+    chargeId?: string;
+    createdDateFrom?: string;
+    createdDateTo?: string;
+    capturedDateFrom?: string;
+    capturedDateTo?: string;
+    limit?: number;
+  }): Promise<Stripe.ApiList<Stripe.PaymentIntent>> {
+    await this.ensureStripeInitialized();
+
+    try {
+      const params: Stripe.PaymentIntentListParams = {
+        limit: filters.limit || 100,
+        expand: ['data.customer', 'data.payment_method'],
+      };
+
+      // Apply filters
+      if (filters.customerId) {
+        params.customer = filters.customerId;
+      }
+
+      // Get all payment intents first (Stripe doesn't support complex filtering)
+      const paymentIntents = await this.stripe!.paymentIntents.list(params);
+      
+      // Apply client-side filtering for fields not supported by Stripe API
+      let filteredPaymentIntents = paymentIntents.data;
+
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.id.toLowerCase().includes(searchTerm) ||
+          (pi.description && pi.description.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      if (filters.status) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.status === filters.status
+        );
+      }
+
+      if (filters.currency) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.currency === filters.currency
+        );
+      }
+
+      if (filters.minAmount !== undefined) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.amount >= filters.minAmount!
+        );
+      }
+
+      if (filters.maxAmount !== undefined) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.amount <= filters.maxAmount!
+        );
+      }
+
+      if (filters.paymentIntentId) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.id.includes(filters.paymentIntentId!)
+        );
+      }
+
+      if (filters.chargeId) {
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.charges?.data?.some(charge => charge.id.includes(filters.chargeId!))
+        );
+      }
+
+      if (filters.createdDateFrom) {
+        const fromDate = new Date(filters.createdDateFrom);
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          new Date(pi.created * 1000) >= fromDate
+        );
+      }
+
+      if (filters.createdDateTo) {
+        const toDate = new Date(filters.createdDateTo);
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          new Date(pi.created * 1000) <= toDate
+        );
+      }
+
+      if (filters.capturedDateFrom) {
+        const fromDate = new Date(filters.capturedDateFrom);
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.charges?.data?.some(charge => 
+            charge.captured && new Date(charge.created * 1000) >= fromDate
+          )
+        );
+      }
+
+      if (filters.capturedDateTo) {
+        const toDate = new Date(filters.capturedDateTo);
+        filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
+          pi.charges?.data?.some(charge => 
+            charge.captured && new Date(charge.created * 1000) <= toDate
+          )
+        );
+      }
+
+      return {
+        ...paymentIntents,
+        data: filteredPaymentIntents,
+        has_more: false, // Since we're filtering client-side
+      };
+    } catch (error) {
+      this.logger.error('Error listing payment intents with filters:', error.message);
+      throw new BadRequestException(`Failed to list payment intents: ${error.message}`);
+    }
+  }
+
   async confirmPaymentIntent(
     paymentIntentId: string,
     paymentMethodId?: string,

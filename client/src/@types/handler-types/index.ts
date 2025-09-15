@@ -8,14 +8,17 @@ export type TItemActionProps = {
 };
 
 
-export type TActionComponentProps<T> = T & {
+
+
+export type THandlerComponentProps<T> = {
   storeKey: string;
-  action: string;
+  store: T
 };
 
-export interface IActionComponent<TListActionProps = any> {
+
+export interface IActionComponent<T> {
   action: string;
-  comp: React.ComponentType<TActionComponentProps<TListActionProps>>;
+  comp: React.ComponentType<THandlerComponentProps<T>>;
 }
 
 export interface MutationFns<TFormData, TResponse> {

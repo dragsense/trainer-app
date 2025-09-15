@@ -150,4 +150,54 @@ export class ReminderListDto extends ListQueryDto {
   @IsDate()
   @Type(() => Date)
   startDateTo?: Date;
+
+  @ApiProperty({
+    description: 'Filter by scheduled date range (start)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  scheduledDateFrom?: Date;
+
+  @ApiProperty({
+    description: 'Filter by scheduled date range (end)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDate()
+  @Type(() => Date)
+  scheduledDateTo?: Date;
+
+  @ApiProperty({
+    description: 'Filter by delivery method',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  deliveryMethod?: string;
+
+  @ApiProperty({
+    description: 'Filter by recipient email',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  recipientEmail?: string;
+
+  @ApiProperty({
+    description: 'Filter by creator email',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  creatorEmail?: string;
+
+  @ApiProperty({
+    description: 'Filter by reminder title',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  title?: string;
 }

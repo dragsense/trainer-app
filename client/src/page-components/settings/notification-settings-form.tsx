@@ -1,4 +1,3 @@
-
 // External Libraries
 import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
@@ -18,39 +17,23 @@ import { INotificationSetting, TNotificationSettingData } from "@/@types/setting
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 // Components
-import { NotificationSettingsCardForm } from "@/components/admin";
+import { NotificationSettingCardForm } from "@/components/admin";
 
 // Services
 import { updateNotificationSettings } from "@/services/setting.api";
-
-
-
 
 // Schema
 export const NotificationSettingsSchema = z.object({
     emailNotifications: z.boolean().optional(),
     newUserNotifications: z.boolean().optional(),
     userUpdateNotifications: z.boolean().optional(),
-    invoiceNotifications: z.boolean().optional(),
     billingNotifications: z.boolean().optional(),
     sessionNotifications: z.boolean().optional(),
-    chatNotifications: z.boolean().optional(),
-
 });
 
+interface INotificationSettingsFormProps extends TActionComponentProps<any> {}
 
-interface INotificationSettingsFormProps extends TActionComponentProps<any> {
-}
-
-
-interface INotificationSettingsFormExtraProps {
-}
-
-export default function NotificationSettingsForm({
-    storeKey
-}: INotificationSettingsFormProps) {
-
-
+export default function NotificationSettingsForm({ storeKey }: INotificationSettingsFormProps) {
     const INITIAL_VALUES: TDefaultValue<TNotificationSettingData> = {
         emailNotifications: { value: true },
         newUserNotifications: { value: true },
@@ -72,24 +55,27 @@ export default function NotificationSettingsForm({
         isLoading: state.isLoading,
     })));
 
-    if (!response)
-        return <div>NotificationSettings not found</div>
+    if (!response) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading notification settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     const getInitialValues = (): typeof INITIAL_VALUES => {
         if (!response) {
             return INITIAL_VALUES;
         }
 
-        const flatResponse = {
-            ...(response || {})
-        };
-
-
         const updatedValues = {
             ...INITIAL_VALUES,
             ...Object.fromEntries(
                 Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
+                    const newValue = (response as any)[key];
                     return [
                         key,
                         {
@@ -99,9 +85,7 @@ export default function NotificationSettingsForm({
                     ];
                 })
             ),
-
         };
-
 
         return updatedValues;
     };
@@ -110,24 +94,27 @@ export default function NotificationSettingsForm({
 
     if (isLoading) {
         return (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading notification settings...</p>
+                </div>
             </div>
         );
     }
 
-
-
-    return <>
-        <FormHandler<TNotificationSettingData, IMessageResponse, INotificationSettingsFormExtraProps>
+    return (
+        <FormHandler<TNotificationSettingData, IMessageResponse>
             mutationFn={updateNotificationSettings}
-            FormComponent={NotificationSettingsCardForm}
+            FormComponent={NotificationSettingCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
             validationSchema={NotificationSettingsSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
+            onSuccess={(response) => {
+                // Refresh the notification settings data
+                singleStore.getState().refetch();
+            }}
         />
-
-    </>
-
+    );
 }

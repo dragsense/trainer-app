@@ -77,17 +77,20 @@ export function AppSelect({
     );
 
     const toggle = (val: OptionValue) => {
+
+        let next: any;
         if (multiple) {
             const list = value as OptionValue[];
             const exists = list.some((v) => toKey(v) === toKey(val));
-            const next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
-            (onChange as (v: OptionValue[]) => void)(next);
+            next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
         } else {
             const current = value as OptionValue | undefined;
-            const next = current !== undefined && toKey(current) === toKey(val) ? undefined : val;
-            (onChange as (v: OptionValue | undefined) => void)(next);
+            next = current !== undefined && toKey(current) === toKey(val) ? undefined : val;
             setOpen(false);
         }
+
+        onChange(next);
+
     };
 
     const clearAll = (e?: React.MouseEvent) => {
@@ -105,7 +108,7 @@ export function AppSelect({
         : value !== undefined && value !== null && value !== "";
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+            <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     disabled={disabled}
@@ -113,7 +116,7 @@ export function AppSelect({
                     role="combobox"
                     aria-expanded={open}
                     className={cn(
-                        "w-full h-auto min-h-10 py-2 pl-3 pr-2",
+                        "w-full px-2",
                         "justify-between items-start",
                         "text-left whitespace-normal",
                         "flex flex-wrap gap-1",
@@ -148,12 +151,11 @@ export function AppSelect({
 
                     <div className="flex items-center gap-0 ml-auto">
                         {hasSelection && (
-                            <Button variant="ghost" size="sm" onClick={clearAll}>
+                            <div  onClick={clearAll}>
                             <X
                                 className="h-4 w-4 shrink-0 opacity-60 hover:opacity-100"
-                                
                             />
-                            </Button>
+                            </div>
                         )}
                         <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </div>

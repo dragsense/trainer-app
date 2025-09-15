@@ -85,8 +85,13 @@ export class PaymentMethodsService {
       query.andWhere('paymentMethod.updatedAt <= :updatedBefore', { updatedBefore });
     }
 
+    const sortColumn = sortBy && sortBy in this.paymentMethodRepo.metadata.propertiesMap
+      ? sortBy
+      : 'createdAt';
+    
+
     query
-      .orderBy(`paymentMethod.${sortBy}`, sortOrder as 'ASC' | 'DESC')
+      .orderBy(`paymentMethod.${sortColumn}`, sortOrder as 'ASC' | 'DESC')
 
     const data = await query.getMany();
 

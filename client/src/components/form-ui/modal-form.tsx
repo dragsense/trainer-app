@@ -15,6 +15,7 @@ import { TFormHandlerStore } from "@/stores";
 
 // Utility Function
 import { cn } from "@/lib/utils";
+import { Form } from "./form";
 
 
 type TDialogWidth = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
@@ -29,7 +30,7 @@ const widthMap: Record<string, string> = {
   "3xl": "sm:max-w-3xl",
 };
 
-interface IModalFormProps<TFormData, TResponse> {
+interface IModalFormProps<TFormData, TResponse, TExtraProps extends Record<string, any> = {}> {
   className?: string;
   open: boolean;
   onOpenChange: (state: boolean) => void;
@@ -38,10 +39,10 @@ interface IModalFormProps<TFormData, TResponse> {
   footerContent?: ReactNode;
   children: ReactNode;
   width?: TDialogWidth;
-  formStore: TFormHandlerStore<TFormData, TResponse>;
+  formStore: TFormHandlerStore<TFormData, TResponse, TExtraProps>;
 }
 
-export function ModalForm<TFormData, TResponse>({
+export function ModalForm<TFormData, TResponse, TExtraProps extends Record<string, any> = {}>({
   open,
   onOpenChange,
   title,
@@ -50,48 +51,31 @@ export function ModalForm<TFormData, TResponse>({
   children,
   width = "lg",
   formStore,
-}: IModalFormProps<TFormData, TResponse>) {
-
-
-    const { isSubmitting, error,  onSubmit } = formStore(useShallow(state => ({
-      onSubmit: state.onSubmit,
-      isSubmitting: state.isSubmitting,
-      error: state.error
-    })));
+  className
+}: IModalFormProps<TFormData, TResponse, TExtraProps>) {
 
 
 
   return (
-    <Dialog  open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent forceMount
         className={cn(`max-h-[90vh] overflow-y-auto`, widthMap[width] || "sm:max-w-lg")}
       >
-        <form onSubmit={onSubmit}>
+        <Form<TFormData, TResponse, TExtraProps>
+          formStore={formStore}
+          className={className}
+        >
           <AppDialog
             title={title}
             description={description}
-            footerContent={
-              <div>
-                {footerContent}
-
-                {error && (
-                  <p className="text-sm font-medium text-red-500 my-2">{error.message}</p>
-                )}
-              </div>
-            }
+            footerContent={footerContent}
           >
-
-            {isSubmitting && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            )}
-
             {children}
 
           </AppDialog>
-        </form>
+        </Form>
+
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

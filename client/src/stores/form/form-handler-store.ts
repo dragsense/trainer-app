@@ -10,8 +10,8 @@ import { config } from '@/config';
 
 
 
-export const useFormHandlerStore = <TFormData, TResponse>(initalValues: TFormData, mutationFn: MutationFn<TFormData, TResponse>) => {
-  return create<IFormHandlerState<TFormData, TResponse>>()(
+export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<string, any> = {}>(initalValues: TFormData,  initialExtra: TExtra = {} as TExtra) => {
+  return create<IFormHandlerState<TFormData, TResponse, TExtra>>()(
     devtools(
       (set) => ({
         isSubmitting: false,
@@ -19,11 +19,26 @@ export const useFormHandlerStore = <TFormData, TResponse>(initalValues: TFormDat
         response: null,
         isSuccess: false,
         values: initalValues,
-        mutationFn,
+        extra: initialExtra,
         setError: (error) => set({ error }),
         setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
         setValues: (values) => set({ values }),
         setOnSubmit: (submitFn) => set({ onSubmit: submitFn }),
+
+        setExtra: (key, value) =>
+          set((state) => ({
+            extra: {
+              ...state.extra,
+              [key]: value,
+            },
+          })),
+
+        resetExtra: () =>
+          set({
+            extra: initialExtra,
+          }),
+
+
         syncWithMutation: ({ isSubmitting, error, isSuccess, response }) => {
           set({
             isSubmitting,
@@ -47,6 +62,6 @@ export const useFormHandlerStore = <TFormData, TResponse>(initalValues: TFormDat
   );
 };
 
-export type TFormHandlerStore<TFormData, TResponse> = ReturnType<typeof useFormHandlerStore<TFormData, TResponse>>;
+export type TFormHandlerStore<TFormData, TResponse, TExtra extends Record<string, any> = any> = ReturnType<typeof useFormHandlerStore<TFormData, TResponse, TExtra>>;
 
 

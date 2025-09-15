@@ -36,8 +36,16 @@ export class AuthService {
   async register(
     registerDto: RegisterDto,
   ): Promise<MessageResponse> {
+
+    const { firstName, lastName, ...userDtoData } = registerDto;
+
     return await this.userService.create({
-      ...registerDto, level: UserLevels[UserRole.TRAINER],
+      ...userDtoData,
+      profile: {
+        firstName,
+        lastName
+      },
+      level: UserLevels[UserRole.TRAINER],
     });
   }
 

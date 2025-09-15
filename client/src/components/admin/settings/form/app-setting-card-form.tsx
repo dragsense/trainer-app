@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 
 // Components
-import { CardForm } from "@/components/form-ui/card-form";
+import { Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
@@ -10,12 +10,13 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import {  TAppSettingData } from "@/@types/setting.type";
+import { TAppSettingData } from "@/@types/setting.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 interface IAppSettingCardFormProps {
     storeKey: string;
@@ -60,19 +61,26 @@ export default function AppSettingCardForm({ storeKey }: IAppSettingCardFormProp
     );
 
     return (
-        <CardForm
-            title="Application Settings"
-            description="Configure general application preferences"
-            footerContent={footerContent}
-            formStore={formStore}
+        <AppCard
+            header={
+                <>
+                    <h2 className="text-md font-semibold">Application Settings</h2>
+                    <p className="text-sm text-muted-foreground">Configure general application preferences</p>
+                </>
+            }
+            footer={footerContent}
         >
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-4">
-                    {inputs}
+            <Form
+                formStore={formStore}
+            >
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-4">
+                        {inputs}
+                    </div>
                 </div>
-            </div>
 
-             <FormErrors />
-        </CardForm>
+                <FormErrors />
+            </Form>
+        </AppCard>
     );
 }

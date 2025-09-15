@@ -47,11 +47,21 @@ export class TrainerClientsService {
       search,
       clientId,
       trainerId,
+      trainerEmail,
+      clientEmail,
+      trainerFirstName,
+      trainerLastName,
+      clientFirstName,
+      clientLastName,
+      assignedDateFrom,
+      assignedDateTo,
+      trainerSpecialty,
+      clientGoal,
       createdAfter,
       createdBefore,
       updatedAfter,
       updatedBefore,
-      ...filters
+      ...otherFilters
     } = queryDto;
 
     const queryBuilder = this.trainerClientRepository
@@ -61,7 +71,7 @@ export class TrainerClientsService {
       .leftJoinAndSelect('trainerClient.client', 'client')
       .leftJoinAndSelect('client.profile', 'clientProfile');
 
-    // Add filters
+    // Basic ID filters
     if (trainerId) {
       queryBuilder.andWhere('trainerClient.trainerId = :trainerId', { trainerId });
     }
@@ -70,14 +80,80 @@ export class TrainerClientsService {
       queryBuilder.andWhere('trainerClient.clientId = :clientId', { clientId });
     }
 
+    // Email filters
+    if (trainerEmail) {
+      queryBuilder.andWhere('trainer.email ILIKE :trainerEmail', { 
+        trainerEmail: `%${trainerEmail}%` 
+      });
+    }
+
+    if (clientEmail) {
+      queryBuilder.andWhere('client.email ILIKE :clientEmail', { 
+        clientEmail: `%${clientEmail}%` 
+      });
+    }
+
+    // Name filters
+    if (trainerFirstName) {
+      queryBuilder.andWhere('trainerProfile.firstName ILIKE :trainerFirstName', { 
+        trainerFirstName: `%${trainerFirstName}%` 
+      });
+    }
+
+    if (trainerLastName) {
+      queryBuilder.andWhere('trainerProfile.lastName ILIKE :trainerLastName', { 
+        trainerLastName: `%${trainerLastName}%` 
+      });
+    }
+
+    if (clientFirstName) {
+      queryBuilder.andWhere('clientProfile.firstName ILIKE :clientFirstName', { 
+        clientFirstName: `%${clientFirstName}%` 
+      });
+    }
+
+    if (clientLastName) {
+      queryBuilder.andWhere('clientProfile.lastName ILIKE :clientLastName', { 
+        clientLastName: `%${clientLastName}%` 
+      });
+    }
+
+    // Date range filters
+    if (assignedDateFrom) {
+      queryBuilder.andWhere('trainerClient.assignedAt >= :assignedDateFrom', { assignedDateFrom });
+    }
+
+    if (assignedDateTo) {
+      queryBuilder.andWhere('trainerClient.assignedAt <= :assignedDateTo', { assignedDateTo });
+    }
+
+    // Specialty and goal filters
+    if (trainerSpecialty) {
+      queryBuilder.andWhere('trainerProfile.specialties @> :trainerSpecialty', { 
+        trainerSpecialty: JSON.stringify([trainerSpecialty])
+      });
+    }
+
+    if (clientGoal) {
+      queryBuilder.andWhere('clientProfile.fitnessGoals @> :clientGoal', { 
+        clientGoal: JSON.stringify([clientGoal])
+      });
+    }
+
+    // Search functionality
     if (search) {
       queryBuilder.andWhere(
-        '(LOWER(trainerProfile.firstName) LIKE LOWER(:search) OR LOWER(trainerProfile.lastName) LIKE LOWER(:search) OR LOWER(clientProfile.firstName) LIKE LOWER(:search) OR LOWER(clientProfile.lastName) LIKE LOWER(:search))',
+        `(LOWER(trainerProfile.firstName) LIKE LOWER(:search) OR 
+         LOWER(trainerProfile.lastName) LIKE LOWER(:search) OR 
+         LOWER(clientProfile.firstName) LIKE LOWER(:search) OR 
+         LOWER(clientProfile.lastName) LIKE LOWER(:search) OR
+         LOWER(trainer.email) LIKE LOWER(:search) OR
+         LOWER(client.email) LIKE LOWER(:search))`,
         { search: `%${search}%` }
       );
     }
 
-    // Use assignedAt instead of createdAt/updatedAt since those don't exist in the entity
+    // Date range filters
     if (createdAfter) {
       queryBuilder.andWhere('trainerClient.assignedAt >= :createdAfter', { createdAfter });
     }
@@ -86,9 +162,9 @@ export class TrainerClientsService {
       queryBuilder.andWhere('trainerClient.assignedAt <= :createdBefore', { createdBefore });
     }
 
-    // Remove updatedAfter and updatedBefore since entity doesn't have updatedAt
-    if (filters && typeof filters === 'object') {
-      Object.entries(filters).forEach(([key, value]) => {
+    // Handle any other filters
+    if (otherFilters && typeof otherFilters === 'object') {
+      Object.entries(otherFilters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           queryBuilder.andWhere(`trainerClient.${key} = :${key}`, { [key]: value });
         }

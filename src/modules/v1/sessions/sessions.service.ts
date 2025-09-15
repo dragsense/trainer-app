@@ -29,33 +29,31 @@ export class SessionsService {
   ) { }
 
   async create(user: User, createSessionDto: CreateSessionDto): Promise<MessageResponse> {
-    const { trainerId, clientIds, dateTime, ...data } = createSessionDto;
+    const { trainer, clients: clientsData, dateTime, ...data } = createSessionDto;
 
     // Validate users exist and have correct roles
-    const trainer = await this.usersService.findOne({ id: trainerId });
+    const trainerUser = await this.usersService.findOne({ id: trainer.id });
 
-
-
-    if (!trainer || trainer.level !== UserLevels[UserRole.TRAINER]) {
+    if (!trainerUser || trainerUser.level !== UserLevels[UserRole.TRAINER]) {
       throw new BadRequestException('Invalid trainer ID');
     }
 
-    if (!clientIds || clientIds.length === 0) {
+    if (!clientsData.ids || clientsData.ids.length === 0) {
       throw new BadRequestException('Invalid client ID');
     }
 
-    const clients = await this.usersService.findByIds(clientIds);
+    const clients = await this.usersService.findByIds(clientsData.ids);
 
     if (clients.length === 0) throw new NotFoundException("No valid members found");
 
 
     // Check both scheduling conflicts and availability
-    const hasConflict = await this.checkSchedulingConflict(trainer.id, dateTime, data.duration);
+    const hasConflict = await this.checkSchedulingConflict(trainerUser.id, dateTime, data.duration);
   /*   if (hasConflict) {
       throw new BadRequestException('Trainer has a scheduling conflict');
     }
 
-    const isAvailable = await this.checkTrainerAvailability(trainer.id, dateTime, data.duration);
+    const isAvailable = await this.checkTrainerAvailability(trainerUser.id, dateTime, data.duration);
     if (!isAvailable) {
       throw new BadRequestException('Trainer is not available during the requested time');
     } */
@@ -63,7 +61,7 @@ export class SessionsService {
     const session = this.sessionsRepository.create({
       ...data,
       dateTime,
-      trainer,
+      trainer: trainerUser,
       clients,
       creator: user,
       status: SessionStatus.SCHEDULED
@@ -89,7 +87,9 @@ export class SessionsService {
     const skip = (page - 1) * limit;
     const query = this.sessionsRepository.createQueryBuilder('session')
       .leftJoinAndSelect('session.trainer', 'trainer')
-      .leftJoinAndSelect('session.creator', 'createdBy')
+      .leftJoinAndSelect('trainer.profile', 'trainerProfile')
+      .leftJoinAndSelect('session.clients', 'clients')
+      .leftJoinAndSelect('clients.profile', 'clientProfiles')
       .loadRelationCountAndMap('session.clientCount', 'session.clients');
 
 
@@ -187,7 +187,7 @@ export class SessionsService {
       query.andWhere('client.id = :userId', { userId: user.id });
     } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
-    } else {
+    } else { 
       throw new ForbiddenException('Invalid role');
     }
 
@@ -208,23 +208,21 @@ export class SessionsService {
       throw new BadRequestException('Can only update scheduled sessions');
     }
 
-    const { trainerId, clientIds, ...data } = updateSessionDto;
+    const { trainer, clients: clientsData, ...data } = updateSessionDto;
 
     // Update trainer if specified
-    if (trainerId) {
-      const trainer = await this.usersService.findOne({ id: trainerId });
-      if (!trainer || trainer.level !== UserLevels[UserRole.TRAINER]) {
+    if (trainer) {
+      const trainerUser = await this.usersService.findOne({ id: trainer.id });
+      if (!trainerUser || trainerUser.level !== UserLevels[UserRole.TRAINER]) {
         throw new BadRequestException('Invalid trainer ID');
       }
-
-
 
       if (data.dateTime || data.duration) {
         const newDateTime = data.dateTime || session.dateTime;
         const newDuration = data.duration || session.duration;
 
         const hasConflict = await this.checkSchedulingConflict(
-          trainerId,
+          trainer.id,
           newDateTime,
           newDuration,
           id // exclude current session
@@ -233,21 +231,21 @@ export class SessionsService {
           throw new BadRequestException('Trainer has a scheduling conflict');
         }
 
-        const isAvailable = await this.checkTrainerAvailability(trainerId, newDateTime, newDuration);
+        const isAvailable = await this.checkTrainerAvailability(trainer.id, newDateTime, newDuration);
         if (!isAvailable) {
           throw new BadRequestException('Trainer is not available during the requested time');
         }
       }
 
-      session.trainer = trainer;
+      session.trainer = trainerUser;
     }
 
-    if (clientIds) {
-      if (clientIds.length === 0) {
+    if (clientsData) {
+      if (!clientsData.ids || clientsData.ids.length === 0) {
         throw new BadRequestException('Invalid client IDs');
       }
 
-      const clients = await this.usersService.findByIds(clientIds);
+      const clients = await this.usersService.findByIds(clientsData.ids);
       if (clients.length === 0) {
         throw new NotFoundException('No valid clients found');
       }

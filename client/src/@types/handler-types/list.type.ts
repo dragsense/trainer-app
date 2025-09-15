@@ -29,7 +29,7 @@ export interface IListHandlerBaseState<TResponse> {
 
 export interface IListHandlerState<TResponse, TExtra extends Record<string, any> = {}> extends IListHandlerBaseState<TResponse>, IListQueryState {
   
-  extra: Partial<TExtra>;
+  extra: TExtra;
 
   setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
   resetExtra: () => void;
@@ -46,4 +46,4 @@ export interface IListHandlerState<TResponse, TExtra extends Record<string, any>
   reset: () => void;
 }
 
-export type IListStoreApi<TResponse> = StoreApi<IListHandlerState<TResponse>>;
+export type IListStoreApi<TResponse, TExtra extends Record<string, any>> = StoreApi<IListHandlerState<TResponse, TExtra>>;

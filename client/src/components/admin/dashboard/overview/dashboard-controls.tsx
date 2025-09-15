@@ -38,7 +38,7 @@ export const DashboardControls: React.FC<IDashboardControlsProps> = ({
     } else if ("from" in date) {
       const { from, to } = date
 
-      if (from && to) {
+      if (from && to && from.getTime() !== to.getTime()) {
         setExtra('customRange', { from, to })
       } else if (from) {
         setExtra('customRange', { from })

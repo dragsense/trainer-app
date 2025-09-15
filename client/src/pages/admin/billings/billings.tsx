@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { BillingTable, BillingViewModal, InvoiceViewModal } from "@/components/admin";
+import { BillingList, BillingViewModal, InvoiceViewModal } from "@/components/admin";
 import { BillingForm, BillingStatusDialog } from "@/page-components";
 
 
@@ -33,7 +33,7 @@ export default function BillingsPage() {
         deleteFn={deleteBilling}
         storeKey={STORE_KEY}
         onDeleteSuccess={() => queryBilling.invalidateQueries({ queryKey: [STORE_KEY + "-list"] })}
-        SingleComponent={BillingViewModal}
+        SingleComponent={({ storeKey, store }) => <BillingViewModal storeKey={storeKey} store={store} />}
         actionComponents={[
           {
             action: 'createOrUpdate',
@@ -52,7 +52,7 @@ export default function BillingsPage() {
 
       <ListHandler<IBilling>
         queryFn={fetchBillings}
-        ListComponent={BillingTable}
+        ListComponent={BillingList}
         storeKey={STORE_KEY}
       />
     </>

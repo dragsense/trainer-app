@@ -62,25 +62,158 @@ export class RemindersService {
       createdBefore,
       updatedAfter,
       updatedBefore,
-      ...filters
+      type,
+      status,
+      frequency,
+      creatorId,
+      recipientId,
+      sessionId,
+      paymentId,
+      message,
+      weekdays,
+      monthDays,
+      timeOfDay,
+      intervalMinutes,
+      priority,
+      startDateFrom,
+      startDateTo,
+      scheduledDateFrom,
+      scheduledDateTo,
+      deliveryMethod,
+      recipientEmail,
+      creatorEmail,
+      title,
+      ...otherFilters
     } = queryDto;
 
     const query = this.reminderRepository.createQueryBuilder('reminder')
       .leftJoinAndSelect('reminder.creator', 'creator')
+      .leftJoinAndSelect('creator.profile', 'creatorProfile')
       .leftJoinAndSelect('reminder.recipient', 'recipient')
+      .leftJoinAndSelect('recipient.profile', 'recipientProfile')
       .leftJoinAndSelect('reminder.session', 'session')
+      .leftJoinAndSelect('reminder.billing', 'billing');
 
     if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
     }
 
+    // Search functionality
     if (search) {
-      query.andWhere('(reminder.message ILIKE :search)', { search: `%${search}%` });
+      query.andWhere(
+        `(reminder.message ILIKE :search OR 
+         reminder.title ILIKE :search OR
+         creator.email ILIKE :search OR
+         recipient.email ILIKE :search OR
+         creatorProfile.firstName ILIKE :search OR
+         creatorProfile.lastName ILIKE :search OR
+         recipientProfile.firstName ILIKE :search OR
+         recipientProfile.lastName ILIKE :search)`,
+        { search: `%${search}%` }
+      );
     }
 
-    if (filters && typeof filters === 'object') {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+    // Specific filters
+    if (type) {
+      query.andWhere('reminder.type = :type', { type });
+    }
+
+    if (status) {
+      query.andWhere('reminder.status = :status', { status });
+    }
+
+    if (frequency) {
+      query.andWhere('reminder.frequencyConfig->>\'frequency\' = :frequency', { frequency });
+    }
+
+    if (creatorId) {
+      query.andWhere('reminder.creatorId = :creatorId', { creatorId });
+    }
+
+    if (recipientId) {
+      query.andWhere('reminder.recipientId = :recipientId', { recipientId });
+    }
+
+    if (sessionId) {
+      query.andWhere('reminder.sessionId = :sessionId', { sessionId });
+    }
+
+    if (paymentId) {
+      query.andWhere('reminder.billingId = :paymentId', { paymentId });
+    }
+
+    if (message) {
+      query.andWhere('reminder.message ILIKE :message', { message: `%${message}%` });
+    }
+
+    if (title) {
+      query.andWhere('reminder.title ILIKE :title', { title: `%${title}%` });
+    }
+
+    if (weekdays && weekdays.length > 0) {
+      query.andWhere('reminder.frequencyConfig->\'weekdays\' ?| array[:weekdays]', { 
+        weekdays: weekdays.map(d => d.toString()) 
+      });
+    }
+
+    if (monthDays && monthDays.length > 0) {
+      query.andWhere('reminder.frequencyConfig->\'monthDays\' ?| array[:monthDays]', { 
+        monthDays: monthDays.map(d => d.toString()) 
+      });
+    }
+
+    if (timeOfDay) {
+      query.andWhere('reminder.frequencyConfig->>\'timeOfDay\' = :timeOfDay', { timeOfDay });
+    }
+
+    if (intervalMinutes) {
+      query.andWhere('reminder.frequencyConfig->>\'intervalMinutes\' = :intervalMinutes', { 
+        intervalMinutes: intervalMinutes.toString() 
+      });
+    }
+
+    if (priority !== undefined) {
+      query.andWhere('reminder.priority = :priority', { priority });
+    }
+
+    if (startDateFrom) {
+      query.andWhere('reminder.startDate >= :startDateFrom', { startDateFrom });
+    }
+
+    if (startDateTo) {
+      query.andWhere('reminder.startDate <= :startDateTo', { startDateTo });
+    }
+
+    if (scheduledDateFrom) {
+      query.andWhere('reminder.scheduledAt >= :scheduledDateFrom', { scheduledDateFrom });
+    }
+
+    if (scheduledDateTo) {
+      query.andWhere('reminder.scheduledAt <= :scheduledDateTo', { scheduledDateTo });
+    }
+
+    if (deliveryMethod) {
+      query.andWhere('reminder.deliveryMethods @> :deliveryMethod', { 
+        deliveryMethod: JSON.stringify([deliveryMethod])
+      });
+    }
+
+    if (recipientEmail) {
+      query.andWhere('recipient.email ILIKE :recipientEmail', { 
+        recipientEmail: `%${recipientEmail}%` 
+      });
+    }
+
+    if (creatorEmail) {
+      query.andWhere('creator.email ILIKE :creatorEmail', { 
+        creatorEmail: `%${creatorEmail}%` 
+      });
+    }
+
+    // Handle any other filters
+    if (otherFilters && typeof otherFilters === 'object') {
+      Object.entries(otherFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
           if (Array.isArray(value)) {
             query.andWhere(`reminder.${key} && ARRAY[:...${key}]`, { [key]: value });
           } else {
@@ -91,6 +224,7 @@ export class RemindersService {
       });
     }
 
+    // Date range filters
     if (createdAfter) {
       query.andWhere('reminder.createdAt >= :createdAfter', { createdAfter });
     }

@@ -18,9 +18,14 @@ import {
 } from "#/modules/v1/users/dto/user-availability.dto";
 import { CreateUserAvailabilityDto } from "#/modules/v1/users/dto/create-user-availability.dto";
 import { UpdateUserAvailabilityDto } from "#/modules/v1/users/dto/update-user-availability.dto";
+import { IMessageResponse } from "./api/response.type";
 
 export interface IUser extends User, GeneralBaseEntity {};
 export interface IProfile extends Profile, GeneralBaseEntity {}
+
+export type TUserResponse = IUser & IMessageResponse
+  
+
 
 export type TUserData = CreateUserDto;
 export type TProfileData = CreateProfileDto;

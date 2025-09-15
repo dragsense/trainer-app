@@ -33,6 +33,8 @@ import { StripeTransactionService } from '../stripe/services/stripe-transaction.
 import { CreateBillingDto } from './dto/create-billing.dto';
 import { UpdateBillingDto, UpdateBillingStatusDto } from './dto/update-billing.dto';
 import { BillingListDto } from './dto/billing-list.dto';
+import { StripeInvoiceListDto } from './dto/stripe-invoice-list.dto';
+import { StripeTransactionListDto } from './dto/stripe-transaction-list.dto';
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
 import { UserLevels, UserRole } from '../users/enums/user.enum';
 import { RoleLevelGuard } from '@/guards/level.guard';
@@ -152,8 +154,7 @@ export class BillingsController {
   @ApiResponse({ status: 200, description: 'Stripe invoices fetched successfully' })
   async getStripeInvoices(
     @Req() req: any,
-    @Query('status') status?: string,
-    @Query('limit') limit?: number,
+    @Query() query: StripeInvoiceListDto,
   ) {
     let customerId = '';
     const user = req.user;
@@ -162,7 +163,11 @@ export class BillingsController {
       customerId = loggedInUser.stripeCustomerId;
     }
 
-    return await this.stripeInvoiceService.listInvoices(customerId, status, limit || 100);
+    // Use the new filtering method
+    return await this.stripeInvoiceService.listInvoicesWithFilters({
+      ...query,
+      customerId: customerId || query.customerId,
+    });
   }
 
   @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
@@ -183,6 +188,28 @@ export class BillingsController {
   async getStripeInvoicePDF(@Param('invoiceId') invoiceId: string) {
     const pdfUrl = await this.stripeInvoiceService.getInvoicePDF(invoiceId);
     return { pdfUrl };
+  }
+
+  @MinRoleLevel(UserLevels[UserRole.USER])
+  @Get('stripe/transactions')
+  @ApiOperation({ summary: 'Get Stripe transactions' })
+  @ApiResponse({ status: 200, description: 'Stripe transactions fetched successfully' })
+  async getStripeTransactions(
+    @Req() req: any,
+    @Query() query: StripeTransactionListDto,
+  ) {
+    let customerId = '';
+    const user = req.user;
+    if (user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+      const loggedInUser = await this.userService.findOne({ id: user.id });
+      customerId = loggedInUser.stripeCustomerId;
+    }
+
+    // Use the new filtering method
+    return await this.stripeTransactionService.listPaymentIntentsWithFilters({
+      ...query,
+      customerId: customerId || query.customerId,
+    });
   }
 
 

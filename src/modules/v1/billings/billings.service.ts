@@ -106,9 +106,22 @@ export class BillingsService {
       createdBefore,
       updatedAfter,
       updatedBefore,
-      ...filters
+      status,
+      userId,
+      type,
+      currency,
+      minAmount,
+      maxAmount,
+      issueDateFrom,
+      issueDateTo,
+      dueDateFrom,
+      dueDateTo,
+      paidDateFrom,
+      paidDateTo,
+      stripeInvoiceId,
+      localInvoiceNumber,
+      ...otherFilters
     } = queryDto;
-
 
     const query = this.billingRepo
       .createQueryBuilder('billing')
@@ -116,35 +129,103 @@ export class BillingsService {
       .leftJoinAndSelect('user.profile', 'profile')
       .leftJoin('billing.creator', 'creator');
 
-
     if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
       query.where('creator.id = :userId', { userId: user.id });
+    }
+
+    // Search functionality
+    if (search) {
+      query.andWhere(
+        `(billing.stripeInvoiceId ILIKE :search OR 
+         billing.localInvoiceNumber ILIKE :search OR 
+         user.email ILIKE :search OR
+         profile.firstName ILIKE :search OR
+         profile.lastName ILIKE :search)`,
+        { search: `%${search}%` },
+      );
+    }
+
+    // Specific filters
+    if (status) {
+      query.andWhere('billing.status = :status', { status });
+    }
+
+    if (userId) {
+      query.andWhere('billing.userId = :userId', { userId });
+    }
+
+    if (type) {
+      query.andWhere('billing.type = :type', { type });
+    }
+
+    if (currency) {
+      query.andWhere('billing.currency = :currency', { currency });
+    }
+
+    if (minAmount !== undefined) {
+      query.andWhere('billing.invoiceAmount >= :minAmount', { minAmount });
+    }
+
+    if (maxAmount !== undefined) {
+      query.andWhere('billing.invoiceAmount <= :maxAmount', { maxAmount });
+    }
+
+    if (issueDateFrom) {
+      query.andWhere('billing.issueDate >= :issueDateFrom', { issueDateFrom });
+    }
+
+    if (issueDateTo) {
+      query.andWhere('billing.issueDate <= :issueDateTo', { issueDateTo });
+    }
+
+    if (dueDateFrom) {
+      query.andWhere('billing.dueDate >= :dueDateFrom', { dueDateFrom });
+    }
+
+    if (dueDateTo) {
+      query.andWhere('billing.dueDate <= :dueDateTo', { dueDateTo });
+    }
+
+    if (paidDateFrom) {
+      query.andWhere('billing.paidDate >= :paidDateFrom', { paidDateFrom });
+    }
+
+    if (paidDateTo) {
+      query.andWhere('billing.paidDate <= :paidDateTo', { paidDateTo });
+    }
+
+    if (stripeInvoiceId) {
+      query.andWhere('billing.stripeInvoiceId ILIKE :stripeInvoiceId', { 
+        stripeInvoiceId: `%${stripeInvoiceId}%` 
+      });
+    }
+
+    if (localInvoiceNumber) {
+      query.andWhere('billing.localInvoiceNumber ILIKE :localInvoiceNumber', { 
+        localInvoiceNumber: `%${localInvoiceNumber}%` 
+      });
+    }
+
+    // Date range filters
+    if (createdAfter) query.andWhere('billing.createdAt >= :createdAfter', { createdAfter });
+    if (createdBefore) query.andWhere('billing.createdAt <= :createdBefore', { createdBefore });
+    if (updatedAfter) query.andWhere('billing.updatedAt >= :updatedAfter', { updatedAfter });
+    if (updatedBefore) query.andWhere('billing.updatedAt <= :updatedBefore', { updatedBefore });
+
+    // Handle any other filters
+    if (otherFilters && typeof otherFilters === 'object') {
+      Object.entries(otherFilters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          const coercedValue = !isNaN(value as any) ? Number(value) : value;
+          query.andWhere(`billing.${key} = :${key}`, { [key]: coercedValue });
+        }
+      });
     }
 
     query
       .orderBy('billing.createdAt', 'DESC')
       .take(limit)
       .skip((page - 1) * limit);
-
-    if (search) {
-      query.andWhere(
-        `(billing.stripeInvoiceId ILIKE :search OR user.name ILIKE :search)`,
-        { search: `%${search}%` },
-      );
-    }
-
-    if (filters && typeof filters === 'object') {
-      Object.entries(filters).forEach(([key, value]) => {
-        const coercedValue = !isNaN(value as any) ? Number(value) : value;
-        if (coercedValue) {
-          query.andWhere(`billing.${key} = :${key}`, { [key]: value });
-        }
-      });
-    }
-    if (createdAfter) query.andWhere('billing.createdAt >= :createdAfter', { createdAfter });
-    if (createdBefore) query.andWhere('billing.createdAt <= :createdBefore', { createdBefore });
-    if (updatedAfter) query.andWhere('billing.updatedAt >= :updatedAfter', { updatedAfter });
-    if (updatedBefore) query.andWhere('billing.updatedAt <= :updatedBefore', { updatedBefore });
 
     const [data, total] = await query.getManyAndCount();
     const lastPage = Math.ceil(total / limit);

@@ -16,47 +16,41 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 
 // Stores
-import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore } from "@/stores";
+import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore, TSingleHandlerStore } from "@/stores";
+import { useShallow } from "zustand/shallow";
+import { pickKeys } from "@/utils";
 
 
 interface IListHandlerProps<
   TData,
-  TListExtraProps
+  TExtraProps extends Record<string, any> = {},
 > {
   storeKey: string;
   queryFn: (params: IListParams) => Promise<IPaginatedResponse<TData>>;
-  ListComponent: React.ComponentType<{ storeKey: string } & TListExtraProps>;
-  listProps?: TListExtraProps;
-  initialPage?: number;
-  initialLimit?: number;
-  initialSortOrder?: "ASC" | "DESC";
-  initialSortBy?: string;
-  initialFilters?: Record<string, any>;
+  ListComponent: React.ComponentType<{ storeKey: string, store: TListHandlerStore<TData, TExtraProps> }>;
+  listProps?: TExtraProps;
+  initialParams?: IListParams;
 };
 
 export function ListHandler<
   TData,
-  TListExtraProps extends Record<string, any> = Record<string, any>,
+  TExtraProps extends Record<string, any> = {},
 >({
   queryFn,
   ListComponent,
-  initialPage = 1,
-  initialLimit = 10,
-  initialSortOrder = "DESC",
-  initialSortBy = "createdAt",
-  initialFilters = {},
+  initialParams = {},
   listProps,
   storeKey
 }: IListHandlerProps<
   TData,
-  TListExtraProps
+  TExtraProps
 >) {
   const listStoreKey = storeKey + "-list"
 
-  let store = useRegisteredStore<TListHandlerStore<TData>>(listStoreKey);
+  let store = useRegisteredStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey);
   if (!store) {
-    store = useListHandlerStore<TData>();
-    registerStore<TListHandlerStore<TData>>(listStoreKey, store);
+    store = useListHandlerStore<TData, TExtraProps>(initialParams, listProps || {} as TExtraProps);
+    registerStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey, store);
   }
 
   useEffect(() => {
@@ -65,10 +59,20 @@ export function ListHandler<
   }, [listStoreKey, store]);
 
 
-  const queryKey = [listStoreKey];
+  const filteredExtra = store(
+    useShallow((state) =>
+      pickKeys(
+        state.extra,
+        Object.keys(initialParams.filters || {}) as (keyof typeof initialParams)[]
+      )
+    )
+  );
 
 
-  useApiPaginatedQuery<TData>(queryKey, async (params) => {
+  const queryKey = [listStoreKey, JSON.stringify(filteredExtra)];
+
+
+  const { setFilters, setLimit, setPage } = useApiPaginatedQuery<TData>(queryKey, async (params) => {
     store.setState({ isLoading: true });
     try {
       const response = await queryFn(params);
@@ -97,7 +101,7 @@ export function ListHandler<
         response: null,
         pagination: {
           page: 1,
-          limit: initialLimit,
+          limit: initialParams.limit || 10,
           total: 0,
           lastPage: 1,
           hasNextPage: false,
@@ -114,18 +118,31 @@ export function ListHandler<
       throw err;
     }
   }, {
-    page: initialPage,
-    limit: initialLimit,
-    sortBy: initialSortBy,
-    sortOrder: initialSortOrder,
-    filters: initialFilters,
+    page: initialParams.page || 1,
+    limit: initialParams.limit || 10,
+    sortBy: initialParams.sortBy || 'createdAt',
+    sortOrder: initialParams.sortOrder || 'DESC',
+    search: initialParams.search || '',
+    filters: {
+      ...initialParams.filters || {},
+      ...filteredExtra || {}
+    }
   });
+
+  useEffect(() => {
+    const unsub = store.subscribe((state) => {
+      setPage(state.pagination.page);
+      setLimit(state.pagination.limit);
+      setFilters(state.filters);
+    });
+    return unsub;
+  }, [store, setPage, setLimit, setFilters, ]);
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ListComponent
         storeKey={storeKey}
-        {...(listProps as TListExtraProps)}
+        store={store}
       />
     </ErrorBoundary>
   );

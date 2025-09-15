@@ -82,6 +82,12 @@ export class UsersService {
       search,
       level,
       trainerId,
+      createdAfter,
+      createdBefore,
+      updatedAfter,
+      updatedBefore,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
       ...filters
     } = queryDto;
 
@@ -120,25 +126,50 @@ export class UsersService {
       query.andWhere('createdBy.id = :trainerId', { trainerId });
     }
 
-    // (Optional) Apply extra filters dynamically if needed
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        query.andWhere(`user.${key} = :${key}`, { [key]: value });
-      }
-    });
 
-    // Sorting (could be enhanced if queryDto includes sort options)
-    query.orderBy('user.createdAt', 'DESC');
+    if (filters && typeof filters === 'object') {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            query.andWhere(`user.${key} && ARRAY[:...${key}]`, { [key]: value });
+          } else {
+            const coercedValue = !isNaN(value as any) ? Number(value) : value;
+            query.andWhere(`user.${key} = :${key}`, { [key]: coercedValue });
+          }
+        }
+      });
+    }
 
-    const [data, total] = await query
-      .skip(skip)
-      .take(limit)
-      .getManyAndCount();
+    if (createdAfter) {
+      query.andWhere('user.createdAt >= :createdAfter', { createdAfter });
+    }
 
+    if (createdBefore) {
+      query.andWhere('user.createdAt <= :createdBefore', { createdBefore });
+    }
+
+    if (updatedAfter) {
+      query.andWhere('user.updatedAt >= :updatedAfter', { updatedAfter });
+    }
+
+    if (updatedBefore) {
+      query.andWhere('user.updatedAt <= :updatedBefore', { updatedBefore });
+    }
+
+    const sortColumn = sortBy && sortBy in this.userRepo.metadata.propertiesMap
+      ? sortBy
+      : 'createdAt';
+
+    query
+      .orderBy(`user.${sortColumn}`, sortOrder.toUpperCase() as "ASC" | "DESC")
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [results, total] = await query.getManyAndCount();
     const lastPage = Math.ceil(total / limit);
 
     return {
-      data,
+      data: results,
       total,
       page,
       limit,
@@ -182,13 +213,19 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto, currentUser?: User): Promise<MessageResponse> {
+
+    const {
+      profile: profileDtoData,
+      ...userDtoData
+    } = createUserDto;
+
     // Check if email exists
     const existingUser = await this.userRepo.findOne({
-      where: { email: createUserDto.email },
+      where: { email: userDtoData.email },
     });
 
 
-    if (createUserDto.level !== UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+    if (userDtoData.level !== UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
       throw new ForbiddenException('Trainers can only create clients');
     }
 
@@ -203,21 +240,21 @@ export class UsersService {
       owner = await this.findOne({ id: currentUser.id }, { select: ['id'] });
     }
 
-    if (!createUserDto.password) {
+    if (!userDtoData.password) {
       tempPassword = this.generateStrongPassword(12);
-      createUserDto.password = tempPassword;
+      userDtoData.password = tempPassword;
     }
 
     const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    const hashedPassword = await bcrypt.hash(userDtoData.password, salt);
 
     return await this.dataSource.transaction(async (manager: EntityManager) => {
       // Create user
       const userData: DeepPartial<User> = {
-        email: createUserDto.email,
+        email: userDtoData.email,
         password: hashedPassword,
-        level: createUserDto.level,
-        isActive: createUserDto.isActive,
+        level: userDtoData.level,
+        isActive: userDtoData.isActive,
         owner,
       };
 
@@ -227,19 +264,7 @@ export class UsersService {
 
       // Create profile
       const profileData: DeepPartial<Profile> = {
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        phoneNumber: createUserDto.phoneNumber,
-        dateOfBirth: createUserDto.dateOfBirth,
-        gender: createUserDto.gender,
-        address: createUserDto.address,
-        bio: createUserDto.bio,
-        specialties: createUserDto.specialties,
-        avatar: createUserDto.avatar,
-        experience: createUserDto.experience,
-        rating: createUserDto.rating,
-        fitnessGoals: createUserDto.fitnessGoals,
-        preferredTrainerGender: createUserDto.preferredTrainerGender,
+        ...profileDtoData,
         user: { id: user.id } as DeepPartial<User>,
       };
 
@@ -247,6 +272,26 @@ export class UsersService {
       await manager.save(profile);
 
       user.profile = profile;
+
+      // Create default app settings
+      const appSettingData: DeepPartial<AppSetting> = {
+        allowNotification: true,
+        user: { id: user.id } as DeepPartial<User>,
+      };
+      const appSetting = manager.create(AppSetting, appSettingData);
+      await manager.save(appSetting);
+
+      // Create default notification settings
+      const notificationSettingData: DeepPartial<NotificationSetting> = {
+        emailNotifications: true,
+        newUserNotifications: true,
+        userUpdateNotifications: true,
+        billingNotifications: true,
+        sessionNotifications: true,
+        user: { id: user.id } as DeepPartial<User>,
+      };
+      const notificationSetting = manager.create(NotificationSetting, notificationSettingData);
+      await manager.save(notificationSetting);
 
       if (tempPassword) {
         this.userEmailService.sendOnboardingEmail({
@@ -272,12 +317,15 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+
+    const { profile: profileDtoData, ...userDtoData } = updateUserDto;
+
     const user = await this.findOne({ id }, { relations: ['profile'] });
 
     // Check email uniqueness if changed
-    if (updateUserDto.email && updateUserDto.email !== user.email) {
+    if (userDtoData.email && userDtoData.email !== user.email) {
       const existingUser = await this.userRepo.findOne({
-        where: { email: updateUserDto.email },
+        where: { email: userDtoData.email },
       });
 
       if (existingUser) {
@@ -287,12 +335,16 @@ export class UsersService {
 
     return await this.dataSource.transaction(async (manager: EntityManager) => {
       // Update user
-      if (updateUserDto.email) {
-        user.email = updateUserDto.email;
+      if (userDtoData.email) {
+        user.email = userDtoData.email;
       }
 
-      if (updateUserDto.isActive !== undefined) {
-        user.isActive = updateUserDto.isActive;
+      if (userDtoData.isActive !== undefined) {
+        user.isActive = userDtoData.isActive;
+      }
+
+      if (user.profile) {
+        Object.assign(user.profile, profileDtoData);
       }
 
       await manager.save(user);
@@ -371,8 +423,11 @@ export class UsersService {
       email: superAdmin.email,
       password: superAdmin.password,
       level: UserLevels[UserRole.SUPER_ADMIN],
-      firstName: superAdmin.firstName,
-      lastName: superAdmin.lastName
+      profile: {
+        firstName: superAdmin.firstName,
+        lastName: superAdmin.lastName
+      }
+
     });
   }
 }

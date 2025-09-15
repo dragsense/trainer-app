@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 
 // Components
-import { CardForm } from "@/components/form-ui/card-form";
+import { Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
@@ -10,16 +10,16 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TProfileData } from "@/@types/user.type";
+import { TUpdateProfileData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 
-
 // Custom Components
 import ProfileImageUpload from "@/components/shared-ui/profile-image-upload";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { AppCard } from "@/components/layout-ui/app-card";
 
 interface IProfileCardFormProps {
     storeKey: string;
@@ -28,16 +28,25 @@ interface IProfileCardFormProps {
 export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
     const formStoreKey = storeKey + "-form";
 
-    const formStore = useRegisteredStore<TFormHandlerStore<TProfileData, IMessageResponse>>(formStoreKey);
+    const formStore = useRegisteredStore<TFormHandlerStore<TUpdateProfileData, IMessageResponse>>(formStoreKey);
 
     if (!formStore) {
         return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
     }
 
+    const isSubmitting = formStore(state => state.isSubmitting);
 
-    const isSubmitting = formStore(state => state.isSubmitting)
+    const fields: TFieldConfig<TUpdateProfileData>[] = [
+        // ─── Profile Image ──────────────
+        {
+            id: "image",
+            name: "image",
+            label: "Profile Image",
+            type: "custom",
+            required: false,
+            Component: (props) => <ProfileImageUpload {...props} />,
+        },
 
-    const fields: TFieldConfig[] = [
         // ─── Basic Info ──────────────
         {
             id: "firstName",
@@ -68,7 +77,7 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             name: "address",
             label: "Address",
             placeholder: "Enter your address",
-            type: "text",
+            type: "textarea",
             required: false,
         },
 
@@ -85,59 +94,61 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             id: "fitnessGoals",
             name: "fitnessGoals",
             label: "Fitness Goals",
-            type: "multiSelect",
-            options: [
-                { value: "weight-loss", label: "Weight Loss" },
-                { value: "muscle-gain", label: "Muscle Gain" },
-                { value: "endurance", label: "Endurance" },
-                { value: "flexibility", label: "Flexibility" },
-                { value: "strength", label: "Strength Training" },
-                { value: "rehabilitation", label: "Rehabilitation" },
-            ],
+            placeholder: "Enter your fitness goals (comma-separated)",
+            type: "text",
             required: false,
-        },
-        {
-            id: "image",
-            name: "image",
-            label: "Profile Image",
-            type: "custom",
-            className: "w-full",
-            required: false,
-            Component: ({ value, onChange, disabled }) => (
-                <ProfileImageUpload
-                    value={value}
-                    onImageUpload={onChange}
-                    disabled={disabled}
-                />
-            ),
         },
     ];
 
     const { inputs } = useInput({
         fields,
-        showRequiredAsterisk: true,
+        showRequiredAsterisk: false,
     });
 
     const footerContent: ReactNode = (
         <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                {isSubmitting ? "Saving..." : "Save Profile"}
             </Button>
         </div>
     );
 
     return (
-        <CardForm
-            title="Update Profile"
-            description="Manage your personal information"
-            footerContent={footerContent}
-            formStore={formStore}
+        <AppCard
+            header={
+                <>
+                    <h2 className="text-md font-semibold">Update Profile</h2>
+                    <p className="text-sm text-muted-foreground">Manage your personal information</p>
+                </>
+            }
+            footer={footerContent}
         >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                {inputs}
-            </div>
+            <Form formStore={formStore}>
+                <div className="space-y-6">
+                    {/* Profile Image Section */}
+                    <div className="flex justify-center">
+                        {inputs.slice(0, 1)}
+                    </div>
 
-             <FormErrors />
-        </CardForm>
+                    {/* Basic Information Section */}
+                    <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">Basic Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {inputs.slice(1, 5)}
+                        </div>
+                    </div>
+
+                    {/* Bio & Goals Section */}
+                    <div>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-3">About You</h3>
+                        <div className="space-y-4">
+                            {inputs.slice(5)}
+                        </div>
+                    </div>
+                </div>
+
+                <FormErrors />
+            </Form>
+        </AppCard>
     );
 }

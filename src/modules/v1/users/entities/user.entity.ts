@@ -66,7 +66,7 @@ export class User extends GeneralBaseEntity {
 
 
   // Other relationships
-  @OneToOne(() => Profile)
+  @OneToOne(() => Profile, { cascade: true, eager: true })
   @JoinColumn()
   profile?: Profile;
 

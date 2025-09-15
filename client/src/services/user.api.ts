@@ -15,6 +15,7 @@ import {
     TCreateUserAvailabilityData,
     TUpdateProfileData
 } from "@/@types/user.type";
+import { generateQueryParams } from "@/utils";
 
 // Constants
 const USERS_API_PATH = "/users";
@@ -25,7 +26,7 @@ export const me = async () =>
     apiRequest<IUser>(`${USERS_API_PATH}/me`, "GET");
 
 
-export const createUser = (data: Partial<TUserData>) =>
+export const createUser = (data: TUserData) =>
     apiRequest<{ user: IUser, message: string }>(`${USERS_API_PATH}`, "POST", data);
 
 export const updateUser = (id: number) => (data: Partial<TUserData>) =>
@@ -41,21 +42,10 @@ export const fetchUsers = (
 ) => {
 
     const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append("page", params.page.toString());
-    if (params.limit) queryParams.append("limit", params.limit.toString());
     if (level) queryParams.append("level", level.toString());
+    generateQueryParams(queryParams, params);
 
-    if (
-        params.filters &&
-        typeof params.filters === "object" &&
-        Object.keys(params.filters).length > 0
-    ) {
-        Object.entries(params.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                queryParams.append(key, value.toString());
-            }
-        });
-    }
+
     let apiPath = `${USERS_API_PATH}`;
     return apiRequest<IPaginatedResponse<IUser>>(
         `${apiPath}?${queryParams.toString()}`,
@@ -87,7 +77,7 @@ export const updateProfile = (data: TUpdateProfileData) => {
         if (Array.isArray(value)) {
             value.forEach((item) => {
                 if (item instanceof File || item instanceof Blob) {
-                    formData.append(`${key}[]`, item); 
+                    formData.append(`${key}[]`, item);
                 } else {
                     formData.append(`${key}[]`, String(item));
                 }

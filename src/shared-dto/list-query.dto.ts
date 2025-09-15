@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
-export class PaginationDto {
+export class PaginationDto<T> {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -23,9 +23,9 @@ export class PaginationDto {
   @Max(100)
   limit?: number;
 
-   @IsOptional()
+  @IsOptional()
   @IsString()
-  sortBy?: string;
+  sortBy?: keyof T; // ✅ dynamic based on T
 
   @IsOptional()
   @IsString()
@@ -34,8 +34,7 @@ export class PaginationDto {
   sortOrder?: 'ASC' | 'DESC';
 }
 
-
-export class ListQueryDto extends PaginationDto {
+export class ListQueryDto<T = any> extends PaginationDto<T> {
     @IsOptional()
     @IsString()
     search?: string;

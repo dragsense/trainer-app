@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { User, Bell, Settings, CreditCard, Shield, Clock, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_ROUTES } from "@/config/routes.config";
+import { SettingsMobileNav } from "@/components/layout-ui/settings-mobile-nav";
 
 const settingsNavItems = [
     { title: "Profile", href: ADMIN_ROUTES.SETTINGS_PROFILE, icon: User, description: "Manage your personal information" },
@@ -19,10 +20,12 @@ export default function SettingsLayout() {
     return (
         <div className="flex flex-col gap-2 min-h-screen md:flex-row">
             {/* Sidebar for Desktop */}
-            <div className="hidden md:block w-64 shadow-sm border-r">
-                <div className="p-6 border-b">
-                    <h1 className="text-xl font-semibold">Settings</h1>
-                    <p className="text-sm mt-1">
+            <div className="hidden md:block w-64 shadow-sm border-r bg-background">
+                <div className="p-6 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
+                    <h1 className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        Settings
+                    </h1>
+                    <p className="text-sm mt-1 text-muted-foreground">
                         Manage your account settings and preferences
                     </p>
                 </div>
@@ -37,16 +40,19 @@ export default function SettingsLayout() {
                                 key={item.href}
                                 to={item.href}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
                                     isActive
-                                        ? "bg-secondary/10 text-secondary"
-                                        : "text-muted-foreground/50 hover:bg-muted/50"
+                                        ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 )}
                             >
-                                <Icon className="h-5 w-5" />
-                                <div>
-                                    <div>{item.title}</div>
-                                    <div className="text-xs mt-0.5">{item.description}</div>
+                                <Icon className={cn(
+                                    "h-5 w-5 transition-all duration-200",
+                                    isActive && "scale-110"
+                                )} />
+                                <div className="flex-1">
+                                    <div className="font-medium">{item.title}</div>
+                                    <div className="text-xs mt-0.5 opacity-70">{item.description}</div>
                                 </div>
                             </NavLink>
                         );
@@ -55,32 +61,14 @@ export default function SettingsLayout() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-auto mb-16 md:mb-0">
+            <div className="flex-1 overflow-auto pb-20 md:pb-0">
+                <div className="p-4 md:p-6">
                     <Outlet />
+                </div>
             </div>
 
-            {/* Bottom Nav for Mobile */}
-            <nav className="fixed bottom-10 left-0 right-0 z-50 border-t shadow-md md:hidden bg-foreground">
-                <div className="flex justify-around">
-                    {settingsNavItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = location.pathname === item.href;
-
-                        return (
-                            <NavLink
-                                key={item.href}
-                                to={item.href}
-                                className={cn(
-                                    "flex flex-col items-center justify-center py-2 text-xs transition-colors",
-                                    isActive ? "text-secondary" : "text-background/50"
-                                )}
-                            >
-                                <Icon className="h-5 w-5 mb-0.5" />
-                            </NavLink>
-                        );
-                    })}
-                </div>
-            </nav>
+            {/* Enhanced Mobile Bottom Nav for Settings */}
+            <SettingsMobileNav />
         </div>
     );
 }

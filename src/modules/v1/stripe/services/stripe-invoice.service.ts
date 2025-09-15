@@ -248,6 +248,131 @@ export class StripeInvoiceService {
     }
   }
 
+  async listInvoicesWithFilters(filters: {
+    search?: string;
+    status?: string;
+    customerId?: string;
+    currency?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    invoiceNumber?: string;
+    createdDateFrom?: string;
+    createdDateTo?: string;
+    dueDateFrom?: string;
+    dueDateTo?: string;
+    paidDateFrom?: string;
+    paidDateTo?: string;
+    limit?: number;
+  }): Promise<Stripe.ApiList<Stripe.Invoice>> {
+    await this.ensureStripeInitialized();
+
+    try {
+      const params: Stripe.InvoiceListParams = {
+        limit: filters.limit || 100,
+        expand: ['data.payment_intent', 'data.subscription'],
+      };
+
+      // Apply filters
+      if (filters.customerId) {
+        params.customer = filters.customerId;
+      }
+
+      if (filters.status) {
+        params.status = filters.status as Stripe.Invoice.Status;
+      }
+
+      // Get all invoices first (Stripe doesn't support complex filtering)
+      const invoices = await this.stripe!.invoices.list(params);
+      
+      // Apply client-side filtering for fields not supported by Stripe API
+      let filteredInvoices = invoices.data;
+
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.id.toLowerCase().includes(searchTerm) ||
+          (invoice.number && invoice.number.toLowerCase().includes(searchTerm)) ||
+          (invoice.description && invoice.description.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      if (filters.currency) {
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.currency === filters.currency
+        );
+      }
+
+      if (filters.minAmount !== undefined) {
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.amount_due >= filters.minAmount!
+        );
+      }
+
+      if (filters.maxAmount !== undefined) {
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.amount_due <= filters.maxAmount!
+        );
+      }
+
+      if (filters.invoiceNumber) {
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.number && invoice.number.includes(filters.invoiceNumber!)
+        );
+      }
+
+      if (filters.createdDateFrom) {
+        const fromDate = new Date(filters.createdDateFrom);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          new Date(invoice.created * 1000) >= fromDate
+        );
+      }
+
+      if (filters.createdDateTo) {
+        const toDate = new Date(filters.createdDateTo);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          new Date(invoice.created * 1000) <= toDate
+        );
+      }
+
+      if (filters.dueDateFrom) {
+        const fromDate = new Date(filters.dueDateFrom);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.due_date && new Date(invoice.due_date * 1000) >= fromDate
+        );
+      }
+
+      if (filters.dueDateTo) {
+        const toDate = new Date(filters.dueDateTo);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.due_date && new Date(invoice.due_date * 1000) <= toDate
+        );
+      }
+
+      if (filters.paidDateFrom) {
+        const fromDate = new Date(filters.paidDateFrom);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.status_transitions?.paid_at && new Date(invoice.status_transitions.paid_at * 1000) >= fromDate
+        );
+      }
+
+      if (filters.paidDateTo) {
+        const toDate = new Date(filters.paidDateTo);
+        filteredInvoices = filteredInvoices.filter(invoice => 
+          invoice.status_transitions?.paid_at && new Date(invoice.status_transitions.paid_at * 1000) <= toDate
+        );
+      }
+
+      return {
+        ...invoices,
+        data: filteredInvoices,
+        has_more: false, // Since we're filtering client-side
+      };
+    } catch (error) {
+      this.logger.error('Error listing invoices with filters:', error.message);
+      throw new BadRequestException(`Failed to list invoices: ${error.message}`);
+    }
+  }
+
   async getInvoicePDF(invoiceId: string): Promise<string> {
     await this.ensureStripeInitialized();
 

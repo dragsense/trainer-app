@@ -45,7 +45,7 @@ export interface ISingleHandlerProps<
   deleteFn?: (id: number) => Promise<void>;
   onDeleteSuccess?: () => void;
   SingleComponent: React.ComponentType<{ storeKey: string, store: TSingleHandlerStore<IData, TExtraProps> }>;
-  actionComponents?: IActionComponent<TExtraProps>[];
+  actionComponents?: IActionComponent<TSingleHandlerStore<IData, TExtraProps>>[];
   singleProps?: TExtraProps;
 }
 
@@ -75,7 +75,7 @@ export function SingleHandler<
 
   let store = useRegisteredStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey);
   if (!store) {
-    store = useSingleHandlerStore<IData>(name, initialParams, singleProps || {});
+    store = useSingleHandlerStore<IData, TExtraProps>(name, initialParams, singleProps || {} as TExtraProps);
     registerStore<TSingleHandlerStore<IData, TExtraProps>>(singleStoreKey, store);
   }
 
@@ -86,10 +86,9 @@ export function SingleHandler<
 
 
   const id = store((state) => state.id);
-
+  const params = store((state) => state.params);
   const filteredExtra = store(useShallow((state) => pickKeys(state.extra, Object.keys(initialParams) as (keyof typeof initialParams)[])
   ));
-
 
   const queryKey = [singleStoreKey, id, JSON.stringify(filteredExtra)];
 
@@ -100,11 +99,7 @@ export function SingleHandler<
       store.setState({ isLoading: true });
       try {
 
-
-        const response = await queryFn(id, {
-          ...params,
-          ...filteredExtra,
-        });
+        const response = await queryFn(id, {...params, ...filteredExtra});
 
         store.setState({
           isLoading: false,
@@ -127,7 +122,7 @@ export function SingleHandler<
       }
     },
     {
-      ...initialParams,
+      ...params,
       ...filteredExtra
     },
     {
@@ -205,7 +200,7 @@ export function SingleHandler<
         <ActionComponentHandler<IData, TExtraProps>
           actionComponents={actionComponents}
           storeKey={storeKey}
-          listProps={singleProps as TExtraProps}
+          store={store}
         />
 
         <ConfirmDialog {...dialogProps} />

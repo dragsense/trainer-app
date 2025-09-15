@@ -8,9 +8,8 @@ import { IUser } from "@/@types/user.type";
 import { ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
-import { TrainerTable } from "@/components/admin";
-import { TrainerView } from "@/components/admin/trainers";
-import { TrainerForm, TrainerClientAssignForm } from "@/page-components";
+import { UserList, TrainerView } from "@/components/admin";
+import { UserForm, TUserExtraProps, TrainerClientAssignForm } from "@/page-components";
 
 
 // API
@@ -36,7 +35,7 @@ export default function TrainersPage() {
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <SingleHandler<IUser>
+      <SingleHandler<IUser, TUserExtraProps>
         queryFn={fetchUser}
         deleteFn={deleteUser}
         storeKey={STORE_KEY}
@@ -45,18 +44,21 @@ export default function TrainersPage() {
         actionComponents={[
           {
             action: 'createOrUpdate',
-            comp: TrainerForm
+            comp: UserForm
           },
           {
             action: 'assignClient',
             comp: TrainerClientAssignForm
           },
         ]}
+        singleProps={{
+          level: UserLevels[UserRole.TRAINER],
+        }}
       />
 
       <ListHandler<IUser>
         queryFn={(params) => fetchUsers(params, UserLevels[UserRole.TRAINER])}
-        ListComponent={TrainerTable}
+        ListComponent={UserList}
         storeKey={STORE_KEY}
       />
     </PageInnerLayout>

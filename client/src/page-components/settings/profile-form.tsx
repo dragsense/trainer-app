@@ -1,4 +1,3 @@
-
 // External Libraries
 import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
@@ -13,7 +12,6 @@ import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TActionComponentProps } from "@/@types/handler-types";
 import { IProfile, TUpdateProfileData } from "@/@types/user.type";
-import { UserGender } from "#/modules/v1/users/enums/user.enum";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -23,9 +21,6 @@ import { ProfileCardForm } from "@/components/admin";
 
 // Services
 import { updateProfile } from "@/services/user.api";
-
-
-
 
 // Schema
 export const ProfileSchema = z.object({
@@ -38,34 +33,20 @@ export const ProfileSchema = z.object({
     phoneNumber: z.string().optional(),
     address: z.string().optional(),
     bio: z.string().optional(),
-    fitnessGoals: z.array(z.string()).optional(),
+    fitnessGoals: z.string().optional(),
     image: z.any().optional(),
-
 });
 
+interface IProfileFormProps extends TActionComponentProps<any> {}
 
-interface IProfileFormProps extends TActionComponentProps<any> {
-}
-
-
-interface IProfileFormExtraProps {
-    open: boolean,
-    onClose: () => void,
-    isEditing?: boolean
-}
-
-export default function ProfileForm({
-    storeKey
-}: IProfileFormProps) {
-
-
+export default function ProfileForm({ storeKey }: IProfileFormProps) {
     const INITIAL_VALUES: TDefaultValue<TUpdateProfileData> = {
         firstName: { value: "" },
         lastName: { value: "" },
         phoneNumber: { value: "" },
         address: { value: "" },
         bio: { value: "" },
-        fitnessGoals: { value: [] },
+        fitnessGoals: { value: "" },
         image: { value: null },
     };
 
@@ -83,24 +64,30 @@ export default function ProfileForm({
         reset: state.reset
     })));
 
-    if (!response)
-        return <div>Profile not found</div>
+    if (!response) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading profile...</p>
+                </div>
+            </div>
+        );
+    }
 
     const getInitialValues = (): typeof INITIAL_VALUES => {
         if (!response) {
             return INITIAL_VALUES;
         }
 
-        const flatResponse = {
-            ...(response || {})
-        };
-
+        // Extract profile data from response
+        const profileData = response.profile || response;
 
         const updatedValues = {
             ...INITIAL_VALUES,
             ...Object.fromEntries(
                 Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
+                    const newValue = (profileData as any)[key];
                     return [
                         key,
                         {
@@ -110,9 +97,7 @@ export default function ProfileForm({
                     ];
                 })
             ),
-
         };
-
 
         return updatedValues;
     };
@@ -121,16 +106,17 @@ export default function ProfileForm({
 
     if (isLoading) {
         return (
-            <div className="absolute inset-0 z-30 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center p-8">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading profile...</p>
+                </div>
             </div>
         );
     }
 
-
-
-    return <>
-        <FormHandler<TUpdateProfileData, IMessageResponse, IProfileFormExtraProps>
+    return (
+        <FormHandler<TUpdateProfileData, IMessageResponse>
             mutationFn={updateProfile}
             FormComponent={ProfileCardForm}
             storeKey={storeKey}
@@ -138,13 +124,9 @@ export default function ProfileForm({
             validationSchema={ProfileSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
-            }}
-            formProps={{
-                open: !!action,
-                onClose: reset
+                // Refresh the profile data
+                singleStore.getState().refetch();
             }}
         />
-
-    </>
-
+    );
 }

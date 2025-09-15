@@ -1,7 +1,5 @@
-
 // External Libraries
 import { Loader2 } from "lucide-react";
-import React, { useMemo } from "react";
 
 // Custom Hooks
 import { useInput } from "@/hooks/use-input";
@@ -9,64 +7,57 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { ISession, TSessionData } from "@/@types/session.type";
 import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
 import { IUser } from "@/@types/user.type";
 import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
-import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 
-
-
-export interface ISessionFormModalProps {
-  storeKey: string;
+export interface ISessionFormModalExtraProps {
   open: boolean;
-  isEditing?: boolean;
   onClose: () => void;
+  isEditing?: boolean;
   trainerId?: number;
+}
+
+interface ISessionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TSessionData, ISession, ISessionFormModalExtraProps>> {
 }
 
 export default function SessionFormModal({
   storeKey,
-  open,
-  isEditing = false,
-  onClose,
-  trainerId
+  store,
 }: ISessionFormModalProps) {
 
-  const formStoreKey = storeKey + "-form";
-
-  const formStore = useRegisteredStore<TFormHandlerStore<TSessionData, ISession>>(formStoreKey);
-
-  if (!formStore) {
-    return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
+  if (!store) {
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
+  const open = store((state) => state.extra.open)
+  const isEditing = store((state) => state.extra.isEditing)
+  const onClose = store((state) => state.extra.onClose)
+  const trainerId = store((state) => state.extra.trainerId)
 
-  const isSubmitting = formStore(state => state.isSubmitting);
-
-
-  const UserSelect = React.memo(
-    ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
-      <SearchableInputWrapper<IUser>
-        {...props}
-        modal={true}
-        multiple={multiple}
-        useSearchable={() => useSearchableUsers({ level })}
-        getLabel={(item) => item.email}
-        getKey={(item) => item.id.toString()}
-        shouldFilter={false}
-      />
-    )
+  const UserSelect = ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
+    <SearchableInputWrapper<IUser>
+      {...props}
+      modal={true}
+      multiple={multiple}
+      useSearchable={() => useSearchableUsers({ level })}
+      getLabel={(item) => `${item.profile?.firstName} ${item.profile?.lastName} (${item.email})`}
+      getKey={(item) => item.id.toString()}
+      shouldFilter={false}
+    />
   );
 
-  const fields = useMemo<TFieldConfig[]>(() => [
+  const fields: TFieldConfig<TSessionData>[] = [
     // ─── Session Basic Info ──────────────
     {
       id: "title",
@@ -75,14 +66,6 @@ export default function SessionFormModal({
       placeholder: "Personal Training Session",
       type: "text",
       required: true,
-    },
-    {
-      id: "description",
-      name: "description",
-      label: "Description",
-      type: "textarea",
-      placeholder: "Session description and notes...",
-      required: false,
     },
     {
       id: "type",
@@ -140,31 +123,53 @@ export default function SessionFormModal({
       options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
     },
     {
-      id: "trainerId",
-      name: "trainerId",
+      id: "trainer",
+      name: "trainer",
       label: "Trainer",
-      placeholder: "Select Trainer",
-      type: "custom",
+      type: "nested",
       required: true,
-      valueType: "number",
-      disabled: !!trainerId,
-      Component: (props) => (
-        <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
-
-      ),
+      subFields: [
+        {
+          id: "id",
+          name: "id",
+          label: "Select Trainer",
+          type: "custom",
+          required: true,
+          valueType: "number",
+          disabled: !!trainerId,
+          Component: (props) => (
+            <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
+          ),
+        }
+      ]
     },
     {
-      id: "clientIds",
-      name: "clientIds",
-      label: "Client",
-      placeholder: "Select Client",
-      type: "custom",
+      id: "clients",
+      name: "clients",
+      label: "Clients",
+      type: "nested",
       required: true,
-      valueType: "number",
-      Component: (props) => (
-        <UserSelect props={props} multiple={true} level={UserLevels[UserRole.USER]} />
-
-      ),
+      subFields: [
+        {
+          id: "ids",
+          name: "ids",
+          label: "Select Clients",
+          type: "custom",
+          required: true,
+          valueType: "number",
+          Component: (props) => (
+            <UserSelect props={props} multiple={true} level={UserLevels[UserRole.USER]} />
+          ),
+        }
+      ]
+    },
+    {
+      id: "description",
+      name: "description",
+      label: "Description",
+      type: "textarea",
+      placeholder: "Session description and notes...",
+      required: false,
     },
     {
       id: "location",
@@ -191,10 +196,9 @@ export default function SessionFormModal({
       min: 1,
       required: false,
     },
-  ], []);
+  ];
 
-
-  const { inputs } = useInput({
+  const { inputs } = useInput<TSessionData>({
     fields,
     showRequiredAsterisk: true,
   });
@@ -215,31 +219,29 @@ export default function SessionFormModal({
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" disabled={false}>
+        {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Update" : "Add"}
       </Button>
     </div>
   );
 
   return <>
-
-    <ModalForm<TSessionData, ISession>
+    <ModalForm<TSessionData, ISession, ISessionFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Session`}
       description={`${isEditing ? "Edit" : "Add a new"} session`}
       open={open}
       onOpenChange={onOpenChange}
-      formStore={formStore}
+      formStore={store}
       footerContent={formButtons}
       width="3xl"
     >
       <div className="space-y-8">
-
         {/* Session Info */}
         <div>
           <h3 className="text-sm font-semibold mb-4">Session Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(0, 4) /* title → dateTime */}
+            {inputs.slice(0, 4) /* title → duration */}
           </div>
         </div>
 
@@ -247,8 +249,7 @@ export default function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-4">Pricing</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(4, 6) /* duration → pricePerClient */}
-            {inputs.slice(6, 8) /* currency */}
+            {inputs.slice(4, 7) /* pricePerClient → paymentMethodType */}
           </div>
         </div>
 
@@ -256,7 +257,7 @@ export default function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-4">Trainer & Client</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(8, 10) /* trainerId → clientId */}
+            {inputs.slice(7, 9) /* trainer → clients */}
           </div>
         </div>
 
@@ -264,14 +265,12 @@ export default function SessionFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-4">Additional Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(10) /* location → cancellationDeadline */}
+            {inputs.slice(9) /* description → cancellationDeadline */}
           </div>
         </div>
-
       </div>
 
-       <FormErrors />
+      <FormErrors />
     </ModalForm>
-
   </>
 }
