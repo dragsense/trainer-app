@@ -13,7 +13,7 @@ export class AppService {
 
   getAppInfo() {
     return {
-      name: 'Trainer App Web Platform',
+      name: 'FORMANCE Web Platform',
       description: 'A comprehensive solution to manage fitness trainers, their clients, sessions, and payments',
       version: '1.0.0',
       documentation: '/api/docs',

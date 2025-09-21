@@ -20,21 +20,19 @@ import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import ProfileImageUpload from "@/components/shared-ui/profile-image-upload";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
-interface IProfileCardFormProps {
-    storeKey: string;
+interface IProfileCardFormProps extends THandlerComponentProps<TFormHandlerStore<TUpdateProfileData, IMessageResponse>> {
 }
 
-export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
-    const formStoreKey = storeKey + "-form";
+export default function ProfileCardForm({ storeKey, store }: IProfileCardFormProps) {
 
-    const formStore = useRegisteredStore<TFormHandlerStore<TUpdateProfileData, IMessageResponse>>(formStoreKey);
-
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+    const isSubmitting = store(state => state.isSubmitting);
+
 
     const fields: TFieldConfig<TUpdateProfileData>[] = [
         // ─── Profile Image ──────────────
@@ -123,7 +121,7 @@ export default function ProfileCardForm({ storeKey }: IProfileCardFormProps) {
             }
             footer={footerContent}
         >
-            <Form formStore={formStore}>
+            <Form formStore={store}>
                 <div className="space-y-6">
                     {/* Profile Image Section */}
                     <div className="flex justify-center">

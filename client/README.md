@@ -1,8 +1,8 @@
-# 🏋️‍♂️ Trainer App — Built for Coaches. Loved by Clients.
+# 🏋️‍♂️ FORMANCE — Built for Coaches. Loved by Clients.
 
-Welcome to **Trainer App**, a streamlined platform designed for personal trainers and coaching professionals to manage their clients, sessions, progress tracking, and payments — all in one place.
+Welcome to **FORMANCE**, a streamlined platform designed for personal trainers and coaching professionals to manage their clients, sessions, progress tracking, and payments — all in one place.
 
-Built to be **modular, intuitive, and client-focused**, Trainer App gives you the tools to grow your coaching business without technical complexity.
+Built to be **modular, intuitive, and client-focused**, FORMANCE gives you the tools to grow your coaching business without technical complexity.
 
 ---
 
@@ -69,5 +69,5 @@ Built to be **modular, intuitive, and client-focused**, Trainer App gives you th
 
 ---
 
-> ⚡ Whether you're a solo coach or managing a large client base, **Trainer App** is built to scale with your business — beautifully and simply.
+> ⚡ Whether you're a solo coach or managing a large client base, **FORMANCE** is built to scale with your business — beautifully and simply.
 

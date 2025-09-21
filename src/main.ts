@@ -23,7 +23,7 @@ async function bootstrap() {
 
   // API documentation
   const config = new DocumentBuilder()
-    .setTitle('Trainer App Web API')
+    .setTitle('FORMANCE Web API')
     .setDescription('Empower coaches to manage clients, track progress, and deliver results — all in one simple, powerful tool.')
     .setVersion('1.0')
     .addBearerAuth(
@@ -45,7 +45,7 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory, {
-    customSiteTitle: 'Trainer App Web API',
+    customSiteTitle: 'FORMANCE Web API',
     swaggerOptions: {
       persistAuthorization: true,
       withCredentials: true,

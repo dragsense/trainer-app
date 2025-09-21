@@ -156,10 +156,7 @@ export default function UserList({
     <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)}>
 
 
-      <div className="flex flex-col xl:flex-row xl:items-center gap-2">
-        <h3 className="text-bold">Users</h3>
-
-        <div className="flex flex-1 justify-between items-center gap-2">
+        <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
           <UserFilters
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -172,7 +169,7 @@ export default function UserList({
             <Plus /> <span className="hidden sm:inline capitalize">Add User</span>
           </Button>
         </div>
-      </div>
+      
 
 
 

@@ -17,21 +17,18 @@ import { IMessageResponse } from "@/@types/api/response.type";
 import { TFormHandlerStore, useRegisteredStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
-interface INotificationSettingCardFormProps {
-    storeKey: string;
+interface INotificationSettingCardFormProps extends THandlerComponentProps<TFormHandlerStore<TNotificationSettingData, IMessageResponse>> {
 }
 
-export default function NotificationSettingCardForm({ storeKey }: INotificationSettingCardFormProps) {
-    const formStoreKey = storeKey + "-form";
-
-    const formStore = useRegisteredStore<TFormHandlerStore<TNotificationSettingData, IMessageResponse>>(formStoreKey);
-
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+export default function NotificationSettingCardForm({ storeKey, store }: INotificationSettingCardFormProps) {
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+
+    const isSubmitting = store(state => state.isSubmitting);
 
     const fields: TFieldConfig<TNotificationSettingData>[] = [
         // ─── General Notifications ──────────────
@@ -99,7 +96,7 @@ export default function NotificationSettingCardForm({ storeKey }: INotificationS
             }
             footer={footerContent}
         >
-            <Form formStore={formStore}>
+            <Form formStore={store}>
                 <div className="space-y-6">
                     {/* General Notifications Section */}
                     <div>

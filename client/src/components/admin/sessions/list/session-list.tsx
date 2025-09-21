@@ -23,9 +23,7 @@ import { itemViews } from "./session-item-views";
 // Stores
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
-// Utils
-// import { buildRoutePath } from "@/utils";
-// import { ADMIN_ROUTES } from "@/config/routes.config";
+
 
 interface ISessionListProps {
   storeKey: string;
@@ -129,46 +127,44 @@ export default function SessionList({
   );
 
   return (
-    <AppCard
-      header={
-        <div className="flex flex-col xl:flex-row xl:items-center gap-2">
-          <h3 className="text-bold">Sessions</h3>
 
-          <div className="flex flex-1 justify-between items-center gap-2">
-            <SessionFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={handleClearFilters}
-            />
-            <div className="flex items-center gap-2">
-              {renderViewToggle()}
-              <Button onClick={handleCreate}>
-                <Plus /> <span className="hidden sm:inline capitalize">Add Session</span>
-              </Button>
-            </div>
-          </div>
+    <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as "table" | "list")}>
+
+
+        <div className="flex justify-between items-start md:items-center gap-2 flex-wrap">
+          <SessionFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+          {renderViewToggle()}
+          <Button
+            onClick={handleCreate}
+          >
+            <Plus /> <span className="hidden sm:inline capitalize">Add Session</span>
+          </Button>
         </div>
-      }
-    >
-      <Tabs value={currentView} onValueChange={(value) => setCurrentView(value as ViewType)} className="w-full">
-        <TabsContent value="table" className="space-y-4">
-          <TableComponent<ISession>
-            listStore={store}
-            columns={columns}
-            emptyMessage="No sessions found."
-            showPagination
-          />
-        </TabsContent>
+      
 
-        <TabsContent value="list" className="space-y-4">
-          <ListComponent<ISession>
-            listStore={store}
-            renderItem={listItem}
-            emptyMessage="No sessions found."
-            showPagination
-          />
-        </TabsContent>
-      </Tabs>
-    </AppCard>
+      <TabsContent value="table" className="space-y-4">
+        <AppCard><TableComponent<ISession>
+          listStore={store}
+          columns={columns}
+          emptyMessage="No sessions found."
+          showPagination
+        />
+        </AppCard>
+      </TabsContent>
+
+      <TabsContent value="list" className="space-y-4">
+        <ListComponent<ISession>
+          listStore={store}
+          renderItem={listItem}
+          emptyMessage="No sessions found."
+          showPagination
+        />
+      </TabsContent>
+    </Tabs>
+
   );
 }

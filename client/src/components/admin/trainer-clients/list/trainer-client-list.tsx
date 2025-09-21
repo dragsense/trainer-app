@@ -21,7 +21,7 @@ import { TrainerClientFilters } from "./trainer-client-filters";
 import { columns, listItem } from "./trainer-client-item-views";
 
 // Stores
-import { TListHandlerStore, TSingleHandlerStore } from "@/stores";
+import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface ITrainerClientListProps {
   storeKey: string;
@@ -33,13 +33,22 @@ export default function TrainerClientList({
   store
 }: ITrainerClientListProps) {
 
-  const listStoreKey = storeKey + "-list";
+  const singleStoreKey = storeKey + "-single";
 
   if (!store) {
-    return <div>List store "{listStoreKey}" not found. Did you forget to register it?</div>;
+    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const setListFilters = store.getState().setFilters;
+
+  const singleStore = useRegisteredStore<TSingleHandlerStore<ITrainerClient, any>>(singleStoreKey);
+
+  if (!singleStore) {
+    return `Single store "${singleStore}" not found. Did you forget to register it?`;
+  }
+
+  const setListFilters = store(state => state.setFilters);
+  const setAction = singleStore(state => state.setAction);
+
 
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [viewType, setViewType] = useState<"table" | "list">("table");
@@ -57,7 +66,7 @@ export default function TrainerClientList({
   // Flatten nested filter objects for backend
   const flattenFilters = (filters: Record<string, any>) => {
     const flattened: Record<string, any> = {};
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
         // Handle nested objects like date ranges
@@ -70,7 +79,7 @@ export default function TrainerClientList({
         flattened[key] = value;
       }
     });
-    
+
     return flattened;
   };
 
@@ -94,19 +103,19 @@ export default function TrainerClientList({
   };
 
   const handleCreate = () => {
-    // TODO: Implement create action
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    // TODO: Implement edit action
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    // TODO: Implement delete action
+    setAction('delete', id);
   }
 
   const handleView = (id: number) => {
-    // TODO: Implement view action
+    setAction('view', id);
   }
 
   const tableColumns = columns({
@@ -121,65 +130,66 @@ export default function TrainerClientList({
     handleDelete
   });
 
+
+  const renderViewToggle = () => (
+    <TabsList className="grid grid-cols-2 w-auto border-b border-gray-200">
+      <TabsTrigger
+        value="table"
+        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+      >
+        <Table className="h-4 w-4" />
+        <span className="hidden sm:inline">Table</span>
+      </TabsTrigger>
+
+      <TabsTrigger
+        value="list"
+        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+      >
+        <List className="h-4 w-4" />
+        <span className="hidden sm:inline">List</span>
+      </TabsTrigger>
+    </TabsList>
+  );
+
+
   return (
-    <AppCard
-      header={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            <span className="font-semibold">Trainer-Client Assignments</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleCreate} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              New Assignment
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Filters */}
+    <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "list")}>
+
+
+      <div className="flex justify-between items-start md:items-center gap-2 flex-wrap">
         <TrainerClientFilters
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
         />
-
-        {/* View Toggle and Content */}
-        <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "list")}>
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="table" className="flex items-center gap-2">
-                <Table className="h-4 w-4" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                List
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="table" className="mt-4">
-            <TTable<ITrainerClient>
-              listStore={store}
-              columns={tableColumns}
-              emptyMessage="No trainer-client assignments found."
-              showPagination={true}
-            />
-          </TabsContent>
-
-          <TabsContent value="list" className="mt-4">
-            <TList<ITrainerClient>
-              listStore={store}
-              emptyMessage="No trainer-client assignments found."
-              showPagination={true}
-              renderItem={listItemComponent}
-            />
-          </TabsContent>
-        </Tabs>
+        {renderViewToggle()}
+        <Button
+          onClick={handleCreate}
+        >
+          <Plus /> <span className="hidden sm:inline capitalize">Add Trainer-Client Assignment</span>
+        </Button>
       </div>
-    </AppCard>
+
+
+
+      <TabsContent value="table" className="mt-4">
+        <AppCard><TTable<ITrainerClient>
+          listStore={store}
+          columns={tableColumns}
+          emptyMessage="No trainer-client assignments found."
+          showPagination={true}
+        /></AppCard>
+      </TabsContent>
+
+      <TabsContent value="list" className="mt-4">
+        <TList<ITrainerClient>
+          listStore={store}
+          emptyMessage="No trainer-client assignments found."
+          showPagination={true}
+          renderItem={listItemComponent}
+        />
+      </TabsContent>
+
+    </Tabs>
   );
 }

@@ -20,34 +20,39 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { LineItemInput } from "./line-item-input";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { useShallow } from "zustand/shallow";
+import { IMessageResponse } from "@/@types/api/response.type";
 
 
 
-export interface IBillingFormModalProps {
-  storeKey: string;
-  open: boolean;
-  isEditing?: boolean;
-  onClose: () => void;
+export interface IBillingFormExtraProps {
+  open: boolean,
+  onClose: () => void,
+  isEditing?: boolean
+}
+
+interface IBillingFormModalProps extends THandlerComponentProps<TFormHandlerStore<TBillingData, IMessageResponse, IBillingFormExtraProps>> {
 }
 
 export default function BillingFormModal({
   storeKey,
-  open,
-  isEditing = false,
-  onClose,
+  store
 }: IBillingFormModalProps) {
 
-  const formStoreKey = storeKey + "-form";
 
-  const formStore = useRegisteredStore<TFormHandlerStore<TBillingData, IBilling>>(formStoreKey);
 
-  if (!formStore) {
-    return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
+  if (!store) {
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
 
-  const isSubmitting = formStore(state => state.isSubmitting);
+  const {isSubmitting, extra} = store(useShallow(state => ({
+    isSubmitting: state.isSubmitting,
+    extra: state.extra,
+  })));
 
+  const {open, onClose, isEditing} = extra;
 
   const fields = useMemo<TFieldConfig[]>(() => [
     {
@@ -182,12 +187,12 @@ export default function BillingFormModal({
 
   return <>
 
-    <ModalForm<TBillingData, IBilling>
+    <ModalForm<TBillingData, IBilling, IBillingFormExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Billing`}
       description={`${isEditing ? "Edit" : "Add a new"} billing`}
       open={open}
       onOpenChange={onOpenChange}
-      formStore={formStore}
+      formStore={store}
       footerContent={formButtons}
       width="3xl"
     >

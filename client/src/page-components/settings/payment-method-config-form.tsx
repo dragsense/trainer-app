@@ -10,7 +10,7 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 import { IPaymentMethod, TUpdatePaymentMethodData } from "@/@types/setting.type";
 
 // Store
@@ -21,29 +21,25 @@ import { PaymentMethodConfigFormModal } from "@/components/admin";
 
 // Services
 import { updatePaymentMethod } from "@/services/setting.api";
+import { IPaymentMethodConfigFormModalExtraProps } from "@/components/admin/settings/form/payment-method-config-modal-form";
 
 
-interface IPaymentMethodConfigFormProps extends TActionComponentProps<any> {
+interface IPaymentMethodConfigFormProps extends THandlerComponentProps<TSingleHandlerStore<IPaymentMethod[], any>> {
 }
 
-interface IPaymentMethodConfigFormExtraProps {
-  properties: any,
-  open: boolean,
-  onClose: () => void,
-}
+
 
 export default function PaymentMethodConfigForm({
-  storeKey
+  storeKey,
+  store
 }: IPaymentMethodConfigFormProps) {
 
-  const singleStoreKey = storeKey + "-single";
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IPaymentMethod[]>>(singleStoreKey);
 
-  if (!singleStore) {
-    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+  if (!store) {
+    return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const { response: paymentMethods, action, setAction, id, isLoading } = singleStore(useShallow(state => ({
+  const { response: paymentMethods, action, setAction, id, isLoading } = store(useShallow(state => ({
     action: state.action,
     id: state.id,
     response: state.response,
@@ -51,13 +47,13 @@ export default function PaymentMethodConfigForm({
     setAction: state.setAction
   })));
 
-  const paymentMethod = paymentMethods?.find(pm => pm.id === id);
+  const paymentMethod = paymentMethods?.find((pm: IPaymentMethod) => pm.id === id);
 
-  if (!paymentMethod)
+  if (!paymentMethods)
     return <div>Payment Method not found</div>
 
 
-  const properties = paymentMethod.configSchema?.properties;
+  const properties = paymentMethod?.configSchema?.properties;
 
   const ConfigSchema = z.object({
     config: paymentMethod.configSchema
@@ -90,8 +86,6 @@ export default function PaymentMethodConfigForm({
     }
   };
 
-  console.log(defaultValues);
-
 
   const initialValues: TDefaultValue<{ config: any }> = defaultValues;
 
@@ -106,8 +100,8 @@ export default function PaymentMethodConfigForm({
 
 
   return <>
-    <FormHandler<TUpdatePaymentMethodData, IMessageResponse, IPaymentMethodConfigFormExtraProps>
-      mutationFn={updatePaymentMethod(paymentMethod.id)}
+    <FormHandler<TUpdatePaymentMethodData, IMessageResponse, IPaymentMethodConfigFormModalExtraProps>
+      mutationFn={updatePaymentMethod(paymentMethod?.id)}
       FormComponent={PaymentMethodConfigFormModal}
       storeKey={storeKey}
       initialValues={initialValues}
@@ -115,7 +109,7 @@ export default function PaymentMethodConfigForm({
       validationMode={EVALIDATION_MODES.OnSubmit}
       formProps={{
         properties,
-        open: !!action,
+        open: action === 'configurePaymentMethod',
         onClose: () => setAction('none'),
       }}
     />

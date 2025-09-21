@@ -55,7 +55,7 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
     <AppCard
       header={header}
       loading={loading}
-      className="hover:shadow-md transition-shadow"
+      className="hover:shadow-md transition-shadow h-fit"
     >
       <div className="space-y-2">
         {/* Overview Cards */}
@@ -66,7 +66,7 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
             icon={<div className="bg-blue-100 p-2 rounded-full hidden md:block"><Mail className="h-4 w-4 text-blue-600" /></div>}
             trend={5.2} // Example trend value
           />
-       {/*    <StatCard
+      <StatCard
             title="Successful"
             value={data?.reminderTypes?.reduce((sum, type) => sum + type.successfulCount, 0) || 0}
             icon={<div className="bg-green-100 p-2 rounded-full hidden md:block"><CheckCircle2 className="h-4 w-4 text-green-600" /></div>}
@@ -83,7 +83,7 @@ export const RemindersAnalyticsCard: React.FC<IRemindersAnalyticsCardProps> = ({
             value={data?.timeline?.[0]?.failedReminders || 0}
             icon={<div className="bg-red-100 p-2 rounded-full hidden md:block"><AlertCircle className="h-4 w-4 text-red-600" /></div>}
             trend={1.5}
-          /> */}
+          /> 
         </div>
 
       

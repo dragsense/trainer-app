@@ -13,32 +13,33 @@ import { TFieldConfig } from "@/@types/form/field.type";
 import { IStripeConnectCreateResponse, TCreateStripeConnectData } from "@/@types/setting.type";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
-interface IStripeConnectFormModalFormProps {
-    storeKey: string;
+
+export interface IStripeConnectFormModalFormExtraProps {
     open: boolean;
     onClose: () => void;
 }
 
+interface IStripeConnectFormModalFormProps extends THandlerComponentProps<TFormHandlerStore<TCreateStripeConnectData, IStripeConnectCreateResponse>> {
+
+}
+
 export default function StripeConnectFormModalForm({
     storeKey,
-    open,
-    onClose
+   store
 }: IStripeConnectFormModalFormProps) {
-    const formStoreKey = storeKey + "-form";
-
-    // Move store calls to top level
-    const formStore = useRegisteredStore<TFormHandlerStore<TCreateStripeConnectData, IStripeConnectCreateResponse>>(formStoreKey);
-
-    // Handle missing stores after hooks are called
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+
+    const isSubmitting = store(state => state.isSubmitting);
+    const extra = store(state => state.extra);
+    const { open, onClose } = extra;
 
     const fields: TFieldConfig[] = [
         {
@@ -89,7 +90,7 @@ export default function StripeConnectFormModalForm({
             description={`Configure your Stripe account.`}
             open={open}
             onOpenChange={onOpenChange}
-            formStore={formStore}
+            formStore={store}
             footerContent={footerContent}
             width="3xl"
         >

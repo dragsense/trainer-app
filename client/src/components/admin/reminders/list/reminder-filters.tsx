@@ -67,14 +67,14 @@ export function ReminderFilters({
     <>
       {/* Type Filter */}
       <Select
-        value={filters.type || ""}
-        onValueChange={(value) => onFilterChange("type", value || undefined)}
+        value={filters.type || "all"}
+        onValueChange={(value) => onFilterChange("type", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Types</SelectItem>
+          <SelectItem value="all">All Types</SelectItem>
           <SelectItem value={ReminderType.SESSION}>Session</SelectItem>
           <SelectItem value={ReminderType.PAYMENT}>Payment</SelectItem>
           <SelectItem value={ReminderType.GENERAL}>General</SelectItem>
@@ -83,14 +83,14 @@ export function ReminderFilters({
 
       {/* Status Filter */}
       <Select
-        value={filters.status || ""}
-        onValueChange={(value) => onFilterChange("status", value || undefined)}
+        value={filters.status || "all"}
+        onValueChange={(value) => onFilterChange("status", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Status</SelectItem>
+          <SelectItem value="all">All Status</SelectItem>
           <SelectItem value={ReminderStatus.SCHEDULED}>Scheduled</SelectItem>
           <SelectItem value={ReminderStatus.SENT}>Sent</SelectItem>
           <SelectItem value={ReminderStatus.FAILED}>Failed</SelectItem>
@@ -100,14 +100,14 @@ export function ReminderFilters({
 
       {/* Frequency Filter */}
       <Select
-        value={filters.frequency || ""}
-        onValueChange={(value) => onFilterChange("frequency", value || undefined)}
+        value={filters.frequency || "all"}
+        onValueChange={(value) => onFilterChange("frequency", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Frequency" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Frequencies</SelectItem>
+          <SelectItem value="all">All Frequencies</SelectItem>
           <SelectItem value={ReminderFrequency.ONCE}>Once</SelectItem>
           <SelectItem value={ReminderFrequency.DAILY}>Daily</SelectItem>
           <SelectItem value={ReminderFrequency.WEEKLY}>Weekly</SelectItem>
@@ -117,14 +117,14 @@ export function ReminderFilters({
 
       {/* Delivery Method Filter */}
       <Select
-        value={filters.deliveryMethod || ""}
-        onValueChange={(value) => onFilterChange("deliveryMethod", value || undefined)}
+        value={filters.deliveryMethod || "all"}
+        onValueChange={(value) => onFilterChange("deliveryMethod", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Delivery" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Methods</SelectItem>
+          <SelectItem value="all">All Methods</SelectItem>
           <SelectItem value="EMAIL">Email</SelectItem>
           <SelectItem value="SMS">SMS</SelectItem>
           <SelectItem value="PUSH">Push</SelectItem>
@@ -134,14 +134,14 @@ export function ReminderFilters({
 
       {/* Priority Filter */}
       <Select
-        value={filters.priority || ""}
-        onValueChange={(value) => onFilterChange("priority", value ? Number(value) : undefined)}
+        value={filters.priority || "all"}
+        onValueChange={(value) => onFilterChange("priority", value === "all" ? undefined : (value ? Number(value) : undefined))}
       >
         <SelectTrigger className="w-[120px]">
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Priorities</SelectItem>
+          <SelectItem value="all">All Priorities</SelectItem>
           <SelectItem value="1">High (1)</SelectItem>
           <SelectItem value="2">Medium (2)</SelectItem>
           <SelectItem value="3">Low (3)</SelectItem>
@@ -254,13 +254,12 @@ export function ReminderFilters({
   );
 
   return (
-    <div className="flex flex-1 justify-between items-center gap-2">
-      <div className="flex-1 flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 flex-wrap">
         <Input
           placeholder="Search reminders..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-          className="max-w-sm"
+         
         />
         
         {/* Mobile filters (dropdown) */}
@@ -304,6 +303,6 @@ export function ReminderFilters({
           </Button>
         )}
       </div>
-    </div>
+    
   );
 }

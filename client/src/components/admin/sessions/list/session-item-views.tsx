@@ -1,6 +1,6 @@
 // React & Hooks
 import { format } from "date-fns";
-import { Calendar, Clock, DollarSign, MapPin, Users, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
+import { Calendar, Clock, DollarSign, MapPin, Users, MoreHorizontal, Eye, Edit, Trash2, Timer, CalendarDays, Clock3 } from "lucide-react";
 
 // Types
 import { ISession } from "@/@types/session.type";
@@ -249,93 +249,102 @@ export function itemViews({ handleEdit, handleDelete, handleView }: ItemViewHand
   const listItem = (session: ISession) => (
     <AppCard
       key={session.id}
-      className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/30"
+      className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-background to-muted/20"
       onClick={() => handleView(session.id)}
     >
-      <div className="p-4 md:p-6">
-        <div className="flex flex-col lg:flex-row items-start gap-4">
-          <div className="flex-1 w-full">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-              <h3 className="font-semibold text-lg md:text-xl mb-2 sm:mb-0 group-hover:text-primary transition-colors">
-                {session.title}
-              </h3>
-              <div className="flex items-center gap-2 flex-wrap">
+      <div className="p-3">
+        <div className="flex flex-col sm:flex-row items-start gap-3">
+          <div className="flex-1 w-full space-y-3">
+            {/* Header with Title and Status */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-base group-hover:text-primary transition-colors truncate">
+                  {session.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {session.type.replace('_', ' ')} Session
+                </p>
+              </div>
+              <div className="flex items-center gap-1 flex-wrap">
                 <Badge variant="outline" className="text-xs">
-                  {session.type}
+                  {session.type.replace('_', ' ')}
                 </Badge>
                 <Badge className={
-                  session.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800' :
-                  session.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                  'bg-red-100 text-red-800'
+                  session.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                  session.status === 'COMPLETED' ? 'bg-green-100 text-green-800 border-green-200' :
+                  session.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                  'bg-red-100 text-red-800 border-red-200'
                 }>
-                  {session.status}
+                  {session.status.replace('_', ' ')}
                 </Badge>
               </div>
             </div>
 
-            {/* Trainer and Clients Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              {/* Trainer Info */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
-                  <AvatarImage src={session.trainer?.profile?.avatar} />
-                  <AvatarFallback className="text-sm font-semibold">
-                    {session.trainer?.profile?.firstName?.[0]}{session.trainer?.profile?.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">
-                    {session.trainer?.profile?.firstName} {session.trainer?.profile?.lastName}
+            {/* Main Session Info - Responsive Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Date & Time */}
+              <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
+                <CalendarDays className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Date & Time</p>
+                  <p className="text-sm font-semibold text-blue-800">
+                    {format(new Date(session.dateTime), "MMM dd, yyyy")}
                   </p>
-                  <p className="text-xs text-muted-foreground">Trainer</p>
+                  <p className="text-xs text-blue-600 flex items-center gap-1">
+                    <Clock3 className="h-3 w-3" />
+                    {format(new Date(session.dateTime), "h:mm a")}
+                  </p>
                 </div>
               </div>
 
-              {/* Clients Info */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Users className="h-5 w-5 text-primary" />
+              {/* Duration & Price */}
+              <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
+                <Timer className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Duration & Price</p>
+                  <p className="text-sm font-semibold text-green-800">{session.duration} minutes</p>
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    ${(session.pricePerClient / 100).toFixed(2)} per client
+                  </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{session.clients?.length || 0} clients</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {session.clients?.map(c => `${c.profile?.firstName} ${c.profile?.lastName}`).join(', ')}
+              </div>
+
+              {/* Trainer & Clients */}
+              <div className="flex items-center gap-2 p-2 rounded bg-purple-50 border border-purple-200 sm:col-span-2 lg:col-span-1">
+                <Users className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Participants</p>
+                  <p className="text-sm font-semibold text-purple-800">
+                    {session.clients?.length || 0} clients
+                  </p>
+                  <p className="text-xs text-purple-600 truncate">
+                    Trainer: {session.trainer?.profile?.firstName} {session.trainer?.profile?.lastName}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Session Details */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20">
-                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span className="truncate">{format(new Date(session.dateTime), "MMM dd")}</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20">
-                <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>{format(new Date(session.dateTime), "h:mm a")}</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20">
-                <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>{session.duration} min</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20">
-                <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span>${(session.pricePerClient / 100).toFixed(2)}</span>
-              </div>
-            </div>
-
-            {session.location && (
-              <div className="flex items-center gap-2 mt-3 p-2 rounded-md bg-muted/20">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <span className="text-sm text-muted-foreground truncate">{session.location}</span>
+            {/* Location and Description */}
+            {(session.location || session.description) && (
+              <div className="space-y-2">
+                {session.location && (
+                  <div className="flex items-center gap-2 p-2 rounded bg-muted/20 border">
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground truncate">{session.location}</span>
+                  </div>
+                )}
+                {session.description && (
+                  <div className="p-2 rounded bg-muted/20 border">
+                    <p className="text-sm text-muted-foreground line-clamp-2">{session.description}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex-shrink-0 mx-auto lg:mx-0">
+          <div className="flex-shrink-0 self-start">
             <SessionActions
               session={session}
               handleEdit={handleEdit}

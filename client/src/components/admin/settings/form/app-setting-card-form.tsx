@@ -14,27 +14,21 @@ import { TAppSettingData } from "@/@types/setting.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
-interface IAppSettingCardFormProps {
-    storeKey: string;
+interface IAppSettingCardFormProps extends THandlerComponentProps<TFormHandlerStore<TAppSettingData, IMessageResponse>> {
 }
 
-export default function AppSettingCardForm({ storeKey }: IAppSettingCardFormProps) {
-    const formStoreKey = storeKey + "-form";
-
-    // Move store calls to top level
-    const formStore = useRegisteredStore<TFormHandlerStore<TAppSettingData, IMessageResponse>>(formStoreKey);
-
-    // Handle missing stores after hooks are called
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+export default function AppSettingCardForm({ storeKey, store }: IAppSettingCardFormProps) {
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+    const isSubmitting = store(state => state.isSubmitting);
 
     const fields: TFieldConfig[] = [
         // ─── General App Settings ──────────────
@@ -71,7 +65,7 @@ export default function AppSettingCardForm({ storeKey }: IAppSettingCardFormProp
             footer={footerContent}
         >
             <Form
-                formStore={formStore}
+                formStore={store}
             >
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-4">

@@ -103,34 +103,63 @@ export class AuthService {
       const resetUrl = `${appUrl}/${resetPasswordPath}?token=${token}`;
 
       const emailContent = `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Password Reset Request</h2>
-        
-        <p>Dear ${user.profile?.firstName || 'User'},</p>
-        
-        <p>We received a request to reset your password for account <strong>${user.email}</strong>.</p>
-        
-        <p style="text-align: center; margin: 25px 0;">
-          <a href="${resetUrl}" 
-             style="background-color: #3498db; color: white; padding: 12px 24px; 
-                    text-decoration: none; border-radius: 4px; font-weight: bold;
-                    display: inline-block;">
-            Reset Your Password
-          </a>
-        </p>
-        
-        <p style="font-size: 0.9em; color: #7f8c8d;">
-          This link will expire in 15 minutes. If you didn't request this, 
-          please ignore this email or contact support if you have concerns.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #ecf0f1; margin: 20px 0;">
-        
-        <p style="font-size: 0.8em; color: #7f8c8d;">
-          Can't click the button? Copy this link to your browser:<br>
-          <a href="${resetUrl}" style="word-break: break-all;">${resetUrl}</a>
-        </p>
-      </div>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Password Reset Request - ${appName}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">🔐 Password Reset Request</h1>
+              <p style="color: #d1fae5; font-size: 18px; margin: 10px 0 0 0; font-weight: 400;">Secure your account</p>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 40px 30px;">
+              <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #10b981;">
+                <h3 style="color: #1f2937; margin: 0 0 16px 0; font-size: 20px; font-weight: 600;">Hello ${user.profile?.firstName || 'User'},</h3>
+                <p style="color: #4b5563; line-height: 1.6; margin: 0;">We received a request to reset your password for account <strong style="color: #374151;">${user.email}</strong>.</p>
+              </div>
+
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${resetUrl}" style="
+                  display: inline-block;
+                  padding: 16px 32px;
+                  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                  color: #ffffff;
+                  text-decoration: none;
+                  border-radius: 12px;
+                  font-weight: 600;
+                  font-size: 16px;
+                  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                  transition: all 0.2s ease;
+                ">Reset Your Password</a>
+              </div>
+
+              <div style="background: #fef3c7; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
+                <h3 style="color: #92400e; margin: 0 0 16px 0; font-size: 20px; font-weight: 600;">⏰ Important</h3>
+                <p style="color: #92400e; margin: 0; line-height: 1.6;">This link will expire in 15 minutes. If you didn't request this password reset, please ignore this email or contact support if you have concerns.</p>
+              </div>
+
+              <div style="background: #f3f4f6; padding: 20px; border-radius: 12px; margin-bottom: 32px;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0; font-weight: 600;">Can't click the button? Copy this link to your browser:</p>
+                <p style="color: #4b5563; font-size: 12px; margin: 0; word-break: break-all; background: #ffffff; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb;">${resetUrl}</p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0; line-height: 1.5;">If you need assistance, please don't hesitate to contact our support team.</p>
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
     `;
 
       const mailerConfig = this.configService.get('mailer');

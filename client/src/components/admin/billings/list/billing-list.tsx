@@ -21,7 +21,7 @@ import { BillingFilters } from "./billing-filters";
 import { columns, listItem } from "./billing-item-views";
 
 // Stores
-import { TListHandlerStore, TSingleHandlerStore } from "@/stores";
+import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 
 interface IBillingListProps {
   storeKey: string;
@@ -33,13 +33,21 @@ export default function BillingList({
   store
 }: IBillingListProps) {
 
-  const listStoreKey = storeKey + "-list";
+  const singleStoreKey = storeKey + "-single";
 
   if (!store) {
-    return <div>List store "{listStoreKey}" not found. Did you forget to register it?</div>;
+    return <div>List store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const setListFilters = store.getState().setFilters;
+  const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling, any>>(singleStoreKey);
+
+  if (!singleStore) {
+    return `Single store "{singleStoreKey}" not found. Did you forget to register it?`;
+  }
+
+  const setListFilters = store(state => state.setFilters);
+  const setAction = singleStore(state => state.setAction);
+
 
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [viewType, setViewType] = useState<"table" | "list">("table");
@@ -57,7 +65,7 @@ export default function BillingList({
   // Flatten nested filter objects for backend
   const flattenFilters = (filters: Record<string, any>) => {
     const flattened: Record<string, any> = {};
-    
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
         // Handle nested objects like date ranges
@@ -70,7 +78,7 @@ export default function BillingList({
         flattened[key] = value;
       }
     });
-    
+
     return flattened;
   };
 
@@ -94,27 +102,27 @@ export default function BillingList({
   };
 
   const handleCreate = () => {
-    // TODO: Implement create action
+    setAction('createOrUpdate');
   };
 
   const handleEdit = (id: number) => {
-    // TODO: Implement edit action
+    setAction('createOrUpdate', id);
   }
 
   const handleDelete = (id: number) => {
-    // TODO: Implement delete action
+    setAction('delete', id);
   }
 
   const handleView = (id: number) => {
-    // TODO: Implement view action
+    setAction('view', id);
   }
 
   const handleViewInvoice = (id: number) => {
-    // TODO: Implement view invoice action
+    setAction('viewInvoice', id);
   }
 
   const updateStatus = (id: number) => {
-    // TODO: Implement status update action
+    setAction('updateStatus', id);
   }
 
   const tableColumns = columns({
@@ -133,65 +141,64 @@ export default function BillingList({
     handleViewInvoice
   });
 
+  const renderViewToggle = () => (
+    <TabsList className="grid grid-cols-2 w-auto border-b border-gray-200">
+      <TabsTrigger
+        value="table"
+        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+      >
+        <Table className="h-4 w-4" />
+        <span className="hidden sm:inline">Table</span>
+      </TabsTrigger>
+
+      <TabsTrigger
+        value="list"
+        className="flex items-center gap-2 px-4 py-2 data-[state=active]:text-secondary data-[state=active]:font-semibold"
+      >
+        <List className="h-4 w-4" />
+        <span className="hidden sm:inline">List</span>
+      </TabsTrigger>
+    </TabsList>
+  );
+
+
   return (
-    <AppCard
-      header={
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            <span className="font-semibold">Billings</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleCreate} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Billing
-            </Button>
-          </div>
+    <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "list")}>
+
+
+        <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
+          <BillingFilters
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+          {renderViewToggle()}
+          <Button
+            onClick={handleCreate}
+          >
+            <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
+          </Button>
         </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Filters */}
-        <BillingFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClearFilters={handleClearFilters}
+
+
+      <TabsContent value="table" className="mt-4">
+        <AppCard><TTable<IBilling>
+          listStore={store}
+          columns={tableColumns}
+          emptyMessage="No billings found."
+          showPagination={true}
+        /></AppCard>
+      </TabsContent>
+
+      <TabsContent value="list" className="mt-4">
+        <TList<IBilling>
+          listStore={store}
+          emptyMessage="No billings found."
+          showPagination={true}
+          renderItem={listItemComponent}
         />
+      </TabsContent>
 
-        {/* View Toggle and Content */}
-        <Tabs value={viewType} onValueChange={(value) => setViewType(value as "table" | "list")}>
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="table" className="flex items-center gap-2">
-                <Table className="h-4 w-4" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                List
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="table" className="mt-4">
-            <TTable<IBilling>
-              listStore={store}
-              columns={tableColumns}
-              emptyMessage="No billings found."
-              showPagination={true}
-            />
-          </TabsContent>
-
-          <TabsContent value="list" className="mt-4">
-            <TList<IBilling>
-              listStore={store}
-              emptyMessage="No billings found."
-              showPagination={true}
-              renderItem={listItemComponent}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AppCard>
+    </Tabs>
   );
 }

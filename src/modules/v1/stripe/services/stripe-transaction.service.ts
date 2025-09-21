@@ -187,12 +187,12 @@ export class StripeTransactionService {
           pi.id.includes(filters.paymentIntentId!)
         );
       }
-
+/* 
       if (filters.chargeId) {
         filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
           pi.charges?.data?.some(charge => charge.id.includes(filters.chargeId!))
         );
-      }
+      } */
 
       if (filters.createdDateFrom) {
         const fromDate = new Date(filters.createdDateFrom);
@@ -208,23 +208,23 @@ export class StripeTransactionService {
         );
       }
 
-      if (filters.capturedDateFrom) {
+     /*  if (filters.capturedDateFrom) {
         const fromDate = new Date(filters.capturedDateFrom);
         filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
           pi.charges?.data?.some(charge => 
             charge.captured && new Date(charge.created * 1000) >= fromDate
           )
         );
-      }
+      } */
 
-      if (filters.capturedDateTo) {
+/*       if (filters.capturedDateTo) {
         const toDate = new Date(filters.capturedDateTo);
         filteredPaymentIntents = filteredPaymentIntents.filter(pi => 
           pi.charges?.data?.some(charge => 
             charge.captured && new Date(charge.created * 1000) <= toDate
           )
         );
-      }
+      } */
 
       return {
         ...paymentIntents,

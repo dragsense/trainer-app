@@ -10,8 +10,8 @@ import { FormHandler } from "@/handlers";
 // Types
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
-import { IStripeConnectCreateResponse, TCreateStripeConnectData } from "@/@types/setting.type";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { IStripeConnectCreateResponse, IStripeConnectStatus, TCreateStripeConnectData } from "@/@types/setting.type";
 
 // Store
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -32,7 +32,7 @@ export const StripeConnectsSchema = z.object({
 });
 
 
-interface IStripeConnectFormProps extends TActionComponentProps<any> {
+interface IStripeConnectFormProps extends THandlerComponentProps<TSingleHandlerStore<IStripeConnectStatus, any>> {
 }
 
 
@@ -42,7 +42,8 @@ interface IStripeConnectFormExtraProps {
 }
 
 export default function StripeConnectForm({
-    storeKey
+    storeKey,
+    store
 }: IStripeConnectFormProps) {
 
     const navigate = useNavigate();
@@ -52,14 +53,11 @@ export default function StripeConnectForm({
         country: { value: "US" },
     };
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<null>>(singleStoreKey);
-
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, reset } = singleStore(useShallow(state => ({
+    const { action, reset } = store(useShallow(state => ({
         action: state.action,
         reset: state.reset
     })));
@@ -83,7 +81,7 @@ export default function StripeConnectForm({
             validationSchema={StripeConnectsSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
             formProps={{
-                open: action === "connectStripe",
+                open: action === 'connectStripe',
                 onClose: () => reset()
             }}
         />

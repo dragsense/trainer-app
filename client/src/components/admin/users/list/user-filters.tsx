@@ -66,13 +66,12 @@ export function UserFilters({
   );
 
   return (
-    <div className="flex flex-1 justify-between items-center gap-2">
-      <div className="flex-1 flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 flex-wrap">
         <Input
           placeholder="Search trainers..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-          className="max-w-sm"
+       
         />
         
         {/* Mobile filters (dropdown) */}
@@ -114,6 +113,6 @@ export function UserFilters({
           </Button>
         )}
       </div>
-    </div>
+  
   );
 }

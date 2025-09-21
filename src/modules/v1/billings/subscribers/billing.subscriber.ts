@@ -183,7 +183,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
 
     await this.mailerService.sendMail({
       to: user.email,
-      subject: `Trainer App - Billing Details ${billing.stripeInvoiceId ? `(Invoice: ${billing.stripeInvoiceId})` : ''}`,
+      subject: `FORMANCE - Billing Details ${billing.stripeInvoiceId ? `(Invoice: ${billing.stripeInvoiceId})` : ''}`,
       html: this.generateBillingEmailHTML(billing, user, adminContact),
     });
 
@@ -198,153 +198,157 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
     const userName = user.profile?.firstName || 'Member';
 
     return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #c8102e; margin-bottom: 10px;">Trainer App</h1>
-          <h2 style="color: #333; margin: 0;">Billing Details</h2>
-        </div>
-        
-        <p>Dear ${userName},</p>
-        
-        <p>Thank you for choosing Red Strength! Below are your billing details:</p>
-        
-        <!-- Stripe Invoice Details -->
-      
-        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #c8102e; margin-top: 0;">📋 Invoice Details</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Stripe Invoice ID:</td>
-              <td style="padding: 8px 0;">${billing.localInvoiceNumber}</td>
-            </tr>
-      
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Date Created:</td>
-              <td style="padding: 8px 0;">${new Date(billing.createdAt).toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Due Date:</td>
-              <td style="padding: 8px 0;">${billing?.dueDate || 'N/A'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Payment Method:</td>
-              <td style="padding: 8px 0;">${billing.paymentMethod?.key === 'cash' ? 'Cash Payment' : 'Online Payment (Stripe)'}</td>
-            </tr>
-              <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Invoice Amount:</td>
-              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.invoiceAmount / 100)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Amount Due:</td>
-              <td style="padding: 8px 0; font-weight: bold; color: #c8102e;">$${(billing?.dueAmount / 100)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Currency:</td>
-              <td style="padding: 8px 0;">${billing?.currency?.toUpperCase() || 'USD'}</td>
-            </tr>
-          </table>
-        </div>
-   
-
-        <!--Invoice Items-- >
-          ${billing?.lineItems ? `
-        <div style="background: #fff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #ddd;">
-          <h3 style="color: #333; margin-top: 0;">📝 Invoice Items</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-              <tr style="background: #f5f5f5;">
-                <th style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #ddd;">Description</th>
-                <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #ddd;">Quantity</th>
-                <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #ddd;">Amount</th>
-                <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #ddd;">Tax</th>
-                <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #ddd;">Discount</th>
-
-              </tr>
-            </thead>
-            <tbody>
-              ${billing.lineItems.map((item: any) => `
-                <tr>
-                  <td style="padding: 12px 8px; border-bottom: 1px solid #eee;">${item.description || 'Membership Fee'}</td>
-                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">${item.quantity || 1}</td>
-                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.amount)} cents</td>
-                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.tax)}</td>
-                  <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #eee;">$${(item.discount)}</td>
-
-
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>FORMANCE - Billing Details</title>
+          <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); overflow: hidden;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">FORMANCE</h1>
+              <h2 style="color: #d1fae5; margin: 10px 0 0 0; font-size: 20px; font-weight: 400;">Billing Details</h2>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 40px 30px;">
+              <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #10b981;">
+                <h3 style="color: #1f2937; margin: 0 0 16px 0; font-size: 20px; font-weight: 600;">Dear ${userName},</h3>
+                <p style="color: #4b5563; line-height: 1.6; margin: 0;">Thank you for choosing FORMANCE! Below are your billing details:</p>
+              </div>
+              
+              <!-- Invoice Details -->
+              <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #10b981;">
+                <h3 style="color: #065f46; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">📋 Invoice Details</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151; width: 30%;">Invoice ID:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing.localInvoiceNumber}</td>
                   </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr style="background: #f9f9f9;">
-                <td colspan="2" style="padding: 12px 8px; text-align: right; font-weight: bold;">Total:</td>
-                <td style="padding: 12px 8px; text-align: right; font-weight: bold; color: #c8102e;">$${(billing.totalAmount / 100)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        ` : ''
-      }
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Date Created:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${new Date(billing.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Due Date:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing?.dueDate || 'N/A'}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Payment Method:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing.paymentMethod?.key === 'cash' ? 'Cash Payment' : 'Online Payment (Stripe)'}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Invoice Amount:</td>
+                    <td style="padding: 12px 0; color: #dc2626; font-weight: 700; font-size: 18px;">$${(billing?.invoiceAmount / 100)}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Amount Due:</td>
+                    <td style="padding: 12px 0; color: #dc2626; font-weight: 700; font-size: 18px;">$${(billing?.dueAmount / 100)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Currency:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing?.currency?.toUpperCase() || 'USD'}</td>
+                  </tr>
+                </table>
+              </div>
 
-  <!--Session Details-- >
-    ${billing.type === BillingType.SESSION ? `
-        <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #856404; margin-top: 0;">🏋️ Training Session</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Session Type:</td>
-              <td style="padding: 8px 0;">Personal Training</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Duration:</td>
-              <td style="padding: 8px 0;">60 minutes</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Trainer:</td>
-              <td style="padding: 8px 0;">Will be assigned</td>
-            </tr>
-          </table>
-        </div>
-        ` : ''
-      }
-
-<!--Billing Details-- >
-  <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 20px 0;" >
-    <h3 style="color: #1e4d72; margin-top: 0;" >💳 Billing Information </h3>
-      < table style = "width: 100%; border-collapse: collapse;" >
-        <tr>
-        <td style="padding: 8px 0; font-weight: bold;" > Billing ID: </td>
-          < td style = "padding: 8px 0;" > #${billing.id} </td>
-            </tr>
-            < tr >
-            <td style="padding: 8px 0; font-weight: bold;" > Billing Type: </td>
-              < td style = "padding: 8px 0;" > ${billing.type} </td>
-                </tr>
-                < tr >
-                <td style="padding: 8px 0; font-weight: bold;" > Created Date: </td>
-                  < td style = "padding: 8px 0;" > ${new Date(billing.createdAt).toLocaleDateString()} </td>
+              <!-- Invoice Items -->
+              ${billing?.lineItems ? `
+              <div style="background: #ffffff; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">📝 Invoice Items</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #f8fafc;">
+                      <th style="padding: 12px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Description</th>
+                      <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Quantity</th>
+                      <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Amount</th>
+                      <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Tax</th>
+                      <th style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">Discount</th>
                     </tr>
-                    < tr >
-                    <td style="padding: 8px 0; font-weight: bold;" > Status: </td>
-                      < td style = "padding: 8px 0; color: ${billing.status === 'paid' ? '#28a745' : '#ffc107'}; font-weight: bold;" >
-                        ${billing.status === 'paid' ? '✅ Paid' : '⏳ Pending'}
-</td>
-  </tr>
-  </table>
-  </div>
+                  </thead>
+                  <tbody>
+                    ${billing.lineItems.map((item: any) => `
+                      <tr>
+                        <td style="padding: 12px 8px; border-bottom: 1px solid #f3f4f6; color: #1f2937;">${item.description || 'Membership Fee'}</td>
+                        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #f3f4f6; color: #1f2937;">${item.quantity || 1}</td>
+                        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #f3f4f6; color: #1f2937;">$${(item.amount)} cents</td>
+                        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #f3f4f6; color: #1f2937;">$${(item.tax)}</td>
+                        <td style="padding: 12px 8px; text-align: right; border-bottom: 1px solid #f3f4f6; color: #1f2937;">$${(item.discount)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #f8fafc;">
+                      <td colspan="4" style="padding: 12px 8px; text-align: right; font-weight: 700; color: #374151;">Total:</td>
+                      <td style="padding: 12px 8px; text-align: right; font-weight: 700; color: #dc2626; font-size: 18px;">$${(billing.totalAmount / 100)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              ` : ''}
 
+              <!-- Session Details -->
+              ${billing.type === BillingType.SESSION ? `
+              <div style="background: #fef3c7; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
+                <h3 style="color: #92400e; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">🏋️ Training Session</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr style="border-bottom: 1px solid #fbbf24;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151; width: 30%;">Session Type:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">Personal Training</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #fbbf24;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Duration:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">60 minutes</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Trainer:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">Will be assigned</td>
+                  </tr>
+                </table>
+              </div>
+              ` : ''}
 
-  < !--Contact Information-- >
-    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;" >
-      <p style="margin: 5px 0;" > Questions ? Contact us: </p>
-        < p style = "margin: 5px 0;" >📧 ${adminContact.email} | 📞 ${adminContact.phone} </p>
-          < p style = "margin: 5px 0; color: #666;" > ${adminContact.address} </p>
+              <!-- Billing Information -->
+              <div style="background: #eff6ff; padding: 24px; border-radius: 12px; margin-bottom: 32px; border-left: 4px solid #3b82f6;">
+                <h3 style="color: #1e40af; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">💳 Billing Information</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr style="border-bottom: 1px solid #93c5fd;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151; width: 30%;">Billing ID:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">#${billing.id}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #93c5fd;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Billing Type:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing.type}</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #93c5fd;">
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Created Date:</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${new Date(billing.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 12px 0; font-weight: 600; color: #374151;">Status:</td>
+                    <td style="padding: 12px 0; color: ${billing.status === 'paid' ? '#059669' : '#f59e0b'}; font-weight: 700;">
+                      ${billing.status === 'paid' ? '✅ Paid' : '⏳ Pending'}
+                    </td>
+                  </tr>
+                </table>
+              </div>
             </div>
 
-            < div style = "text-align: center; margin-top: 20px;" >
-              <p style="color: #c8102e; font-weight: bold;" > Best regards, <br>The Red Strength Team </p>
-                </div>
-                </div>
-                  `;
+            <!-- Contact Information -->
+            <div style="background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0; line-height: 1.5;">Questions? Contact us:</p>
+              <p style="color: #4b5563; font-size: 14px; margin: 0 0 8px 0;">📧 ${adminContact.email} | 📞 ${adminContact.phone}</p>
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 16px 0;">${adminContact.address}</p>
+              <p style="color: #374151; font-weight: 600; margin: 0;">Best regards,<br>The FORMANCE Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
   }
 
   private async getAdminContactInfo() {

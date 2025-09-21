@@ -11,7 +11,7 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 import { IUserAvailability, TUpdateUserAvailabilityData } from "@/@types/user.type";
 
 // Store
@@ -23,6 +23,9 @@ import { AvailabilityCardForm } from "@/components/admin";
 // Services
 import { updateMyAvailability } from "@/services/user.api";
 import { DAYS_OF_WEEK } from "@/components/admin/settings/form/availability-card-form";
+import { useMemo } from "react";
+import { extractValues } from "@/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 // UI Components
 import { Badge } from "@/components/ui/badge";
@@ -81,7 +84,7 @@ export const AvailabilitySchema = z.object({
 });
 
 
-interface IAvailabilityProps extends TActionComponentProps<any> {
+interface IAvailabilityProps extends THandlerComponentProps<TSingleHandlerStore<IUserAvailability, any>> {
 }
 
 
@@ -89,8 +92,11 @@ interface IAvailabilityExtraProps {
 }
 
 export default function Availability({
-    storeKey
+    storeKey,
+    store
 }: IAvailabilityProps) {
+
+    const queryClient = useQueryClient();
 
 
     const INITIAL_VALUES: TDefaultValue<TUpdateUserAvailabilityData> = {
@@ -109,60 +115,21 @@ export default function Availability({
     };
 
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IUserAvailability>>(singleStoreKey);
-
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { response: availability, isLoading } = singleStore(useShallow(state => ({
+    const { response: availability, isLoading } = store(useShallow(state => ({
         response: state.response,
         isLoading: state.isLoading,
     })));
 
-    if (!availability)
-        return <div>Availability not found</div>
+    
+    const initialValues = useMemo(() => {
+        return extractValues(availability, INITIAL_VALUES);
+    }, [availability]);
 
-    const weeklySchedule = availability.weeklySchedule || {} as any;
-    const unavailablePeriods = availability.unavailablePeriods || [];
 
-
-    const getInitialValues = (): typeof INITIAL_VALUES => {
-        if (!availability) {
-            return INITIAL_VALUES;
-        }
-
-        // Ensure weeklySchedule has all days with proper structure
-        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const;
-        const formattedWeeklySchedule = {} as any;
-
-        days.forEach(day => {
-            formattedWeeklySchedule[day] = {
-                enabled: weeklySchedule[day]?.enabled ?? false,
-                timeSlots: weeklySchedule[day]?.timeSlots || []
-            };
-        });
-
-        // Ensure unavailablePeriods is an array with proper structure
-        const formattedUnavailablePeriods = (unavailablePeriods || []).map(period => ({
-            id: period.id || undefined,
-            startDate: period.startDate ? new Date(period.startDate) : new Date(),
-            endDate: period.endDate ? new Date(period.endDate) : new Date(),
-            reason: period.reason || ''
-        }));
-
-        return {
-            weeklySchedule: {
-                value: formattedWeeklySchedule
-            },
-            unavailablePeriods: {
-                value: formattedUnavailablePeriods
-            }
-        };
-    };
-
-    const initialValues = getInitialValues();
 
     if (isLoading) {
         return (
@@ -171,6 +138,15 @@ export default function Availability({
             </div>
         );
     }
+
+
+
+    if (!availability)
+        return <div>Availability not found</div>
+
+    const weeklySchedule = availability.weeklySchedule || {} as any;
+
+
 
 
 
@@ -212,6 +188,9 @@ export default function Availability({
             initialValues={initialValues}
             validationSchema={AvailabilitySchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
+            onSuccess={(response) => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
+            }}
         />
 
 

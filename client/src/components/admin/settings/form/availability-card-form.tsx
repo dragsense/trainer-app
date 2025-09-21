@@ -16,9 +16,10 @@ import { TDayKey, TUpdateUserAvailabilityData } from "@/@types/user.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
 export const DAYS_OF_WEEK: { key: TDayKey; label: string }[] = [
     { key: "monday", label: "Monday" },
@@ -33,22 +34,18 @@ export const DAYS_OF_WEEK: { key: TDayKey; label: string }[] = [
 const MAX_SLOTS = 5;
 const MAX_UNAVAILABLE = 5;
 
-interface IAvailabilityCardFormProps {
-    storeKey: string;
+interface IAvailabilityCardFormProps extends THandlerComponentProps<TFormHandlerStore<TUpdateUserAvailabilityData, IMessageResponse>> {
 }
 
-export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardFormProps) {
+export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityCardFormProps) {
 
     const { getValues, setValue } = useFormContext();
 
-    const formStoreKey = storeKey + "-form";
-    const formStore = useRegisteredStore<TFormHandlerStore<TUpdateUserAvailabilityData, IMessageResponse>>(formStoreKey);
-
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { values, isSubmitting } = formStore(useShallow(state => ({
+    const { values, isSubmitting } = store(useShallow(state => ({
         values: state.values,
         isSubmitting: state.isSubmitting,
     })));
@@ -188,7 +185,7 @@ export default function AvailabilityCardForm({ storeKey }: IAvailabilityCardForm
             footer={footerContent}
         >
             <Form
-                formStore={formStore}
+                formStore={store}
             >
                 <div className="space-y-8">
                     {DAYS_OF_WEEK.map((day) => {

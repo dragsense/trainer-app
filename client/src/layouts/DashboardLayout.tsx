@@ -12,6 +12,8 @@ import { ADMIN_ROUTES, ROUTE_TITLES } from "@/config/routes.config";
 // Layout Components
 import { AppSidebar } from "@/components/layout-ui/app-sidebar";
 import { AppHeader } from "@/components/layout-ui/app-header";
+import { MobileTopNav } from "@/components/layout-ui/mobile-top-nav";
+import { MobileBottomNav } from "@/components/layout-ui/mobile-bottom-nav";
 
 // Utilities
 import { matchRoutePath } from "@/lib/utils";
@@ -58,8 +60,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       >
         <AppHeader title={title} />
+        <MobileTopNav />
 
-        <div className="flex flex-1 flex-col p-4 lg:px-6">
+        <div className="flex flex-1 flex-col p-4 lg:px-6 pb-20">
 
           <div className="@container/main flex flex-1 flex-col gap-2">
             {children}
@@ -72,6 +75,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <footer className="text-center py-2 text-sm text-muted-foreground">
           © {new Date().getFullYear()} FORMANCE
         </footer>
+        <MobileBottomNav />
       </SidebarInset>
     </SidebarProvider>
   );

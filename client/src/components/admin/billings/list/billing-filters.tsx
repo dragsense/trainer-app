@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 // External libraries
-import { Filter, XIcon, DollarSign, Calendar, User, FileText } from "lucide-react";
+import { Filter, XIcon } from "lucide-react";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -67,31 +67,31 @@ export function BillingFilters({
     <>
       {/* Status Filter */}
       <Select
-        value={filters.status || ""}
-        onValueChange={(value) => onFilterChange("status", value || undefined)}
+        value={filters.status || "all"}
+        onValueChange={(value) => onFilterChange("status", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Status</SelectItem>
+          <SelectItem value="all">All Status</SelectItem>
           <SelectItem value={BillingStatus.PENDING}>Pending</SelectItem>
           <SelectItem value={BillingStatus.PAID}>Paid</SelectItem>
           <SelectItem value={BillingStatus.OVERDUE}>Overdue</SelectItem>
-          <SelectItem value={BillingStatus.CANCELLED}>Cancelled</SelectItem>
+          <SelectItem value={BillingStatus.FAILED}>Failed</SelectItem>
         </SelectContent>
       </Select>
 
       {/* Type Filter */}
       <Select
-        value={filters.type || ""}
-        onValueChange={(value) => onFilterChange("type", value || undefined)}
+        value={filters.type || "all"}
+        onValueChange={(value) => onFilterChange("type", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Types</SelectItem>
+          <SelectItem value="all">All Types</SelectItem>
           <SelectItem value="SESSION">Session</SelectItem>
           <SelectItem value="SUBSCRIPTION">Subscription</SelectItem>
           <SelectItem value="PACKAGE">Package</SelectItem>
@@ -101,14 +101,14 @@ export function BillingFilters({
 
       {/* Currency Filter */}
       <Select
-        value={filters.currency || ""}
-        onValueChange={(value) => onFilterChange("currency", value || undefined)}
+        value={filters.currency || "all"}
+        onValueChange={(value) => onFilterChange("currency", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[100px]">
           <SelectValue placeholder="Currency" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All</SelectItem>
+          <SelectItem value="all">All</SelectItem>
           <SelectItem value="USD">USD</SelectItem>
           <SelectItem value="EUR">EUR</SelectItem>
           <SelectItem value="GBP">GBP</SelectItem>
@@ -193,13 +193,11 @@ export function BillingFilters({
   );
 
   return (
-    <div className="flex flex-1 justify-between items-center gap-2">
-      <div className="flex-1 flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 flex-wrap">
         <Input
           placeholder="Search billings..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-          className="max-w-sm"
         />
         
         {/* Mobile filters (dropdown) */}
@@ -243,6 +241,6 @@ export function BillingFilters({
           </Button>
         )}
       </div>
-    </div>
+   
   );
 }

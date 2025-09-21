@@ -12,7 +12,7 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { IHandlerComponentProps, THandlerComponentProps } from "@/@types/handler-types";
 import { IReminder, TReminderData } from "@/@types/reminder.type";
 import { ReminderActions, ReminderFrequency, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
 
@@ -24,6 +24,9 @@ import { ReminderFormModal } from "@/components/admin";
 
 // Services
 import { createReminder, updateReminder } from "@/services/reminder.api";
+import { IReminderFormExtraProps } from "@/components/admin/reminders/form/reminder-form-modal";
+import { useMemo } from "react";
+import { extractValues } from "@/utils";
 
 
 export const ReminderSchema = z
@@ -89,18 +92,13 @@ export const ReminderSchema = z
         }
     });
 
-interface IReminderFormProps extends TActionComponentProps<any> {
+interface IReminderFormProps extends THandlerComponentProps<TSingleHandlerStore<IReminder, any>> {
 }
 
-
-interface IReminderFormExtraProps {
-    open: boolean,
-    onClose: () => void,
-    isEditing?: boolean
-}
 
 export default function ReminderForm({
-    storeKey
+    storeKey,
+    store
 }: IReminderFormProps) {
 
     const queryReminder = useQueryClient();
@@ -131,59 +129,22 @@ export default function ReminderForm({
         billingId: { value: 0 }
     };
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IReminder>>(singleStoreKey);
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, reset } = singleStore(useShallow(state => ({
+    const { action, response, isLoading, reset, setAction } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        reset: state.reset
+        reset: state.reset,
+        setAction: state.setAction
     })));
 
-    const isEditing = !!response;
-
-    const getInitialValues = (): typeof INITIAL_VALUES => {
-        if (!response) {
-            return INITIAL_VALUES;
-        }
-
-        const flatResponse = {
-            ...(response || {}),
-            ...(response?.recipient ? { recipientId: response.recipient.id } : {}),
-            ...(response?.session ? { sessionId: response.session.id } : {}),
-            ...(response?.billing ? { sessionId: response.billing.id } : {}),
-
-
-        };
-
-
-        const updatedValues = {
-            ...INITIAL_VALUES,
-            ...Object.fromEntries(
-                Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
-                    return [
-                        key,
-                        {
-                            ...original,
-                            value: newValue !== undefined ? newValue : original.value,
-                        },
-                    ];
-                })
-            ),
-
-        };
-
-
-        return updatedValues;
-    };
-
-    const initialValues = getInitialValues();
+   const initialValues = useMemo(() => {
+        return extractValues(response, INITIAL_VALUES);
+    }, [response]);
 
     if (isLoading) {
         return (
@@ -194,10 +155,14 @@ export default function ReminderForm({
     }
 
 
+    const handleClose = () => {
+        setAction('none');
+    };
+
 
     return <>
         <FormHandler<TReminderData, IMessageResponse, IReminderFormExtraProps>
-            mutationFn={isEditing ? updateReminder(response.id) : createReminder}
+            mutationFn={response?.id ? updateReminder(response.id) : createReminder}
             FormComponent={ReminderFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
@@ -207,9 +172,9 @@ export default function ReminderForm({
                 queryReminder.invalidateQueries({ queryKey: [storeKey + "-list"] });
             }}
             formProps={{
-                open: !!action,
-                onClose: reset,
-                isEditing,
+                    open: action === 'createOrUpdate',
+                    onClose: handleClose,
+                    isEditing: response?.id ? true : false,
             }}
         />
 

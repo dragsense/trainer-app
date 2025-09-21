@@ -1,5 +1,58 @@
-import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, TrendingUp, Calendar, CreditCard, Users, Gift } from "lucide-react";
+import { Banknote, Clock, LayoutDashboard, LucideIcon, Settings, User2, UserCheck, Calendar, Users, User, Mail, Shield, CreditCard, Clock3 } from "lucide-react";
 import { ADMIN_ROUTES } from "./routes.config";
+
+// Separate settings configuration object
+export const settingsConfig = {
+    title: "Settings",
+    urls: [
+        ADMIN_ROUTES.SETTINGS,
+        ADMIN_ROUTES.SETTINGS_PROFILE,
+        ADMIN_ROUTES.SETTINGS_AVAILABILITY,
+        ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+        ADMIN_ROUTES.SETTINGS_APP,
+        ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
+        ADMIN_ROUTES.SETTINGS_SECURITY,
+        ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+    ],
+    icon: Settings,
+    children: [
+        {
+            title: "Profile",
+            url: ADMIN_ROUTES.SETTINGS_PROFILE,
+            icon: User,
+        },
+        {
+            title: "Availability",
+            url: ADMIN_ROUTES.SETTINGS_AVAILABILITY,
+            icon: Clock3,
+        },
+        {
+            title: "App Settings",
+            url: ADMIN_ROUTES.SETTINGS_APP,
+            icon: Settings,
+        },
+        {
+            title: "Notifications",
+            url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
+            icon: Mail,
+        },
+        {
+            title: "Payment Methods",
+            url: ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
+            icon: CreditCard,
+        },
+        {
+            title: "Security",
+            url: ADMIN_ROUTES.SETTINGS_SECURITY,
+            icon: Shield,
+        },
+        {
+            title: "Stripe Connect",
+            url: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
+            icon: Settings,
+        },
+    ]
+};
 
 export const navItems: {
     title: string;
@@ -49,52 +102,7 @@ export const navItems: {
             urls: [ADMIN_ROUTES.REMINDERS],
             icon: Clock,
         },
-        {
-            title: "Settings",
-            urls: [
-                ADMIN_ROUTES.SETTINGS,
-                ADMIN_ROUTES.SETTINGS_PROFILE,
-                ADMIN_ROUTES.SETTINGS_AVAILABILITY,
-                ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
-                ADMIN_ROUTES.SETTINGS_APP,
-                ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
-                ADMIN_ROUTES.SETTINGS_SECURITY,
-                ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
-            ],
-            icon: Settings,
-            children: [
-                {
-                    title: "Profile",
-                    url: ADMIN_ROUTES.SETTINGS_PROFILE,
-                },
-                {
-                    title: "Availability",
-                    url: ADMIN_ROUTES.SETTINGS_AVAILABILITY,
-                },
-                {
-                    title: "App Settings",
-                    url: ADMIN_ROUTES.SETTINGS_APP,
-                },
-                {
-                    title: "Notifications",
-                    url: ADMIN_ROUTES.SETTINGS_NOTIFICATIONS,
-                },
-
-                {
-                    title: "Payment Methods",
-                    url: ADMIN_ROUTES.SETTINGS_PAYMENT_METHODS,
-                },
-                {
-                    title: "Security",
-                    url: ADMIN_ROUTES.SETTINGS_SECURITY,
-                },
-                {
-                    title: "Stripe Connect",
-                    url: ADMIN_ROUTES.SETTINGS_STRIPE_CONNECT,
-                },
-
-            ]
-        }
+        
     ];
 
 

@@ -17,6 +17,7 @@ import { fetchTrainerClientById, fetchTrainerClients, removeTrainerClientAssignm
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import { IMessageResponse } from "@/@types/api/response.type";
 
 export default function TrainerClientsPage() {
 

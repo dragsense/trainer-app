@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -10,17 +11,19 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 import { INotificationSetting, TNotificationSettingData } from "@/@types/setting.type";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { NotificationSettingCardForm } from "@/components/admin";
 
 // Services
 import { updateNotificationSettings } from "@/services/setting.api";
+import { extractValues } from "@/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Schema
 export const NotificationSettingsSchema = z.object({
@@ -31,9 +34,11 @@ export const NotificationSettingsSchema = z.object({
     sessionNotifications: z.boolean().optional(),
 });
 
-interface INotificationSettingsFormProps extends TActionComponentProps<any> {}
+interface INotificationSettingsFormProps extends THandlerComponentProps<TSingleHandlerStore<INotificationSetting, any>> {}
 
-export default function NotificationSettingsForm({ storeKey }: INotificationSettingsFormProps) {
+export default function NotificationSettingsForm({ storeKey, store }: INotificationSettingsFormProps) {
+    const queryClient = useQueryClient();
+
     const INITIAL_VALUES: TDefaultValue<TNotificationSettingData> = {
         emailNotifications: { value: true },
         newUserNotifications: { value: true },
@@ -42,20 +47,23 @@ export default function NotificationSettingsForm({ storeKey }: INotificationSett
         sessionNotifications: { value: true },
     };
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<INotificationSetting>>(singleStoreKey);
-
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { response, isLoading } = singleStore(useShallow(state => ({
+
+    const { response, isLoading } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
     })));
 
-    if (!response) {
+    const initialValues = useMemo(() => {
+        return extractValues(response, INITIAL_VALUES);
+    }, [response]);
+
+
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center p-8">
                 <div className="text-center">
@@ -66,31 +74,11 @@ export default function NotificationSettingsForm({ storeKey }: INotificationSett
         );
     }
 
-    const getInitialValues = (): typeof INITIAL_VALUES => {
-        if (!response) {
-            return INITIAL_VALUES;
-        }
+    if (!response) {
+        return <div>Notification settings not found</div>;
+    }
 
-        const updatedValues = {
-            ...INITIAL_VALUES,
-            ...Object.fromEntries(
-                Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (response as any)[key];
-                    return [
-                        key,
-                        {
-                            ...original,
-                            value: newValue !== undefined ? newValue : original.value,
-                        },
-                    ];
-                })
-            ),
-        };
 
-        return updatedValues;
-    };
-
-    const initialValues = getInitialValues();
 
     if (isLoading) {
         return (
@@ -113,7 +101,7 @@ export default function NotificationSettingsForm({ storeKey }: INotificationSett
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 // Refresh the notification settings data
-                singleStore.getState().refetch();
+               queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}
         />
     );

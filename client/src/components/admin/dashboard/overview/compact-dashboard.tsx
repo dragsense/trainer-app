@@ -99,7 +99,7 @@ function KPICard({
     alert?: string
 }) {
     return (
-        <AppCard>
+        <AppCard className="h-fit">
 
             <div className="mb-2">
                 <h3 className="font-semibold text-md flex items-center gap-2">
@@ -111,7 +111,7 @@ function KPICard({
             <div className="space-y-2">
                 {metrics.map((metric, index) => (
                     <div key={index} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-5 justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-1 items-center gap-2">
                             {metric.icon && <span className="">{metric.icon}</span>}
                             <span className="text-xs ">{metric.label}</span>
 
@@ -247,10 +247,10 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
             : "0"
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-6">
             {/* People & Capacity */}
 
-            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
 
 
                 <div className="space-y-2">
@@ -400,7 +400,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
 
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
 
                 <div>
                     <SessionsAnalyticsCard dynamicDateLabel={dynamicDateLabel} data={sessions} loading={isLoading} />

@@ -290,7 +290,7 @@ export class StripeInvoiceService {
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
         filteredInvoices = filteredInvoices.filter(invoice => 
-          invoice.id.toLowerCase().includes(searchTerm) ||
+          invoice.id?.toLowerCase().includes(searchTerm) ||
           (invoice.number && invoice.number.toLowerCase().includes(searchTerm)) ||
           (invoice.description && invoice.description.toLowerCase().includes(searchTerm))
         );

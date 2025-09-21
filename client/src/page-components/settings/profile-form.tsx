@@ -10,17 +10,20 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 import { IProfile, TUpdateProfileData } from "@/@types/user.type";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { ProfileCardForm } from "@/components/admin";
 
 // Services
 import { updateProfile } from "@/services/user.api";
+import { extractValues } from "@/utils";
+import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Schema
 export const ProfileSchema = z.object({
@@ -33,76 +36,43 @@ export const ProfileSchema = z.object({
     phoneNumber: z.string().optional(),
     address: z.string().optional(),
     bio: z.string().optional(),
-    fitnessGoals: z.string().optional(),
+    fitnessGoals: z.array(z.string()).optional(),
     image: z.any().optional(),
 });
 
-interface IProfileFormProps extends TActionComponentProps<any> {}
+interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IProfile, any>> { }
 
-export default function ProfileForm({ storeKey }: IProfileFormProps) {
+export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
+
+
+    const queryClient = useQueryClient();
+
     const INITIAL_VALUES: TDefaultValue<TUpdateProfileData> = {
         firstName: { value: "" },
         lastName: { value: "" },
         phoneNumber: { value: "" },
         address: { value: "" },
         bio: { value: "" },
-        fitnessGoals: { value: "" },
+        fitnessGoals: { value: [] },
         image: { value: null },
-    };
+    }; 
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IProfile>>(singleStoreKey);
-
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, reset } = singleStore(useShallow(state => ({
-        action: state.action,
+
+    const { response, isLoading } = store(useShallow(state => ({
         response: state.response,
         isLoading: state.isLoading,
-        reset: state.reset
     })));
 
-    if (!response) {
-        return (
-            <div className="flex items-center justify-center p-8">
-                <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading profile...</p>
-                </div>
-            </div>
-        );
-    }
+    
+    const initialValues = useMemo(() => {
+        return extractValues(response, INITIAL_VALUES);
+    }, [response]);
 
-    const getInitialValues = (): typeof INITIAL_VALUES => {
-        if (!response) {
-            return INITIAL_VALUES;
-        }
 
-        // Extract profile data from response
-        const profileData = response.profile || response;
-
-        const updatedValues = {
-            ...INITIAL_VALUES,
-            ...Object.fromEntries(
-                Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (profileData as any)[key];
-                    return [
-                        key,
-                        {
-                            ...original,
-                            value: newValue !== undefined ? newValue : original.value,
-                        },
-                    ];
-                })
-            ),
-        };
-
-        return updatedValues;
-    };
-
-    const initialValues = getInitialValues();
 
     if (isLoading) {
         return (
@@ -115,6 +85,11 @@ export default function ProfileForm({ storeKey }: IProfileFormProps) {
         );
     }
 
+    if (!response) {
+        return <div>Profile not found</div>;
+    }
+
+
     return (
         <FormHandler<TUpdateProfileData, IMessageResponse>
             mutationFn={updateProfile}
@@ -124,8 +99,7 @@ export default function ProfileForm({ storeKey }: IProfileFormProps) {
             validationSchema={ProfileSchema}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
-                // Refresh the profile data
-                singleStore.getState().refetch();
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}
         />
     );

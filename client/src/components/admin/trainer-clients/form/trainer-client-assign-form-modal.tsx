@@ -8,7 +8,7 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { TTrainerClientData } from "@/@types/trainer-client.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
@@ -19,33 +19,41 @@ import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { useShallow } from "zustand/react/shallow";
 
-
-export interface ITrainerClientAssignFormModalProps {
-    storeKey: string;
+export interface ITrainerClientAssignFormExtraProps {
     trainerId?: number;
     clientId?: number;
     open: boolean;
     onClose: () => void;
 }
 
+
+export interface ITrainerClientAssignFormModalProps extends THandlerComponentProps<TFormHandlerStore<TTrainerClientData, IMessageResponse, ITrainerClientAssignFormExtraProps>> {
+}
+
 export default function TrainerClientAssignFormModal({
     storeKey,
-    trainerId,
-    clientId,
-    open,
-    onClose
+    store
 }: ITrainerClientAssignFormModalProps) {
 
-    const formStoreKey = storeKey + "-form";
-
-    const formStore = useRegisteredStore<TFormHandlerStore<TTrainerClientData, IMessageResponse>>(formStoreKey);
-
-    if (!formStore) {
-        return `Form store "${formStoreKey}" not found. Did you forget to register it?`;
+    if (!store) {
+        return `Form store "${storeKey}" not found. Did you forget to register it?`;
     }
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+    const { isSubmitting, extra } = store(useShallow(state => ({
+        isSubmitting: state.isSubmitting,
+        extra: state.extra,
+    })));
+
+    const {
+        trainerId,
+        clientId,
+        open,
+        onClose,
+    } = extra;
+
 
     const UserSelect = React.memo(
         ({ props, level }: { props: any; level: number; }) => (
@@ -122,12 +130,12 @@ export default function TrainerClientAssignFormModal({
     );
 
     return (
-        <ModalForm<TTrainerClientData, IMessageResponse>
+        <ModalForm<TTrainerClientData, IMessageResponse, ITrainerClientAssignFormExtraProps>
             title={`Assign ${clientId ? 'Trainer to Client' : 'Client to Trainer'}`}
             description={`Assign a ${clientId ? 'trainer to a client' : 'client to a trainer'}`}
             open={open}
             onOpenChange={onOpenChange}
-            formStore={formStore}
+            formStore={store}
             footerContent={formButtons}
             width="3xl"
         >
@@ -135,7 +143,7 @@ export default function TrainerClientAssignFormModal({
                 {inputs}
             </div>
 
-             <FormErrors />
+            <FormErrors />
         </ModalForm>
     );
 }

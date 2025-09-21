@@ -64,14 +64,14 @@ export function InvoiceFilters({
     <>
       {/* Status Filter */}
       <Select
-        value={filters.status || ""}
-        onValueChange={(value) => onFilterChange("status", value || undefined)}
+        value={filters.status || "all"}
+        onValueChange={(value) => onFilterChange("status", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Status</SelectItem>
+          <SelectItem value="all">All Status</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
           <SelectItem value="open">Open</SelectItem>
           <SelectItem value="paid">Paid</SelectItem>
@@ -82,14 +82,14 @@ export function InvoiceFilters({
 
       {/* Currency Filter */}
       <Select
-        value={filters.currency || ""}
-        onValueChange={(value) => onFilterChange("currency", value || undefined)}
+        value={filters.currency || "all"}
+        onValueChange={(value) => onFilterChange("currency", value === "all" ? undefined : value)}
       >
         <SelectTrigger className="w-[100px]">
           <SelectValue placeholder="Currency" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All</SelectItem>
+          <SelectItem value="all">All</SelectItem>
           <SelectItem value="usd">USD</SelectItem>
           <SelectItem value="eur">EUR</SelectItem>
           <SelectItem value="gbp">GBP</SelectItem>

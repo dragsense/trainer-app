@@ -4,7 +4,7 @@ import { useShallow } from "zustand/shallow";
 
 // Types
 import { IPaymentMethod } from "@/@types/setting.type";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
 // Components
 import { ConfirmDialog } from "@/components/layout-ui/app-alert-dialog";
@@ -19,22 +19,20 @@ import {  TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { updatePaymentMethod } from "@/services/setting.api";
 
 
-interface IPaymentMethodToggleProps extends TActionComponentProps<any> {
-  storeKey: string;
+interface IPaymentMethodToggleProps extends THandlerComponentProps<TSingleHandlerStore<IPaymentMethod[], any>> {
 }
 
 export default function PaymentMethodEnabledToggle({
   storeKey,
+  store
 }: IPaymentMethodToggleProps) {
 
-  const singleStoreKey = storeKey + "-single";
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IPaymentMethod[]>>(singleStoreKey);
-
-  if (!singleStore) {
-    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+  if (!store) {
+    return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  const { response: paymentMethods, id, setAction } = singleStore(useShallow(state => ({
+
+  const { response: paymentMethods, id, setAction } = store(useShallow(state => ({
     action: state.action,
     id: state.id,
     response: state.response,
@@ -42,7 +40,7 @@ export default function PaymentMethodEnabledToggle({
     setAction: state.setAction
   })));
 
-  const paymentMethod = paymentMethods?.find(pm => pm.id === id);
+  const paymentMethod = paymentMethods?.find((pm: IPaymentMethod) => pm.id === id);
 
 
   const { confirm, dialogProps } = useConfirm();

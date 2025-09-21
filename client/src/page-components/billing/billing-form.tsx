@@ -12,19 +12,22 @@ import { FormHandler } from "@/handlers";
 import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TActionComponentProps } from "@/@types/handler-types";
+import { THandlerComponentProps } from "@/@types/handler-types";
 import { IBilling, TBillingData } from "@/@types/billing.type";
 import { BillingCurrency, BillingStatus, BillingType } from "#/modules/v1/billings/enums/billing.enum";
 import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore, TSingleHandlerStore } from "@/stores";
 
 // Components
 import { BillingFormModal } from "@/components/admin";
 
 // Services
 import { createBilling, updateBilling } from "@/services/billing.api";
+import { IBillingFormExtraProps } from "@/components/admin/billings/form/billing-form-modal";
+import { useMemo } from "react";
+import { extractValues } from "@/utils";
 
 
 
@@ -69,18 +72,15 @@ export const BillingSchema = z.object({
 });
 
 
-interface IBillingFormProps extends TActionComponentProps<any> {
+interface IBillingFormProps extends THandlerComponentProps<TSingleHandlerStore<IBilling, IBillingFormExtraProps>> {
 }
 
 
-interface IBillingFormExtraProps {
-    open: boolean,
-    onClose: () => void,
-    isEditing?: boolean
-}
+
 
 export default function BillingForm({
-    storeKey
+    storeKey,
+    store,
 }: IBillingFormProps) {
 
     const queryBilling = useQueryClient();
@@ -96,7 +96,7 @@ export default function BillingForm({
         sessionId: { value: 0 },
         issueDate: { value: new Date() },
         dueDate: { value: new Date() },
-        lineItems: { value: [] },
+        lineItems: { value: [], isNested: true },
         totalTax: { value: 0 },
         discount: { value: 0 },
         totalAmount: { value: 0 },
@@ -104,56 +104,25 @@ export default function BillingForm({
         terms: { value: "" },
     };
 
-    const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling>>(singleStoreKey);
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, reset } = singleStore(useShallow(state => ({
+  
+
+    const { action, response, isLoading, setAction } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        reset: state.reset
+        setAction: state.setAction
     })));
 
-    const isEditing = !!response;
-
-    const getInitialValues = (): typeof INITIAL_VALUES => {
-        if (!response) {
-            return INITIAL_VALUES;
-        }
-
-        const flatResponse = {
-            ...(response || {}),
-            ...(response?.session ? { sessionId: response.session.id } : {}),
-            ...(response?.user ? { userId: response.user.id } : {}),
-        };
 
 
-        const updatedValues = {
-            ...INITIAL_VALUES,
-            ...Object.fromEntries(
-                Object.entries(INITIAL_VALUES).map(([key, original]) => {
-                    const newValue = (flatResponse as any)[key];
-                    return [
-                        key,
-                        {
-                            ...original,
-                            value: newValue !== undefined ? newValue : original.value,
-                        },
-                    ];
-                })
-            ),
-
-        };
-
-
-        return updatedValues;
-    };
-
-    const initialValues = getInitialValues();
+    const initialValues = useMemo(() => {
+        return extractValues(response, INITIAL_VALUES);
+    }, [response]);
 
     if (isLoading) {
         return (
@@ -163,11 +132,13 @@ export default function BillingForm({
         );
     }
 
-
+    const handleClose = () => {
+        setAction('none');
+    };
 
     return <>
         <FormHandler<TBillingData, IMessageResponse, IBillingFormExtraProps>
-            mutationFn={isEditing ? updateBilling(response.id) : createBilling}
+            mutationFn={response?.id ? updateBilling(response.id) : createBilling}
             FormComponent={BillingFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
@@ -177,9 +148,9 @@ export default function BillingForm({
                 queryBilling.invalidateQueries({ queryKey: [storeKey + "-list"] });
             }}
             formProps={{
-                open: !!action,
-                onClose: reset,
-                isEditing,
+                open: action === 'createOrUpdate',
+                onClose: handleClose,
+                isEditing: response?.id ? true : false,
             }}
         />
 

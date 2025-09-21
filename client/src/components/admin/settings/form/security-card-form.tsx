@@ -12,32 +12,27 @@ import { useInput } from "@/hooks/use-input";
 import { TFieldConfig } from "@/@types/form/field.type";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { TResetPasswordData } from "@/@types/user.type";
+import { IMessageResponse } from "@/@types/api/response.type";
 
-interface PasswordChangeData {
-    currentPassword: string;
-    newPassword: string;
-    confirmPassword: string;
+
+
+interface ISecurityCardFormProps extends THandlerComponentProps<TFormHandlerStore<Omit<TResetPasswordData, 'currentPassword'>, IMessageResponse>> {
 }
 
-interface ISecurityCardFormProps {
-    storeKey: string;
-}
-
-export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
-    const formStoreKey = storeKey + "-form";
-
-    // Move store calls to top level
-    const formStore = useRegisteredStore<TFormHandlerStore<Partial<PasswordChangeData>, PasswordChangeData>>(formStoreKey);
-
-    // Handle missing stores after hooks are called
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+export default function SecurityCardForm({ storeKey, store }: ISecurityCardFormProps) {
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+    // Move store calls to top level
+    const isSubmitting = store(state => state.isSubmitting);
+
+    // Handle missing stores after hooks are called
 
     const fields: TFieldConfig[] = [
         // ─── Password Change Fields ──────────────
@@ -92,7 +87,7 @@ export default function SecurityCardForm({ storeKey }: ISecurityCardFormProps) {
         >
             <Form
                
-                formStore={formStore}
+                formStore={store}
             >
                 <div className="space-y-4">
                     {inputs}

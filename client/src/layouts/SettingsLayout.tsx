@@ -42,7 +42,7 @@ export default function SettingsLayout() {
                                 className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
                                     isActive
-                                        ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                        ? "bg-secondary text-secondary-foreground shadow-sm border border-secondary/20"
                                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                 )}
                             >
@@ -68,7 +68,7 @@ export default function SettingsLayout() {
             </div>
 
             {/* Enhanced Mobile Bottom Nav for Settings */}
-            <SettingsMobileNav />
+            {/* <SettingsMobileNav /> */}
         </div>
     );
 }

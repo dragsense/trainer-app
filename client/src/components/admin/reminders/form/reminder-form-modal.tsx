@@ -22,39 +22,40 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 // Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { IMessageResponse } from "@/@types/api/response.type";
+import { useShallow } from "zustand/shallow";
 
-export interface IReminderFormModalProps {
-  storeKey: string;
-  open: boolean;
-  isEditing?: boolean;
-  onClose: () => void;
+
+export interface IReminderFormExtraProps {
+  open: boolean,
+  onClose: () => void,
+  isEditing?: boolean
 }
+
+
+
+export interface IReminderFormModalProps extends THandlerComponentProps<TFormHandlerStore<TReminderData, IMessageResponse, IReminderFormExtraProps>> {
+}
+
 
 export default function ReminderFormModal({
   storeKey,
-  open,
-  isEditing = false,
-  onClose,
+  store
 }: IReminderFormModalProps) {
 
-  const formStoreKey = storeKey + "-form";
-  const singleStoreKey = storeKey + "-single";
-
-  // Move store calls to top level - this fixes the hook rendering issue
-  const formStore = useRegisteredStore<TFormHandlerStore<TReminderData, IReminder>>(formStoreKey);
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IReminder>>(singleStoreKey);
-
   // Handle missing stores after hooks are called
-  if (!formStore) {
-    return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+  if (!store) {
+    return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
   }
 
-  if (!singleStore) {
-    return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
-  }
 
-  const isSubmitting = formStore(state => state.isSubmitting);
+  const {isSubmitting, extra} = store(useShallow(state => ({
+    isSubmitting: state.isSubmitting,
+    extra: state.extra,
+  })));
 
+  const {open, onClose, isEditing} = extra;
 
   // Base fields
   const categorizedFields: { category: string; fields: TFieldConfig[] }[] = [
@@ -385,12 +386,12 @@ export default function ReminderFormModal({
   ).sections;
 
   return (
-    <ModalForm<TReminderData, IReminder>
+    <ModalForm<TReminderData, IMessageResponse, IReminderFormExtraProps>
       title={`${isEditing ? "Edit" : "Create"} Reminder`}
       description={`${isEditing ? "Edit existing" : "Create a new"} reminder with custom frequency settings`}
       open={open}
       onOpenChange={onOpenChange}
-      formStore={formStore}
+      formStore={store}
       footerContent={formButtons}
       width="3xl"
     >

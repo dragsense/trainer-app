@@ -61,11 +61,11 @@ const BillingTypeTabs = () => {
             onValueChange={(val) => navigate(val)}
             className="w-full"
         >
-            <TabsList className="w-full grid grid-cols-1 md:grid-cols-4">
+            <TabsList className="w-full ">
                 {tabs.map(tab => (
                     <TabsTrigger key={tab.to} value={tab.to} className="flex items-center gap-2">
                         <tab.icon className="w-4 h-4" />
-                        {tab.name}
+                        <span className="hidden sm:inline">{tab.name}</span>
                     </TabsTrigger>
                 ))}
             </TabsList>

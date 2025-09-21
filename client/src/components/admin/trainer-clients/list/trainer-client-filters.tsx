@@ -79,67 +79,7 @@ export function TrainerClientFilters({
         className="w-[120px]"
       />
 
-      {/* Trainer Email Filter */}
-      <Input
-        placeholder="Trainer Email"
-        value={filters.trainerEmail || ""}
-        onChange={(e) => onFilterChange("trainerEmail", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Client Email Filter */}
-      <Input
-        placeholder="Client Email"
-        value={filters.clientEmail || ""}
-        onChange={(e) => onFilterChange("clientEmail", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Trainer Name Filters */}
-      <Input
-        placeholder="Trainer First Name"
-        value={filters.trainerFirstName || ""}
-        onChange={(e) => onFilterChange("trainerFirstName", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      <Input
-        placeholder="Trainer Last Name"
-        value={filters.trainerLastName || ""}
-        onChange={(e) => onFilterChange("trainerLastName", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Client Name Filters */}
-      <Input
-        placeholder="Client First Name"
-        value={filters.clientFirstName || ""}
-        onChange={(e) => onFilterChange("clientFirstName", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      <Input
-        placeholder="Client Last Name"
-        value={filters.clientLastName || ""}
-        onChange={(e) => onFilterChange("clientLastName", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Specialty Filter */}
-      <Input
-        placeholder="Trainer Specialty"
-        value={filters.trainerSpecialty || ""}
-        onChange={(e) => onFilterChange("trainerSpecialty", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Goal Filter */}
-      <Input
-        placeholder="Client Goal"
-        value={filters.clientGoal || ""}
-        onChange={(e) => onFilterChange("clientGoal", e.target.value || undefined)}
-        className="w-[160px]"
-      />
+    
 
       {/* Assignment Date Range Filter */}
       <DatePicker
@@ -155,13 +95,11 @@ export function TrainerClientFilters({
   );
 
   return (
-    <div className="flex flex-1 justify-between items-center gap-2">
-      <div className="flex-1 flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2 flex-wrap">
         <Input
           placeholder="Search assignments..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-          className="max-w-sm"
         />
         
         {/* Mobile filters (dropdown) */}
@@ -205,6 +143,6 @@ export function TrainerClientFilters({
           </Button>
         )}
       </div>
-    </div>
+  
   );
 }

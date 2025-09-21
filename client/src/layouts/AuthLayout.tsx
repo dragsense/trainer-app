@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 gap-10 p-4">
+    <div className="min-h-screen max-w-7xl mx-auto grid md:grid-cols-2 md:gap-10 gap-4 p-4 py-15">
 
       {/* Left Panel */}
       <div className="flex flex-col items-center justify-center gap-1">

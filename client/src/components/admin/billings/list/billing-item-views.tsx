@@ -1,6 +1,6 @@
 // External Libraries
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Calendar, DollarSign, User, FileText, Download, Send, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { MoreHorizontal, Calendar, DollarSign, User, FileText, Download, Send, ArrowDownLeft, ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import { format } from "date-fns";
 
 // UI Components
@@ -231,11 +231,13 @@ export const listItem = ({
   handleEdit,
   handleView,
   handleDelete,
+  updateStatus,
   handleViewInvoice
 }: {
   handleEdit?: (id: number) => void;
   handleView?: (id: number) => void;
   handleDelete?: (id: number) => void;
+  updateStatus?: (id: number) => void;
   handleViewInvoice?: (id: number) => void;
 }) => (billing: IBilling) => {
   const user = billing.user;
@@ -245,103 +247,129 @@ export const listItem = ({
     : user?.email || 'Unknown';
     
   const config = getStatusConfig(billing.status);
+  const isOverdue = billing.status === 'pending' && new Date(billing.dueDate) < new Date();
 
   return (
-    <AppCard className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/30">
-      <div className="p-4 md:p-6">
-        <div className="flex flex-col lg:flex-row items-start gap-4">
-          <div className="flex-1 w-full space-y-4">
+    <AppCard className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-background to-muted/20">
+      <div className="p-3">
+        <div className="flex flex-col sm:flex-row items-start gap-3">
+          <div className="flex-1 w-full space-y-3">
             {/* Header with Invoice Number and Status */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <span className="font-semibold text-lg group-hover:text-primary transition-colors">
-                  {billing.localInvoiceNumber}
-                </span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                  <h3 className="font-bold text-base group-hover:text-primary transition-colors truncate">
+                    {billing.localInvoiceNumber || `Invoice #${billing.id}`}
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {billing.type?.replace("_", " ")} Invoice
+                </p>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={config.color}>
+              <div className="flex items-center gap-1 flex-wrap">
+                <Badge className={`${config.color} border text-xs`} onClick={updateStatus && (() => updateStatus(billing.id))}>
                   {config.label}
                 </Badge>
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="outline" className="text-xs">
                   {billing.type?.replace("_", " ")}
                 </Badge>
+                {isOverdue && (
+                  <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
+                    OVERDUE
+                  </Badge>
+                )}
               </div>
             </div>
 
-            {/* Member Information */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-              <Avatar className="h-12 w-12 ring-2 ring-background shadow-sm">
-                <AvatarImage src={user?.profile?.avatar} />
-                <AvatarFallback className="text-sm font-semibold">
-                  {user?.profile?.firstName?.[0]}{user?.profile?.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="font-medium">{userName}</div>
-                <div className="text-sm text-muted-foreground">{user?.email}</div>
-              </div>
-            </div>
-
-            {/* Amount and Financial Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
-                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium">
-                    {billing.currency} {(billing.invoiceAmount / 100).toFixed(2)}
-                  </div>
-                  {billing.totalAmount && (
-                    <div className="text-xs text-muted-foreground">
-                      Total: {billing.currency} {(billing.totalAmount / 100).toFixed(2)}
-                    </div>
+            {/* Main Billing Info - Responsive Layout */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Amount & Currency */}
+              <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
+                <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="text-sm font-semibold text-green-800">
+                    {billing.currency.toUpperCase()} {(billing.invoiceAmount / 100).toFixed(2)}
+                  </p>
+                  {billing.totalAmount && billing.totalAmount !== billing.invoiceAmount && (
+                    <p className="text-xs text-green-600">
+                      Total: {billing.currency.toUpperCase()} {(billing.totalAmount / 100).toFixed(2)}
+                    </p>
                   )}
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20">
-                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium">
-                    Due: {format(new Date(billing.dueDate), "MMM dd")}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
+              {/* Due Date & Issue Date */}
+              <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
+                <CalendarDays className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Due Date</p>
+                  <p className={`text-sm font-semibold ${isOverdue ? 'text-red-600' : 'text-blue-800'}`}>
+                    {format(new Date(billing.dueDate), "MMM dd, yyyy")}
+                  </p>
+                  <p className="text-xs text-blue-600 flex items-center gap-1">
+                    <Clock3 className="h-3 w-3" />
                     Issued: {format(new Date(billing.issueDate), "MMM dd")}
-                  </div>
+                  </p>
+                </div>
+              </div>
+
+              {/* Client Information */}
+              <div className="flex items-center gap-2 p-2 rounded bg-purple-50 border border-purple-200 sm:col-span-2 lg:col-span-1">
+                <Avatar className="h-6 w-6 flex-shrink-0">
+                  <AvatarImage src={user?.profile?.avatar} />
+                  <AvatarFallback className="text-xs font-bold bg-purple-100 text-purple-600">
+                    {user?.profile?.firstName?.[0]}{user?.profile?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">Client</p>
+                  <p className="text-sm font-semibold text-purple-800 truncate">{userName}</p>
+                  <p className="text-xs text-purple-600 truncate">{user?.email}</p>
                 </div>
               </div>
             </div>
 
-          {/* Tax and Discount Info */}
-          {(billing.totalTax || billing.discount) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {billing.totalTax && (
-                <div className="text-sm text-muted-foreground">
-                  Tax: {billing.currency} {(billing.totalTax / 100).toFixed(2)}
-                </div>
-              )}
-              {billing.discount && (
-                <div className="text-sm text-muted-foreground">
-                  Discount: {billing.currency} {(billing.discount / 100).toFixed(2)}
-                </div>
-              )}
-            </div>
-          )}
+            {/* Tax and Discount Info */}
+            {(billing.totalTax || billing.discount) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {billing.totalTax && (
+                  <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border">
+                    <div className="h-6 w-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-purple-600">T</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tax</p>
+                      <p className="text-sm font-medium">{billing.currency.toUpperCase()} {(billing.totalTax / 100).toFixed(2)}</p>
+                    </div>
+                  </div>
+                )}
+                {billing.discount && (
+                  <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border">
+                    <div className="h-6 w-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-orange-600">D</span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Discount</p>
+                      <p className="text-sm font-medium">{billing.currency.toUpperCase()} {(billing.discount / 100).toFixed(2)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Stripe Invoice ID */}
-          {billing.stripeInvoiceId && (
-            <div className="text-xs text-muted-foreground">
-              Stripe ID: {billing.stripeInvoiceId}
-            </div>
-          )}
-        </div>
+            {/* Stripe Invoice ID */}
+            {billing.stripeInvoiceId && (
+              <div className="flex items-center gap-2 p-2 rounded bg-muted/20 border">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Stripe ID: {billing.stripeInvoiceId}</span>
+              </div>
+            )}
+          </div>
 
           {/* Actions */}
-          <div className="flex-shrink-0 mx-auto lg:mx-0">
+          <div className="flex-shrink-0 self-start">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">

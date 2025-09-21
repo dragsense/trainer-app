@@ -1,7 +1,7 @@
 // External Libraries
 import { JSX } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Mail, Phone, Star } from "lucide-react";
+import { MoreHorizontal, Mail, Phone, Star, User, Shield } from "lucide-react";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -192,77 +192,127 @@ export const itemViews = ({
 
   const listItem = (item: IUser) => {
     const profile = item.profile;
-    const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown Trainer';
+    const name = profile ? `${profile.firstName} ${profile.lastName}` : 'Unknown User';
     const imagePath = profile?.image?.path;
     const specialties = profile?.specialties || [];
     const phoneNumber = profile?.phoneNumber || '-';
 
+    const getUserRole = (level: number) => {
+      switch (level) {
+        case 1: return { label: 'Client', color: 'bg-blue-100 text-blue-800 border-blue-200' };
+        case 2: return { label: 'Trainer', color: 'bg-green-100 text-green-800 border-green-200' };
+        case 3: return { label: 'Admin', color: 'bg-purple-100 text-purple-800 border-purple-200' };
+        case 4: return { label: 'Super Admin', color: 'bg-red-100 text-red-800 border-red-200' };
+        default: return { label: 'User', color: 'bg-gray-100 text-gray-800 border-gray-200' };
+      }
+    };
+
+    const roleConfig = getUserRole(item.level);
+
     return (
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/30">
-        <CardContent className="p-4 md:p-6">
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            {/* Profile Image */}
-            <div className="flex-shrink-0 mx-auto sm:mx-0">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold text-xl ring-2 ring-background shadow-sm">
-                {imagePath ? (
-                  <img
-                    src={encodeURI(`${API_URL}/${imagePath}`)}
-                    alt={name}
-                    className="w-16 h-16 md:w-20 md:h-20 rounded-xl object-cover"
-                    crossOrigin="anonymous"
-                  />
-                ) : (
-                  name.charAt(0).toUpperCase()
-                )}
-              </div>
-            </div>
-
-            {/* User Info */}
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-                <h3 className="font-semibold text-lg md:text-xl truncate group-hover:text-primary transition-colors">{name}</h3>
-                <Badge 
-                  variant={item.isActive ? "default" : "secondary"} 
-                  className="mt-2 sm:mt-0 sm:ml-2"
-                >
-                  {item.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-
-              {/* Contact Info */}
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{item.email}</span>
+      <Card className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-background to-muted/20">
+        <CardContent className="p-3">
+          <div className="flex flex-col sm:flex-row items-start gap-3">
+            <div className="flex-1 w-full space-y-3">
+              {/* Header with Name and Status */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-base group-hover:text-primary transition-colors truncate">
+                    {name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {roleConfig.label}
+                  </p>
                 </div>
-                {phoneNumber !== '-' && (
-                  <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4 flex-shrink-0" />
-                    <span>{phoneNumber}</span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <Badge className={`${roleConfig.color} border text-xs`}>
+                    {roleConfig.label}
+                  </Badge>
+                  <Badge className={
+                    item.isActive 
+                      ? 'bg-green-100 text-green-800 border-green-200 border text-xs' 
+                      : 'bg-gray-100 text-gray-800 border-gray-200 border text-xs'
+                  }>
+                    {item.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Profile Image and Contact Info */}
+              <div className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/20">
+                <div className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                  {imagePath ? (
+                    <img
+                      src={encodeURI(`${API_URL}/${imagePath}`)}
+                      alt={name}
+                      className="w-8 h-8 rounded object-cover"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Mail className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">{item.email}</span>
+                    </div>
+                    {phoneNumber !== '-' && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Phone className="h-3 w-3 flex-shrink-0" />
+                        <span>{phoneNumber}</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Specialties */}
               {specialties.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2 text-sm font-medium">
-                    <Star className="h-4 w-4" />
-                    <span>Specialties</span>
+                <div className="p-2 rounded bg-secondary/5 border border-secondary/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Star className="h-3 w-3 text-secondary" />
+                    <p className="text-xs font-semibold text-secondary">Specialties</p>
                   </div>
-                  <div className="flex flex-wrap gap-1 justify-center sm:justify-start">
-                    {specialties.map((specialty, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                  <div className="flex flex-wrap gap-1">
+                    {specialties.slice(0, 4).map((specialty, index) => (
+                      <Badge key={index} variant="outline" className="text-xs bg-white/50">
                         {specialty}
                       </Badge>
                     ))}
+                    {specialties.length > 4 && (
+                      <Badge variant="outline" className="text-xs bg-white/50">
+                        +{specialties.length - 4} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )}
+
+              {/* Additional Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
+                  <User className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">User ID</p>
+                    <p className="text-sm font-semibold text-blue-800">#{item.id}</p>
+                    <p className="text-xs text-blue-600">Unique identifier</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
+                  <Shield className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Access Level</p>
+                    <p className="text-sm font-semibold text-green-800">Level {item.level}</p>
+                    <p className="text-xs text-green-600">{roleConfig.label}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Actions */}
-            <div className="flex-shrink-0 mx-auto sm:mx-0">
+            <div className="flex-shrink-0 self-start">
               <TrainerActions
                 trainer={item}
                 handleEdit={handleEdit}

@@ -16,30 +16,36 @@ import { TUpdatePaymentMethodData } from "@/@types/setting.type";
 import { IMessageResponse } from "@/@types/api/response.type";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { Loader2 } from "lucide-react";
 import { FormErrors } from "@/components/shared-ui/form-errors";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { useShallow } from "zustand/shallow";
 
-interface IPaymentMethodConfigFormModalProps {
-    storeKey: string;
-    properties: any
+
+export interface IPaymentMethodConfigFormModalExtraProps {
+    properties: any;
     open: boolean;
     onClose: () => void;
 }
 
-export default function PaymentMethodConfigFormModal({ storeKey, open, onClose, properties }: IPaymentMethodConfigFormModalProps) {
-    const formStoreKey = storeKey + "-form";
+interface IPaymentMethodConfigFormModalProps extends THandlerComponentProps<TFormHandlerStore<TUpdatePaymentMethodData, IMessageResponse>> {
 
-    // Move store calls to top level
-    const formStore = useRegisteredStore<TFormHandlerStore<TUpdatePaymentMethodData, IMessageResponse>>(formStoreKey);
+}
 
-    // Handle missing stores after hooks are called
-    if (!formStore) {
-        return <div>Form store "{formStoreKey}" not found. Did you forget to register it?</div>;
+export default function PaymentMethodConfigFormModal({ storeKey, store }: IPaymentMethodConfigFormModalProps) {
+    if (!store) {
+        return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
 
-    const isSubmitting = formStore(state => state.isSubmitting);
+
+    const { isSubmitting, extra } = store(useShallow(state => ({
+        isSubmitting: state.isSubmitting,
+        extra: state.extra
+    })));
+
+    const { properties, open, onClose } = extra;
 
     function renderFields(): TFieldConfig[] {
         if (!properties) return [];
@@ -106,7 +112,7 @@ export default function PaymentMethodConfigFormModal({ storeKey, open, onClose, 
             description={`Configure payment method configuration.`}
             open={open}
             onOpenChange={onOpenChange}
-            formStore={formStore}
+            formStore={store}
             footerContent={formButtons}
             width="3xl"
         >
@@ -116,7 +122,7 @@ export default function PaymentMethodConfigFormModal({ storeKey, open, onClose, 
                 </div>
             </div>
 
-             <FormErrors />
+            <FormErrors />
         </ModalForm>
     );
 }
