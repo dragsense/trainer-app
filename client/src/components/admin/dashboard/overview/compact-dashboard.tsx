@@ -19,10 +19,10 @@ import {
 import { AppCard } from "@/components/layout-ui/app-card"
 
 // Types
-import { ICombinedDashboardData } from "@/@types/dashboard.type"
+import { ICombinedDashboardData } from "@shared/interfaces/dashboard.interface"
 import { BillingOverview, RemindersAnalyticsCard, SessionsAnalyticsCard } from "./cards"
 import { useAuthUser } from "@/hooks/use-auth-user"
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum"
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/utils"
 
@@ -201,7 +201,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
     const { user } = useAuthUser();
 
 
-    if (user?.level === UserLevels[UserRole.USER]) {
+    if (user?.level === EUserLevels[EUserRole.USER]) {
         return (
             <ClientDashboardPlaceholder />
         )
@@ -372,7 +372,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                 {/*  <AppCard>
                         <h3 className="font-semibold text-sm mb-3 text-blue-700">People & Engagement</h3>
                         <div className="space-y-1">
-                            {user?.level === UserLevels[UserRole.SUPER_ADMIN] && <MetricRow
+                            {user?.level === EUserLevels[EUserRole.SUPER_ADMIN] && <MetricRow
                                 icon={<Users className="h-4 w-4" />}
                                 label="Trainers"
                                 value={`${overview.totalActiveTrainers}/${overview.totalTrainers}`}
@@ -408,7 +408,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                 <RemindersAnalyticsCard dynamicDateLabel={dynamicDateLabel} data={reminders} loading={isLoading} />
             </div>
 
-            <BillingOverview dynamicDateLabel={dynamicDateLabel} isAdmin={user?.level === UserLevels[UserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
+            <BillingOverview dynamicDateLabel={dynamicDateLabel} isAdmin={user?.level === EUserLevels[EUserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
 
 
 

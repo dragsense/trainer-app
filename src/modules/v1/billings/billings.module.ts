@@ -2,7 +2,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { BillingsService } from './billings.service';
 import { BillingsController } from './billings.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Billing } from './entities/billing.entity';
+import { Billing } from 'shared/entities';
 import { UsersModule } from '../users/users.module';
 import { getJwtConfig } from '@/config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
@@ -12,7 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { StripeModule } from '../stripe/stripe.module';
 import { SettingsModule } from '../settings/settings.module';
 import { SessionsService } from '../sessions/sessions.service';
-import { Session } from '../sessions/entities/session.entity';
+import { Session } from 'shared/entities';
 import { PaymentMethodsModule } from '../settings/payment-methods/payment-methods.module';
 import { FileUploadModule } from '../file-upload/file-upload.module';
 

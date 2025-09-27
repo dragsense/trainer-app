@@ -1,8 +1,8 @@
 import { useState, useContext } from 'react';
 import { Bell, X, Check, Trash2, AlertCircle, User2, UserCheck, User } from 'lucide-react';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead, useDeleteNotification, useUnreadCount } from '@/hooks/use-notifications';
-import { INotification } from '@/@types/notification.type';
-import { NotificationType } from '#/modules/v1/notifications/enums/notification.enum';
+import { INotification } from '@shared/interfaces/notification.interface';
+import { ENotificationType } from '@shared/enums/notification.enum';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,34 +13,34 @@ import { useNavigate } from 'react-router-dom';
 import { fetchAppSettings } from '@/services/setting.api';
 import { useQuery } from '@tanstack/react-query';
 
-const getNotificationIcon = (type: NotificationType) => {
+const getNotificationIcon = (type: ENotificationType) => {
     switch (type) {
-        case NotificationType.NEW_USER:
+        case ENotificationType.NEW_USER:
             return <User className='w-4 h-4' />;
-        case NotificationType.USER_UPDATED:
+        case ENotificationType.USER_UPDATED:
             return <UserCheck className='w-4 h-4' />;
 
-        case NotificationType.INVOICE_GENERATED:
+        case ENotificationType.INVOICE_GENERATED:
             return '📄';
-        case NotificationType.BILLING_DUE:
+        case ENotificationType.BILLING_DUE:
             return '💰';
-        case NotificationType.PAYMENT_RECEIVED:
+        case ENotificationType.PAYMENT_RECEIVED:
             return '💳';
         default:
             return '🔔';
     }
 };
 
-const getNotificationColor = (type: NotificationType) => {
+const getNotificationColor = (type: ENotificationType) => {
     switch (type) {
-        case NotificationType.NEW_USER:
+        case ENotificationType.NEW_USER:
             return 'bg-green-100 text-green-800';
-        case NotificationType.USER_UPDATED:
+        case ENotificationType.USER_UPDATED:
             return 'bg-orange-100 text-orange-800';
-        case NotificationType.INVOICE_GENERATED:
-        case NotificationType.BILLING_DUE:
+        case ENotificationType.INVOICE_GENERATED:
+        case ENotificationType.BILLING_DUE:
             return 'bg-blue-100 text-blue-800';
-        case NotificationType.PAYMENT_RECEIVED:
+        case ENotificationType.PAYMENT_RECEIVED:
             return 'bg-yellow-100 text-yellow-800';
         default:
             return 'bg-gray-100 text-gray-800';

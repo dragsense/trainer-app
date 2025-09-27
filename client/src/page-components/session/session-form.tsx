@@ -9,15 +9,17 @@ import { useMemo } from "react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { ISession, TSessionData } from "@/@types/session.type";
-import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
-import { SessionType } from "#/modules/v1/sessions/enums/session.enum";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { TSessionData } from "@shared/types/session.type";
+import { ISession } from "@shared/interfaces/session.interface";
+
+import { EBillingCurrency } from "@shared/enums/billing.enum";
+import { ESessionType } from "@shared/enums/session.enum";
+import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 
 // Store
 import { TSingleHandlerStore } from "@/stores";
@@ -31,47 +33,8 @@ import { extractValues } from "@/utils";
 
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
+import { CreateSessionDto } from "@shared/dtos";
 
-const TrainerSchema = z.object({
-    id: z.number({
-        message: "Trainer is required",
-    }),
-});
-
-const ClientsSchema = z.object({
-    ids: z.array(z.number()).min(1, {
-        message: "At least one client is required",
-    }),
-});
-
-// Schema
-export const SessionSchema = z.object({
-    title: z.string().min(2, {
-        message: "Title must be at least 2 characters",
-    }),
-    type: z.nativeEnum(SessionType, {
-        errorMap: () => ({ message: "Session type is required" }),
-    }),
-    dateTime: z.date({
-        message: "Date and time is required",
-    }),
-    duration: z.number().min(15, {
-        message: "Duration must be at least 15 minutes",
-    }),
-    pricePerClient: z.number().min(0, {
-        message: "Price must be a non-negative number",
-    }),
-    currency: z.nativeEnum(BillingCurrency).optional(),
-    paymentMethodType: z.nativeEnum(PaymentMethodType, {
-        errorMap: () => ({ message: "Payment method is required" }),
-    }),
-    description: z.string().optional(),
-    location: z.string().optional(),
-    requirePrepayment: z.boolean().optional(),
-    cancellationDeadline: z.number().min(1).optional(),
-    trainer: TrainerSchema,
-    clients: ClientsSchema,
-});
 
 export type TSessionExtraProps = {
     trainerId?: number;
@@ -86,7 +49,7 @@ export default function SessionForm({
 }: ISessionFormProps) {
 
     const { user } = useAuthUser();
-    const trainerId = user?.level === UserLevels[UserRole.TRAINER] ? user.id : 0;
+    const trainerId = user?.level === EUserLevels[EUserRole.TRAINER] ? user.id : 0;
 
     const queryClient = useQueryClient();
 
@@ -104,12 +67,12 @@ export default function SessionForm({
 
     const INITIAL_VALUES: TDefaultValue<TSessionData> = {
         title: { value: "" },
-        type: { value: SessionType.ONE_ON_ONE },
+        type: { value: ESessionType.ONE_ON_ONE },
         dateTime: { value: new Date() },
         duration: { value: 60 },
         pricePerClient: { value: 0 },
-        currency: { value: BillingCurrency.USD },
-        paymentMethodType: { value: PaymentMethodType.CASH },
+        currency: { value: EBillingCurrency.USD },
+        paymentMethodType: { value: EPaymentMethodType.CASH },
         description: { value: "" },
         location: { value: "" },
         requirePrepayment: { value: true },
@@ -121,16 +84,19 @@ export default function SessionForm({
             }
         },
         clients: {
-            isNested: true,
-            value: {
-                ids: { value: [] }
-            }
+            value: [{
+                isNested: true,
+                value: {
+                    id: { value: 0 }
+                }
+            }]
         }
     };
 
     const initialValues = useMemo(() => {
         return extractValues(response, INITIAL_VALUES);
     }, [response]);
+
 
     if (isLoading) {
         return (
@@ -150,7 +116,7 @@ export default function SessionForm({
             FormComponent={SessionFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={SessionSchema}
+            dto={CreateSessionDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });

@@ -2,9 +2,10 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
-import { ISession, TSessionData } from "@/@types/session.type";
+import { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import { ISession } from "@shared/interfaces/session.interface";
+import { TSessionData } from "@shared/types/session.type";
 
 // Constants
 const SESSIONS_API_PATH = "/sessions";
@@ -23,7 +24,7 @@ export const updateSession = (id: number) => (data: TSessionData) =>
     );
 
 export const fetchSessions = (
-    params: IListParams
+    params: IListQueryParams
 ) => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append("page", params.page.toString());

@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Types
-import { IBilling, IStripeInvoice, IStripeTransaction } from "@/@types/billing.type";
+import { IBilling, IStripeInvoice, IStripeTransaction } from "@shared/interfaces/billing.interface";
 import { Badge } from "@/components/ui/badge";
-import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 import { cn } from "@/lib/utils";
 
 
@@ -116,29 +116,29 @@ export const columns = ({
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue<BillingStatus>("status");
+        const status = row.getValue<EBillingStatus>("status");
 
-        const statusConfig: Record<BillingStatus, { color: string; label: string }> = {
-          [BillingStatus.PAID]: {
+        const statusConfig: Record<EBillingStatus, { color: string; label: string }> = {
+          [EBillingStatus.PAID]: {
             color: "bg-green-100 text-green-800",
             label: "Paid",
           },
-          [BillingStatus.PENDING]: {
+          [EBillingStatus.PENDING]: {
             color: "bg-yellow-100 text-yellow-800",
             label: "Pending",
           },
-          [BillingStatus.FAILED]: {
+          [EBillingStatus.FAILED]: {
             color: "bg-red-100 text-red-800",
             label: "Failed",
           },
-          [BillingStatus.OVERDUE]: {
+          [EBillingStatus.OVERDUE]: {
             color: "bg-orange-100 text-orange-800",
             label: "Overdue",
           },
         };
 
         const config =
-          statusConfig[status as BillingStatus] || statusConfig[BillingStatus.PENDING];
+          statusConfig[status as EBillingStatus] || statusConfig[EBillingStatus.PENDING];
 
         return <Badge onClick={updateStatus && (() => updateStatus(row.original.id))} className={cn(config.color, "cursor-pointer")}>{config.label}</Badge>;
       },

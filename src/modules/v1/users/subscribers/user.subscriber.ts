@@ -5,11 +5,8 @@ import {
   DataSource,
 } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
-import { User } from '../entities/user.entity';
-import { UserAvailability } from '../entities/user-availability.entity';
-import { AppSetting } from '../../settings/app-setting/entities/app-setting.entity';
-import { NotificationSetting } from '../../settings/notification-settings/entities/notification-setting.entity';
-import { UserRole, UserLevels } from '../enums/user.enum';
+import { User, UserAvailability, AppSetting, NotificationSetting } from 'shared/entities';
+import { EUserRole, EUserLevels } from 'shared/enums';
 
 @EventSubscriber()
 @Injectable()
@@ -68,8 +65,8 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
       notificationSetting.user = user;
       
       // Set default notification preferences based on user role
-      const isAdmin = user.level <= UserLevels[UserRole.TRAINER];
-      const isTrainer = user.level === UserLevels[UserRole.TRAINER];
+      const isAdmin = user.level <= EUserLevels[EUserRole.TRAINER];
+      const isTrainer = user.level === EUserLevels[EUserRole.TRAINER];
       
       // Admin and trainers get all notifications by default
       // Regular users get basic notifications
@@ -92,7 +89,7 @@ export class UserSubscriber implements EntitySubscriberInterface<User> {
       userAvailability.user = user;
       
       // Set default availability based on user role
-      const isTrainer = user.level === UserLevels[UserRole.TRAINER];
+      const isTrainer = user.level === EUserLevels[EUserRole.TRAINER];
       userAvailability.weeklySchedule = this.generateDefaultSchedule(isTrainer);
       userAvailability.unavailablePeriods = [];
 

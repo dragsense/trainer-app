@@ -152,13 +152,7 @@ export default function UserFormModal({
           min: 0,
           required: false,
         },
-        {
-          id: "rating",
-          name: "rating",
-          label: "Rating",
-          type: "rating",
-          required: false,
-        },
+    
       ]
     }
   ];
@@ -169,8 +163,10 @@ export default function UserFormModal({
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false)
+    if (state === false) 
       onClose();
+    
+      
   };
 
   const formButtons = (

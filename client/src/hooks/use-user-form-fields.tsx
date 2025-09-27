@@ -2,7 +2,7 @@ import { User, Home, MapPin, Phone, Building, MailIcon } from "lucide-react";
 import { z } from "zod";
 
 // Types
-import { UserGender } from "#/modules/v1/users/enums/user.enum";
+import { EUserGender } from "@shared/enums/user.enum";
 import { TFieldConfig } from "@/@types/form/field.type";
 
 

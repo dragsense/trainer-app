@@ -2,7 +2,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PaymentMethodsService } from '@/modules/v1/settings/payment-methods/payment-methods.service';
 import Stripe from 'stripe';
-import { User } from '@/modules/v1//users/entities/user.entity';
+import { User } from 'shared/entities';
 import { StripeInvoiceService } from './stripe-invoice.service';
 import { StripeTransactionService } from './stripe-transaction.service';
 

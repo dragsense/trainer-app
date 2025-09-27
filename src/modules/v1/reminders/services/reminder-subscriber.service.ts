@@ -4,11 +4,11 @@ import { ReminderCreatedEvent, ReminderUpdatedEvent, ReminderDeletedEvent } from
 import { ReminderSchedulerService } from './reminder-scheduler.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual } from 'typeorm';
-import { Reminder } from '../entities/reminder.entity';
-import { ReminderFrequency, ReminderStatus } from '../enums/reminder.enum';
+import { Reminder } from 'shared/entities';
+import { EReminderFrequency, EReminderStatus } from 'shared/enums';
 import { Cron, CronExpression, SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
-import { FrequencyConfigDto } from '../dto/frequency-config.dto';
+import { FrequencyConfigDto } from 'shared/dtos';
 
 @Injectable()
 export class ReminderSubscriber {
@@ -101,12 +101,12 @@ export class ReminderSubscriber {
     if (timeOfDay) {
       const [hours, minutes] = this.getTimeOfDay(timeOfDay);
 
-      if (frequency === ReminderFrequency.WEEKLY) {
+      if (frequency === EReminderFrequency.WEEKLY) {
         const days = weekdays?.length ? weekdays.join(",") : "*";
         return `${minutes} ${hours} * * ${days}`;
       }
 
-      if (frequency === ReminderFrequency.MONTHLY) {
+      if (frequency === EReminderFrequency.MONTHLY) {
         const days = monthDays?.length ? monthDays.join(",") : "*";
         return `${minutes} ${hours} ${days} * *`;
       }
@@ -117,12 +117,12 @@ export class ReminderSubscriber {
 
     // If interval-based
     if (intervalMinutes) {
-      if (frequency === ReminderFrequency.WEEKLY) {
+      if (frequency === EReminderFrequency.WEEKLY) {
         const days = weekdays?.length ? weekdays.join(",") : "*";
         return `*/${intervalMinutes} * * * ${days}`;
       }
 
-      if (frequency === ReminderFrequency.MONTHLY) {
+      if (frequency === EReminderFrequency.MONTHLY) {
         const days = monthDays?.length ? monthDays.join(",") : "*";
         return `*/${intervalMinutes} * * ${days} *`;
       }
@@ -138,7 +138,7 @@ export class ReminderSubscriber {
 
     const { frequencyConfig } = reminder;
 
-    if (frequencyConfig?.frequency === ReminderFrequency.ONCE)
+    if (frequencyConfig?.frequency === EReminderFrequency.ONCE)
       this.scheduleOneTimeJob(reminder)
     else {
       const cronExpression = this.buildCronExpression(reminder.frequencyConfig);
@@ -254,8 +254,8 @@ export class ReminderSubscriber {
 
     // Delete completed one-time reminders older than 7 days
     const result = await this.reminderRepository.delete({
-      frequencyConfig: { frequency: ReminderFrequency.ONCE },
-      status: ReminderStatus.SENT,
+      frequencyConfig: { frequency: EReminderFrequency.ONCE },
+      status: EReminderStatus.SENT,
       sentAt: LessThanOrEqual(sevenDaysAgo)
     });
 

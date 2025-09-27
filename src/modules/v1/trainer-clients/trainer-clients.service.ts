@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateTrainerClientDto } from './dto/create-trainer-client.dto';
-import { TrainerClient } from './entities/trainer-client.entity';
-import { User } from '../users/entities/user.entity';
-import { MessageResponse } from '@/interfaces/general.interface';
-import { TrainerClientListDto } from './dto/trainer-client-list.dto';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
+import { CreateTrainerClientDto } from 'shared/dtos';
+import { TrainerClient } from 'shared/entities';
+import { User } from 'shared/entities';
+import { IMessageResponse, IPaginatedResponse } from 'shared/interfaces';
+import { TrainerClientListDto } from 'shared/dtos';
 
 @Injectable()
 export class TrainerClientsService {
@@ -17,7 +16,7 @@ export class TrainerClientsService {
     private userRepository: Repository<User>,
   ) {}
 
-  async assignTrainerToClient(createTrainerClientDto: CreateTrainerClientDto): Promise<MessageResponse> {
+  async assignTrainerToClient(createTrainerClientDto: CreateTrainerClientDto): Promise<IMessageResponse> {
     const { trainerId, clientId } = createTrainerClientDto;
 
     // Check if assignment already exists
@@ -40,7 +39,7 @@ export class TrainerClientsService {
   }
 
 
-  async findAll(queryDto: TrainerClientListDto): Promise<PaginationResponse<TrainerClient>> {
+  async findAll(queryDto: TrainerClientListDto): Promise<IPaginatedResponse<TrainerClient>> {
     const {
       page = 1,
       limit = 10,
@@ -165,7 +164,7 @@ export class TrainerClientsService {
     // Handle any other filters
     if (otherFilters && typeof otherFilters === 'object') {
       Object.entries(otherFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value && value !== undefined && value !== null) {
           queryBuilder.andWhere(`trainerClient.${key} = :${key}`, { [key]: value });
         }
       });

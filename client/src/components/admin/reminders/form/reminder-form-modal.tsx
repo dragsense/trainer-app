@@ -9,11 +9,12 @@ import { useSearchableBillings, useSearchableSessions, useSearchableUsers } from
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
-import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderType, ReminderFrequency, ReminderActions } from "#/modules/v1/reminders/enums/reminder.enum";
-import { IBilling } from "@/@types/billing.type";
-import { IUser } from "@/@types/user.type";
-import { ISession } from "@/@types/session.type";
+import { IReminder } from "@shared/interfaces/reminder.interface";
+import { TReminderData } from "@shared/types/reminder.type";
+import { EReminderType, EReminderFrequency, EReminderActions } from "@shared/enums/reminder.enum";
+import { IBilling } from "@shared/interfaces/billing.interface";
+import { IUser } from "@shared/interfaces/user.interface";
+import { ISession } from "@shared/interfaces/session.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { useShallow } from "zustand/shallow";
 
 
@@ -67,9 +68,9 @@ export default function ReminderFormModal({
         label: "Reminder Type",
         type: "select",
         options: [
-          { value: ReminderType.BILLING, label: "Payment Reminder" },
-          { value: ReminderType.SESSION, label: "Session Reminder" },
-          { value: ReminderType.CUSTOM, label: "Custom Reminder" },
+          { value: EReminderType.BILLING, label: "Payment Reminder" },
+          { value: EReminderType.SESSION, label: "Session Reminder" },
+          { value: EReminderType.CUSTOM, label: "Custom Reminder" },
         ],
         required: true,
       }]
@@ -122,8 +123,8 @@ export default function ReminderFormModal({
           placeholder: "Select Recipient",
           type: "custom",
           valueType: "number",
-          visible: ({ values }) => values.type === ReminderType.CUSTOM,
-          required: ({ values }) => values.type === ReminderType.CUSTOM,
+          visible: ({ values }) => values.type === EReminderType.CUSTOM,
+          required: ({ values }) => values.type === EReminderType.CUSTOM,
           Component: (props) => (
             <SearchableInputWrapper<IUser>
               {...props}
@@ -144,8 +145,8 @@ export default function ReminderFormModal({
           placeholder: "Select Session",
           type: "custom",
           valueType: "number",
-          visible: ({ values }) => values.type === ReminderType.SESSION,
-          required: ({ values }) => values.type === ReminderType.SESSION,
+          visible: ({ values }) => values.type === EReminderType.SESSION,
+          required: ({ values }) => values.type === EReminderType.SESSION,
           Component: (props) => (
             <SearchableInputWrapper<ISession>
               {...props}
@@ -164,8 +165,8 @@ export default function ReminderFormModal({
           label: "Billing",
           placeholder: "Select Billing",
           type: "custom",
-          visible: ({ values }) => values.type === ReminderType.BILLING,
-          required: ({ values }) => values.type === ReminderType.BILLING,
+          visible: ({ values }) => values.type === EReminderType.BILLING,
+          required: ({ values }) => values.type === EReminderType.BILLING,
           valueType: "number",
           Component: (props) => (
             <SearchableInputWrapper<IBilling>
@@ -191,10 +192,10 @@ export default function ReminderFormModal({
           label: "Frequency",
           type: "select",
           options: [
-            { value: ReminderFrequency.ONCE, label: "Once" },
-            { value: ReminderFrequency.DAILY, label: "Daily" },
-            { value: ReminderFrequency.WEEKLY, label: "Weekly" },
-            { value: ReminderFrequency.MONTHLY, label: "Monthly" },
+            { value: EReminderFrequency.ONCE, label: "Once" },
+            { value: EReminderFrequency.DAILY, label: "Daily" },
+            { value: EReminderFrequency.WEEKLY, label: "Weekly" },
+            { value: EReminderFrequency.MONTHLY, label: "Monthly" },
           ],
           required: true,
         },
@@ -204,9 +205,9 @@ export default function ReminderFormModal({
           label: "Time of Day",
           type: "time",
           visible: ({ values }) =>
-            values.frequencyConfig.frequency !== ReminderFrequency.ONCE,
+            values.frequencyConfig.frequency !== EReminderFrequency.ONCE,
           required: ({ values }) =>
-            values.frequencyConfig.frequency !== ReminderFrequency.ONCE
+            values.frequencyConfig.frequency !== EReminderFrequency.ONCE
         },
         {
           id: "frequencyConfig.intervalMinutes",
@@ -228,9 +229,9 @@ export default function ReminderFormModal({
                   : `${Math.floor(v / 60)}.5 hours`
           })),
           visible: ({ values }) =>
-            values.frequencyConfig.frequency !== ReminderFrequency.ONCE,
+            values.frequencyConfig.frequency !== EReminderFrequency.ONCE,
           required: ({ values }) =>
-            values.frequencyConfig.frequency !== ReminderFrequency.ONCE
+            values.frequencyConfig.frequency !== EReminderFrequency.ONCE
         },
         {
           id: "frequencyConfig.weekdays",
@@ -248,8 +249,8 @@ export default function ReminderFormModal({
             { value: "6", label: "Saturday" },
           ],
           placeholder: "Select days of the week...",
-          visible: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.WEEKLY,
-          required: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.WEEKLY,
+          visible: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.WEEKLY,
+          required: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.WEEKLY,
         },
         {
           id: "frequencyConfig.monthDays",
@@ -261,8 +262,8 @@ export default function ReminderFormModal({
             value: (i + 1).toString(),
             label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
           })),
-          visible: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.MONTHLY,
-          required: ({ values }) => values.frequencyConfig.frequency === ReminderFrequency.MONTHLY,
+          visible: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.MONTHLY,
+          required: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.MONTHLY,
         },
         {
           id: "isRecurring",
@@ -271,7 +272,7 @@ export default function ReminderFormModal({
           type: "switch",
           required: false,
           visible: ({ values }) =>
-            values.frequencyConfig.frequency === ReminderFrequency.ONCE,
+            values.frequencyConfig.frequency === EReminderFrequency.ONCE,
         },
       ],
     }
@@ -285,8 +286,8 @@ export default function ReminderFormModal({
           label: "Actions",
           type: "multiSelect",
           options: [
-            { value: ReminderActions.EMAIL, label: "Email" },
-            { value: ReminderActions.BILLING, label: "BILLING" },
+            { value: EReminderActions.EMAIL, label: "Email" },
+            { value: EReminderActions.BILLING, label: "BILLING" },
           ],
           required: true,
         },

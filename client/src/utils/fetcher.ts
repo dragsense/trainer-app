@@ -1,12 +1,14 @@
 import { config } from "@/config";
 
 export const BASE_API_URL = config.apiUrl;
+const ENV = config.environment;
 
 export const fetcher = async <T>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> => {
   try {
+
     const res = await fetch(url, options);
 
     if (res.status === 204) return null as T;
@@ -22,7 +24,11 @@ export const fetcher = async <T>(
     if (!res.ok) {
       const errorMessage =
         payload?.error?.message || payload?.message || "Something went wrong";
-      throw new Error(`API Error: ${errorMessage} (Status: ${res.status})`);
+        if (ENV === 'development') {
+          throw new Error(`API Error: ${errorMessage} (Status: ${res.status})`);
+        } else {
+          throw new Error(`${errorMessage}`);
+        }
     }
 
     return payload as T;

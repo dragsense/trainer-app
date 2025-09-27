@@ -5,7 +5,7 @@ import { JSX, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 
 // Custom UI Components
-import { Pagination } from "../shared-ui/pagination";
+import { Pagination } from "@/components/shared-ui/pagination";
 
 // Utils
 import { cn } from "@/lib/utils";

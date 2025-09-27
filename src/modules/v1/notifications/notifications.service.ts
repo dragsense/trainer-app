@@ -3,18 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindManyOptions } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Notification} from './entities/notification.entity';
-import { CreateNotificationDto } from './dto/create-notification.dto';
-import { UpdateNotificationDto } from './dto/update-notification.dto';
-import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
-import { User } from '../users/entities/user.entity';
-import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
+import { Notification } from 'shared/entities';
+import { CreateNotificationDto } from 'shared/dtos';
+import { UpdateNotificationDto } from 'shared/dtos';
+import { NotificationSetting } from 'shared/entities';
+import { User } from 'shared/entities';
+import { AppSetting } from 'shared/entities';
 import { NotificationGateway } from '@/gateways/notification.gateway';
 import { NotificationSubscriber } from './notification.subscriber';
 import { UserNotificationSubscriber } from './user-notification.subscriber';
 import { BillingNotificationSubscriber } from './billing-notification.subscriber';
-import { NotificationStatus, NotificationType } from './enums/notification.enum';
-import { UpdateNotificationSettingDto } from '../settings/notification-settings/dto/update-notification-setting.dto';
+import { ENotificationStatus, ENotificationType } from 'shared/enums';
+import { UpdateNotificationSettingDto } from 'shared/dtos';
 
 @Injectable()
 export class NotificationsService {
@@ -36,7 +36,7 @@ export class NotificationsService {
         BillingNotificationSubscriber.setNotificationsService(this);
     }
 
-    async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
+        async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
         // Check if global notifications are enabled
         const globalNotificationsEnabled = await this.isGlobalNotificationsEnabled(createNotificationDto.userId);
         if (!globalNotificationsEnabled) {
@@ -78,7 +78,7 @@ export class NotificationsService {
         return await this.notificationRepo.count({
             where: { 
                 userId, 
-                status: NotificationStatus.UNREAD 
+                status: ENotificationStatus.UNREAD 
             }
         });
     }
@@ -117,7 +117,7 @@ export class NotificationsService {
             throw new NotFoundException(`Invalid notification ID: ${id}`);
         }
 
-        const notification = await this.update(id, userId, { status: NotificationStatus.READ });
+        const notification = await this.update(id, userId, { isRead: true });
         
         // Update unread count after marking as read
         const unreadCount = await this.findUnreadCount(userId);
@@ -128,8 +128,8 @@ export class NotificationsService {
 
     async markAllAsRead(userId: number): Promise<{ message: string }> {
         await this.notificationRepo.update(
-            { userId, status: NotificationStatus.UNREAD },
-            { status: NotificationStatus.READ }
+            { userId, status: ENotificationStatus.UNREAD },
+            { status: ENotificationStatus.READ }
         );
         
         // Update unread count after marking all as read
@@ -199,7 +199,7 @@ export class NotificationsService {
 
     // Method to create notifications for specific events
     async createNotificationForEvent(
-        type: NotificationType,
+        type: ENotificationType,
         title: string,
         message: string,
         userId: number,
@@ -219,18 +219,18 @@ export class NotificationsService {
         
         let shouldNotify = false;
         switch (type) {
-            case NotificationType.NEW_USER:
+            case ENotificationType.NEW_USER:
                 shouldNotify = settings.newUserNotifications;
                 break;
-            case NotificationType.USER_UPDATED:
+            case ENotificationType.USER_UPDATED:
                 shouldNotify = settings.userUpdateNotifications;
                 break;
            
-            case NotificationType.BILLING_DUE:
-            case NotificationType.PAYMENT_RECEIVED:
+            case ENotificationType.BILLING_DUE:
+            case ENotificationType.PAYMENT_RECEIVED:
                 shouldNotify = settings.billingNotifications;
                 break;
-            case NotificationType.SESSION_SCHEDULED:
+            case ENotificationType.SESSION_SCHEDULED:
                 shouldNotify = settings.sessionNotifications;
                 break;
             default:
@@ -271,7 +271,7 @@ export class NotificationsService {
 
     // Method to create notifications for multiple users
     async createNotificationForUsers(
-        type: NotificationType,
+        type: ENotificationType,
         title: string,
         message: string,
         userIds: number[],

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import { User } from '../entities/user.entity';
-import { UserRole, UserLevels } from '../enums/user.enum';
+import { User } from 'shared/entities';
+import { EUserRole, EUserLevels } from 'shared/enums';
 
 export interface OnboardingEmailContext {
   user: User;
@@ -32,14 +32,14 @@ export class UserEmailService {
       if (!createdBy) {
         // Self-registration (admin signup)
         await this.sendAdminWelcomeEmail(context);
-      } else if (createdBy.level === UserLevels[UserRole.TRAINER] || createdBy.level === UserLevels[UserRole.SUPER_ADMIN]) {
+      } else if (createdBy.level === EUserLevels[EUserRole.TRAINER] || createdBy.level === EUserLevels[EUserRole.SUPER_ADMIN]) {
         // Admin creating user
-        if (user.level === UserLevels[UserRole.TRAINER]) {
+        if (user.level === EUserLevels[EUserRole.TRAINER]) {
           await this.sendTrainerWelcomeEmail(context);
         } else {
           await this.sendClientWelcomeEmail(context);
         }
-      } else if (createdBy.level === UserLevels[UserRole.TRAINER]) {
+      } else if (createdBy.level === EUserLevels[EUserRole.TRAINER]) {
         // Trainer creating client
         await this.sendClientWelcomeByTrainerEmail(context);
       }

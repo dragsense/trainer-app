@@ -20,7 +20,7 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 import { useLogout } from "@/hooks/use-logout";
 
 // Assets
-import NotificationBell from "../shared-ui/notification-bell";
+import NotificationBell from "@/components/shared-ui/notification-bell";
 
 // Config
 import { settingsConfig } from "@/config/nav.config";

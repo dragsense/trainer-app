@@ -19,7 +19,7 @@ import { DatePicker } from "@/components/shared-ui/date-picker";
 import { DateRange } from "react-day-picker";
 
 // Types
-import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 
 interface IBillingFiltersProps {
   filters: Record<string, any>;
@@ -75,10 +75,10 @@ export function BillingFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value={BillingStatus.PENDING}>Pending</SelectItem>
-          <SelectItem value={BillingStatus.PAID}>Paid</SelectItem>
-          <SelectItem value={BillingStatus.OVERDUE}>Overdue</SelectItem>
-          <SelectItem value={BillingStatus.FAILED}>Failed</SelectItem>
+          <SelectItem value={EBillingStatus.PENDING}>Pending</SelectItem>
+          <SelectItem value={EBillingStatus.PAID}>Paid</SelectItem>
+          <SelectItem value={EBillingStatus.OVERDUE}>Overdue</SelectItem>
+          <SelectItem value={EBillingStatus.FAILED}>Failed</SelectItem>
         </SelectContent>
       </Select>
 

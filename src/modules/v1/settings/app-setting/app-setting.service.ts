@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AppSetting } from './entities/app-setting.entity';
-import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
-import { CreateAppSettingDto } from './dto/create-app-setting.dto';
-import { MessageResponse } from '@/interfaces/general.interface';
+import { AppSetting } from 'shared/entities';
+import { UpdateAppSettingDto } from 'shared/dtos';
+import { CreateAppSettingDto } from 'shared/dtos';
+import { IMessageResponse } from 'shared/interfaces';
 
 @Injectable()
 export class AppSettingService {
@@ -36,7 +36,7 @@ export class AppSettingService {
     return await this.appSettingRepo.save(defaultSettings);
   }
 
-  async updateAppSetting(userId: number, settingDto: UpdateAppSettingDto): Promise<MessageResponse> {
+  async updateAppSetting(userId: number, settingDto: UpdateAppSettingDto): Promise<IMessageResponse> {
     let existingSettings = await this.appSettingRepo.findOne({ 
       where: { user: { id: userId } } 
     });

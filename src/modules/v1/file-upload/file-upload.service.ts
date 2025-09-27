@@ -3,10 +3,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
-import { FileUpload } from './entities/file-upload.entity';
-import { validateImageFile } from '@/lib/utils/validate-image-file.util';
-import { FileListDto } from './dto/file-list.dto';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
+import { FileUpload } from 'shared/entities';
+import { validateImageFile } from '@/validations/validate-image-file.util';
+import { FileListDto } from 'shared/dtos';
+import { IPaginatedResponse } from 'shared/interfaces';
 
 @Injectable()
 export class FileUploadService {
@@ -96,7 +96,7 @@ export class FileUploadService {
     await this.fileRepo.remove(file);
   }
 
-  async findAll(queryDto: FileListDto): Promise<PaginationResponse<FileUpload>> {
+  async findAll(queryDto: FileListDto): Promise<IPaginatedResponse<FileUpload>> {
     const {
       page = 1,
       limit = 10,

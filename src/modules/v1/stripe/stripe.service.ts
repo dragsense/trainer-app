@@ -1,16 +1,16 @@
 
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { Billing } from '../billings/entities/billing.entity';
-import { BillingStatus, BillingType, BillingCurrency } from '../billings/enums/billing.enum';
+import { Billing } from 'shared/entities';
+import { EBillingStatus, EBillingType, EBillingCurrency } from 'shared/enums';
 import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
 import Stripe from 'stripe';
-import { User } from '../users/entities/user.entity';
-import { CreateBillingDto } from '../billings/dto/create-billing.dto';
-import { UserRole, UserLevels } from '../users/enums/user.enum';
-import { StripeConnectAccount } from '../settings/stripe-connect/entities/stripe-connect-account.entity';
-import { PaymentMethodType } from '../settings/payment-methods/enums/payment-method-type.enum';
-import { PaymentMethod } from '../settings/payment-methods/entities/payment-method.entity';
+import { User } from 'shared/entities';
+import { CreateBillingDto } from 'shared/dtos';
+import { EUserRole, EUserLevels } from 'shared/enums';
+import { StripeConnectAccount } from 'shared/entities';
+import { EPaymentMethodType } from 'shared/enums';
+import { PaymentMethod } from 'shared/entities';
 
 @Injectable()
 export class StripeService {
@@ -185,21 +185,21 @@ export class StripeService {
       }
 
       // Update billing status based on invoice status
-      let newStatus: BillingStatus;
+      let newStatus: EBillingStatus;
       switch (invoice.status) {
         case 'paid':
-          newStatus = BillingStatus.PAID;
+          newStatus = EBillingStatus.PAID;
           break;
         case 'open':
-          newStatus = BillingStatus.PENDING;
+          newStatus = EBillingStatus.PENDING;
           break;
         case 'void':
         case 'uncollectible':
-          newStatus = BillingStatus.FAILED;
+          newStatus = EBillingStatus.FAILED;
           break;
         case 'draft':
         default:
-          newStatus = BillingStatus.PENDING;
+          newStatus = EBillingStatus.PENDING;
           break;
       }
 
@@ -290,12 +290,12 @@ export class StripeService {
 
       if (billing) {
         await this.dataSource.manager.update(Billing, billing.id, {
-          status: BillingStatus.PAID
+          status: EBillingStatus.PAID
         });
         this.logger.log(`Updated billing record ${billing.id} status to PAID for invoice: ${invoice.id}`);
 
         let trainer;
-        if (billing.creator?.level === UserLevels[UserRole.TRAINER]) {
+        if (billing.creator?.level === EUserLevels[EUserRole.TRAINER]) {
           trainer = billing.creator
         } else
           if (billing.session?.trainer) {
@@ -324,7 +324,7 @@ export class StripeService {
             trainer,
             invoice.amount_paid,
             billing,
-            transferResult.success ? BillingStatus.PAID : BillingStatus.PENDING,
+            transferResult.success ? EBillingStatus.PAID : EBillingStatus.PENDING,
             `Transfer failed - ${billing.id}. Error: ${transferResult.error}`
           );
         }
@@ -371,7 +371,7 @@ export class StripeService {
 
       if (billing) {
         await this.dataSource.manager.update(Billing, billing.id, {
-          status: BillingStatus.FAILED
+          status: EBillingStatus.FAILED
         });
         this.logger.log(`Updated billing record ${billing.id} status to FAILED for invoice: ${invoice.id}`);
 
@@ -390,13 +390,13 @@ export class StripeService {
 
   private async findAdminUser(): Promise<User> {
     const admin = await this.dataSource.manager.findOne(User, {
-      where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+      where: { level: EUserLevels[EUserRole.SUPER_ADMIN] }
     });
 
     if (!admin) {
       // Fallback to super admin if no admin found
       const superAdmin = await this.dataSource.manager.findOne(User, {
-        where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+        where: { level: EUserLevels[EUserRole.SUPER_ADMIN] }
       });
 
       if (!superAdmin) {
@@ -433,7 +433,7 @@ export class StripeService {
     trainer: User,
     amount: number,
     originalBilling: Billing,
-    status: BillingStatus,
+    status: EBillingStatus,
     description: string
   ): Promise<void> {
     try {
@@ -447,10 +447,10 @@ export class StripeService {
 
 
       const createDto = {
-        type: BillingType.INDIVIDUAL,
+        type: EBillingType.INDIVIDUAL,
         user: admin, // Invoice against admin
         status: status,
-        currency: originalBilling.currency || BillingCurrency.USD,
+        currency: originalBilling.currency || EBillingCurrency.USD,
         paymentMethod: originalBilling.paymentMethod,
         lineItems: [
           {

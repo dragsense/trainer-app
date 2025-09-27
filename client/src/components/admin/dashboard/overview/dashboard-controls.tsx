@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/shared-ui/date-picker"
 import type { DateRange } from "react-day-picker"
-import { ICombinedDashboardData } from "@/@types/dashboard.type"
-import { AnalyticsPeriod } from "#/modules/v1/dashboard/enums/dashboard-analytics.enum";
+import { ICombinedDashboardData } from "@shared/interfaces/dashboard.interface"
+import { EAnalyticsPeriod } from "@shared/enums/dashboard-analytics.enum";
 
 import { IExtraProps } from "./dashboard-view"
 import { TSingleHandlerStore } from "@/stores"
@@ -58,7 +58,7 @@ export const DashboardControls: React.FC<IDashboardControlsProps> = ({
 
         <Select
           value={period}
-          onValueChange={(value: AnalyticsPeriod) =>
+          onValueChange={(value: EAnalyticsPeriod) =>
             setExtra('period', value)
           }
         >

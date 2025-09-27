@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Reminder } from '../entities/reminder.entity';
+import { Reminder } from 'shared/entities';
 import { BillingsService } from '../../billings/billings.service';
 import { use } from 'passport';
 import { Repository } from 'typeorm';
-import { Billing } from '../../billings/entities/billing.entity';
+import { Billing } from 'shared/entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BillingStatus } from '../../billings/enums/billing.enum';
+import { EBillingStatus } from 'shared/enums';
 
 @Injectable()
 export class ReminderBillingService {
@@ -47,7 +47,7 @@ export class ReminderBillingService {
                 id: undefined,
                 dueDate,
                 localInvoiceNumber,
-                status: BillingStatus.PENDING
+                status: EBillingStatus.PENDING
             });
 
             const newBilling = await this.billingRepository.save(cloned);

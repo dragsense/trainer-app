@@ -1,18 +1,16 @@
 
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
-import { TTrainerClientData } from "@/@types/trainer.type";
+import { TTrainerClientData } from "@shared/types/trainer-clients.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IUser } from "@/@types/user.type";
 
 // Layouts
 import { TrainerClientAssignFormModal } from "@/components/admin";
@@ -22,19 +20,15 @@ import { assignTrainerToClient } from "@/services/trainer-client.api";
 
 // Store
 import { TSingleHandlerStore } from "@/stores";
-import { ITrainerClient } from "@/@types/trainer-client.type";
+import { IUser } from "@shared/interfaces/user.interface";
 import { ITrainerClientAssignFormExtraProps } from "@/components/admin/trainer-clients/form/trainer-client-assign-form-modal";
+import { useQueryClient } from "@tanstack/react-query";
+import { CreateTrainerClientDto } from "@shared/dtos";
+import { TUserExtraProps } from "../user";
 
-// Schema
-export const AssignTrainerSchema = z.object({
-    trainerId: z.number().min(1, "Trainer is required"),
-    clientId: z.number().min(1, "Client is required"),
-});
 
-interface ITrainerClientAssignFormProps extends THandlerComponentProps<TSingleHandlerStore<ITrainerClient, any>> {
+interface ITrainerClientAssignFormProps extends THandlerComponentProps<TSingleHandlerStore<IUser, TUserExtraProps>> {
 }
-
-
 
 export default function TrainerClientAssignForm({
     storeKey,
@@ -42,15 +36,16 @@ export default function TrainerClientAssignForm({
 }: ITrainerClientAssignFormProps) {
 
 
+    const queryClient = useQueryClient();
+
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { id, action, reset } = store(useShallow(state => ({
+    const { id, action, setAction } = store(useShallow(state => ({
         id: state.id,
         action: state.action,
-        reset: state.reset,
-
+        setAction: state.setAction
     })));
 
 
@@ -68,14 +63,18 @@ export default function TrainerClientAssignForm({
             storeKey="assignTrainer"
             FormComponent={TrainerClientAssignFormModal}
             mutationFn={assignTrainerToClient}
-            validationSchema={AssignTrainerSchema}
+            dto={CreateTrainerClientDto}
             initialValues={INITIAL_VALUES}
             validationMode={EVALIDATION_MODES.OnChange}
+            onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                setAction('none');
+            }}
             formProps={{
                 trainerId,
                 clientId,
-                open: !!action,
-                onClose: reset
+                open: action === 'assignClient' || action === 'assignTrainer' || action === 'createOrUpdate',
+                onClose: () => setAction('none')
             }}
 
         />

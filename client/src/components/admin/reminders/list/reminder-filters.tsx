@@ -19,7 +19,7 @@ import { DatePicker } from "@/components/shared-ui/date-picker";
 import { DateRange } from "react-day-picker";
 
 // Types
-import { ReminderType, ReminderStatus, ReminderFrequency } from "#/modules/v1/reminders/enums/reminder.enum";
+import { EReminderType, EReminderStatus, EReminderFrequency } from "@shared/enums/reminder.enum";
 
 interface IReminderFiltersProps {
   filters: Record<string, any>;
@@ -75,9 +75,9 @@ export function ReminderFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value={ReminderType.SESSION}>Session</SelectItem>
-          <SelectItem value={ReminderType.PAYMENT}>Payment</SelectItem>
-          <SelectItem value={ReminderType.GENERAL}>General</SelectItem>
+          <SelectItem value={EReminderType.SESSION}>Session</SelectItem>
+          <SelectItem value={EReminderType.PAYMENT}>Payment</SelectItem>
+          <SelectItem value={EReminderType.GENERAL}>General</SelectItem>
         </SelectContent>
       </Select>
 
@@ -91,10 +91,10 @@ export function ReminderFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value={ReminderStatus.SCHEDULED}>Scheduled</SelectItem>
-          <SelectItem value={ReminderStatus.SENT}>Sent</SelectItem>
-          <SelectItem value={ReminderStatus.FAILED}>Failed</SelectItem>
-          <SelectItem value={ReminderStatus.CANCELLED}>Cancelled</SelectItem>
+          <SelectItem value={EReminderStatus.SCHEDULED}>Scheduled</SelectItem>
+          <SelectItem value={EReminderStatus.SENT}>Sent</SelectItem>
+          <SelectItem value={EReminderStatus.FAILED}>Failed</SelectItem>
+          <SelectItem value={EReminderStatus.CANCELLED}>Cancelled</SelectItem>
         </SelectContent>
       </Select>
 
@@ -108,10 +108,10 @@ export function ReminderFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Frequencies</SelectItem>
-          <SelectItem value={ReminderFrequency.ONCE}>Once</SelectItem>
-          <SelectItem value={ReminderFrequency.DAILY}>Daily</SelectItem>
-          <SelectItem value={ReminderFrequency.WEEKLY}>Weekly</SelectItem>
-          <SelectItem value={ReminderFrequency.MONTHLY}>Monthly</SelectItem>
+          <SelectItem value={EReminderFrequency.ONCE}>Once</SelectItem>
+          <SelectItem value={EReminderFrequency.DAILY}>Daily</SelectItem>
+          <SelectItem value={EReminderFrequency.WEEKLY}>Weekly</SelectItem>
+          <SelectItem value={EReminderFrequency.MONTHLY}>Monthly</SelectItem>
         </SelectContent>
       </Select>
 

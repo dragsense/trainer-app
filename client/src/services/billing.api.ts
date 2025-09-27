@@ -2,10 +2,10 @@
 import { apiFileRequest, apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
-import { IBilling, TBillingData, TUpdateBillingStatusData } from "@/@types/billing.type";
-import { FileUpload } from "#/modules/v1/file-upload/entities/file-upload.entity";
+import { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import { TBillingData, TUpdateBillingStatusData } from "@shared/types/billing.type";
+import { IBilling } from "@shared/interfaces/billing.interface";
 
 // Constants
 const BILLINGS_API_PATH = "/billings";
@@ -55,7 +55,7 @@ export const updateBillingStatus = (id: number) => (data: TUpdateBillingStatusDa
 }
 
 export const fetchBillings = (
-    params: IListParams
+    params: IListQueryParams
 ) => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append("page", params.page.toString());

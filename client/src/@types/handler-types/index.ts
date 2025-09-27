@@ -1,4 +1,4 @@
-import { IMessageResponse } from "../api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 export type TItemActionProps = {
   itemName: string;

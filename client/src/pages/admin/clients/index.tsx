@@ -2,7 +2,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 // Types
-import { IUser } from "@/@types/user.type";
+import { IUser } from "@shared/interfaces/user.interface";
 
 // Handlers
 import { ListHandler, SingleHandler } from "@/handlers";
@@ -16,7 +16,7 @@ import { UserForm, TUserExtraProps, TrainerClientAssignForm } from "@/page-compo
 import { deleteUser, fetchUser, fetchUsers } from "@/services/user.api";
 
 // Types
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 
 
 // Layouts
@@ -49,12 +49,12 @@ export default function ClientsPage() {
           },
         ]}
         singleProps={{
-          level: UserLevels[UserRole.USER],
+          level: EUserLevels[EUserRole.USER],
         }}
       />
 
       <ListHandler<IUser>
-        queryFn={(params) => fetchUsers(params, UserLevels[UserRole.USER])}
+        queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.USER])}
         ListComponent={UserList}
         storeKey={STORE_KEY}
       />

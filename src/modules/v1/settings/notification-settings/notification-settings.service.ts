@@ -4,10 +4,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotificationSetting } from './entities/notification-setting.entity';
-import { UpdateNotificationSettingDto } from './dto/update-notification-setting.dto';
-import { CreateNotificationSettingDto } from './dto/create-notification-setting.dto';
-import { MessageResponse } from '@/interfaces/general.interface';
+import { NotificationSetting } from 'shared/entities';
+import { UpdateNotificationSettingDto } from 'shared/dtos';
+import { CreateNotificationSettingDto } from 'shared/dtos';
+import { IMessageResponse } from 'shared/interfaces';
 
 @Injectable()
 export class NotificationSettingsService {
@@ -46,7 +46,7 @@ export class NotificationSettingsService {
     async updateNotificationSettings(
         userId: number,
         settingDto: UpdateNotificationSettingDto
-    ): Promise<MessageResponse> {
+    ): Promise<IMessageResponse> {
         let existingSettings = await this.notificationSettingRepo.findOne({
             where: { user: { id: userId } }
         });

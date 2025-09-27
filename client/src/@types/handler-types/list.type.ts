@@ -1,15 +1,7 @@
 // Types
 import type { StoreApi } from "zustand";
 import type { TItemActionProps } from ".";
-
-export interface IListPaginationState {
-  page: number;
-  limit: number;
-  total: number;
-  lastPage: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
+import { IListPaginationState } from "@shared/interfaces/api/response.interface";
 
 export interface IListQueryState {
   filters: Record<string, any>;

@@ -2,8 +2,8 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IBillingAnalytics, ICombinedDashboardData } from "@/@types/dashboard.type";
-import { TQueryParams } from "@/@types/api/param.type";
+import { IDashboardStats, ISessionsAnalytics, IRemindersAnalytics, IBillingAnalytics, ICombinedDashboardData } from "@shared/interfaces/dashboard.interface";
+import { TQueryParams } from "@shared/types/api/param.type";
 import { generateQueryParams } from "@/utils";
 
 // Constants

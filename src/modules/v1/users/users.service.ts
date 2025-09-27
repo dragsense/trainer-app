@@ -9,21 +9,17 @@ import { DataSource, EntityManager, Repository, FindOptionsWhere, DeepPartial, I
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
-import { User } from './entities/user.entity';
-import { Profile } from './profiles/entities/profile.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRole, UserLevels } from './enums/user.enum';
-import { MessageResponse } from '@/interfaces/general.interface';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { ListQueryDto } from '@/shared-dto/list-query.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { User, Profile } from 'shared/entities';
+import { CreateUserDto } from 'shared/dtos';
+import { UpdateUserDto } from 'shared/dtos';
+import { EUserRole, EUserLevels } from 'shared/enums';
+
+import { ResetPasswordDto } from 'shared/dtos';
 import { MailerService } from '@nestjs-modules/mailer';
-import { AppSetting } from '../settings/app-setting/entities/app-setting.entity';
-import { NotificationSetting } from '../settings/notification-settings/entities/notification-setting.entity';
 import { UserEmailService } from './services/user-email.service';
-import { UserListDto } from './dto/user-list.dto';
+import { UserListDto } from 'shared/dtos';
 import { TrainerClientsService } from '../trainer-clients/trainer-clients.service';
+import { IMessageResponse, IPaginatedResponse, TUserResponse } from 'shared/interfaces';
 
 @Injectable()
 export class UsersService {
@@ -33,10 +29,6 @@ export class UsersService {
     private readonly mailerService: MailerService,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
-    @InjectRepository(AppSetting)
-    private readonly appSettingRepo: Repository<AppSetting>,
-    @InjectRepository(NotificationSetting)
-    private readonly notificationSettingRepo: Repository<NotificationSetting>,
     private readonly userEmailService: UserEmailService,
     private readonly trianerClientService: TrainerClientsService
   ) { }
@@ -75,7 +67,7 @@ export class UsersService {
   async findAll(
     queryDto: UserListDto,
     currentUser: User
-  ): Promise<PaginationResponse<User>> {
+  ): Promise<IPaginatedResponse<User>> {
     const {
       page = 1,
       limit = 10,
@@ -99,11 +91,11 @@ export class UsersService {
 
     // Role-based filtering
     const userLevel = currentUser.level;
-    if (userLevel === UserLevels[UserRole.TRAINER]) {
+    if (userLevel === EUserLevels[EUserRole.TRAINER]) {
       query.where('owner.id = :userId', { userId: currentUser.id });
-    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
+    } else if (userLevel === EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.where('user.level != :superAdminLevel', {
-        superAdminLevel: UserLevels[UserRole.SUPER_ADMIN],
+        superAdminLevel: EUserLevels[EUserRole.SUPER_ADMIN],
       });
     }
     else {
@@ -212,7 +204,7 @@ export class UsersService {
       .join('');
   }
 
-  async create(createUserDto: CreateUserDto, currentUser?: User): Promise<MessageResponse> {
+  async create(createUserDto: CreateUserDto, currentUser?: User): Promise<TUserResponse> {
 
     const {
       profile: profileDtoData,
@@ -225,7 +217,7 @@ export class UsersService {
     });
 
 
-    if (userDtoData.level !== UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+    if (userDtoData.level !== EUserLevels[EUserRole.USER] && currentUser?.level === EUserLevels[EUserRole.TRAINER]) {
       throw new ForbiddenException('Trainers can only create clients');
     }
 
@@ -273,25 +265,7 @@ export class UsersService {
 
       user.profile = profile;
 
-      // Create default app settings
-      const appSettingData: DeepPartial<AppSetting> = {
-        allowNotification: true,
-        user: { id: user.id } as DeepPartial<User>,
-      };
-      const appSetting = manager.create(AppSetting, appSettingData);
-      await manager.save(appSetting);
-
-      // Create default notification settings
-      const notificationSettingData: DeepPartial<NotificationSetting> = {
-        emailNotifications: true,
-        newUserNotifications: true,
-        userUpdateNotifications: true,
-        billingNotifications: true,
-        sessionNotifications: true,
-        user: { id: user.id } as DeepPartial<User>,
-      };
-      const notificationSetting = manager.create(NotificationSetting, notificationSettingData);
-      await manager.save(notificationSetting);
+      // Note: AppSetting and NotificationSetting are automatically created by UserSubscriber
 
       if (tempPassword) {
         this.userEmailService.sendOnboardingEmail({
@@ -305,7 +279,7 @@ export class UsersService {
       }
 
 
-      if (user.level === UserLevels[UserRole.USER] && currentUser?.level === UserLevels[UserRole.TRAINER]) {
+      if (user.level === EUserLevels[EUserRole.USER] && currentUser?.level === EUserLevels[EUserRole.TRAINER]) {
         this.trianerClientService.assignTrainerToClient({
           trainerId: currentUser.id,
           clientId: user.id,
@@ -354,11 +328,11 @@ export class UsersService {
     });
   }
 
-  async remove(id: number, currentUser: User): Promise<MessageResponse> {
+  async remove(id: number, currentUser: User): Promise<IMessageResponse> {
     const user = await this.findOne({ id }, { relations: ['owner'] });
 
     // Only admins can delete users, and they cannot delete super admins
-    if (user.level === UserLevels[UserRole.SUPER_ADMIN]
+    if (user.level === EUserLevels[EUserRole.SUPER_ADMIN]
     ) {
       throw new ForbiddenException('Insufficient permissions to delete this user');
     }
@@ -374,8 +348,8 @@ export class UsersService {
     id: number,
     resetPasswordDto: ResetPasswordDto,
     force: boolean = false
-  ): Promise<MessageResponse> {
-    const { currentPassword, newPassword } = resetPasswordDto;
+  ): Promise<IMessageResponse> {
+    const { currentPassword, password: newPassword } = resetPasswordDto;
 
     const user = await this.findOne({ id }, { select: ['id', 'password'] });
 
@@ -411,7 +385,7 @@ export class UsersService {
 
   async createSuperAdminIfNotExists(): Promise<void> {
     const existingSuperAdmin = await this.userRepo.findOne({
-      where: { level: UserLevels[UserRole.SUPER_ADMIN] }
+      where: { level: EUserLevels[EUserRole.SUPER_ADMIN] }
     });
 
     if (existingSuperAdmin) {
@@ -422,7 +396,7 @@ export class UsersService {
     await this.create({
       email: superAdmin.email,
       password: superAdmin.password,
-      level: UserLevels[UserRole.SUPER_ADMIN],
+      level: EUserLevels[EUserRole.SUPER_ADMIN],
       profile: {
         firstName: superAdmin.firstName,
         lastName: superAdmin.lastName

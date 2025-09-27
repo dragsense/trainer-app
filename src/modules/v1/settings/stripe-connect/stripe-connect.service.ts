@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import Stripe from 'stripe';
-import { User } from '@/modules/v1/users/entities/user.entity';
-import { StripeConnectAccount } from './entities/stripe-connect-account.entity';
-import { CreateStripeConnectDto } from './dto/create-stripe-connect.dto';
-import { StripeConnectStatusDto, StripeConnectCreateResponseDto } from './dto/stripe-connect-responses.dto';
+import { User } from 'shared/entities';
+import { StripeConnectAccount } from 'shared/entities';
+import { CreateStripeConnectDto } from 'shared/dtos';
+import { StripeConnectStatusDto, StripeConnectCreateResponseDto } from 'shared/dtos';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
 

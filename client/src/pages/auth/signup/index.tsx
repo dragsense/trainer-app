@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Types
-import { TSignupData } from "@/@types/auth.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TSignupData } from "@shared/types/auth.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TDefaultValue } from "@/@types/form/field.type";
 
@@ -17,27 +17,11 @@ import { SignupForm } from "@/components/auth";
 
 // Services
 import { signup } from "@/services/auth.api";
+import { SignupDto } from "@shared/dtos/auth-dtos/signup.dto";
 
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
 
-// Schema
-const signupSchema = z.object({
-  firstName: z.string().min(2, {
-    message: "First name must be at least 2 characters",
-  }),
-  lastName: z.string().min(2, {
-    message: "Last name must be at least 2 characters",
-  }),
-  email: z.string().email({
-    message: "Invalid email address",
-  }),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters")
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"]
-});
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -47,7 +31,7 @@ export default function SignupPage() {
     lastName: { value: "" },
     email: { value: "" },
     password: { value: "" },
-    confirmPassword: { notIncluded: true, value: "" }
+    confirmPassword: {  value: "" }
   };
 
   return (
@@ -56,7 +40,7 @@ export default function SignupPage() {
       FormComponent={SignupForm}
       initialValues={SIGNUP_INITIAL_VALUES}
       validationMode={EVALIDATION_MODES.OnChange}
-      validationSchema={signupSchema}
+      dto={SignupDto}
       onSuccess={() => {
         toast.success('Signup successful')
         navigate(PUBLIC_ROUTES.LOGIN)

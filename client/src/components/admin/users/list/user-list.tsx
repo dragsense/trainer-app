@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // External libraries
-import { Grid, List, Plus, Table, Table2 } from "lucide-react";
+import { List, Plus, Table } from "lucide-react";
 
 // Types
-import { IUser } from "@/@types/user.type";
+import { IUser } from "@shared/interfaces/user.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";

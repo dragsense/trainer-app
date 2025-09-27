@@ -10,6 +10,7 @@ export type TFieldType =
   | "tel"
   | "custom"
   | "nested"
+  | "array"
   | "number"
   | "date"
   | "time"
@@ -35,7 +36,7 @@ type BaseField<T> = {
   id: keyof T & string;
   name: keyof T & string;
   label: string;
-  valueType?: "string" | "number" | "boolean" | "date" | "object";
+  valueType?: "string" | "number" | "boolean" | "date" | "object" | "array";
   required: boolean | ((ctx: { values: Record<string, any> }) => boolean);
   placeholder?: string;
   defaultValue?: any;
@@ -52,10 +53,12 @@ type BaseField<T> = {
   bottomAdornment?: ReactNode;
   className?: string;
   onChange?: (value: any) => void;
+
 };
 
 type NestedSubFields<T> =
   { [K in keyof T as T[K] extends object ? K : never]: TFieldConfig<T[K]> }[keyof { [K in keyof T as T[K] extends object ? K : never]: any }];
+
 
 // Nested field must have subFields
 type NestedField<T> = BaseField<T> & {
@@ -71,8 +74,21 @@ type CustomField<T> = BaseField<T> & {
   subFields?: never;
 };
 
+// Array field must have itemFields for array items
+// Extract array item type
+type ArrayItemType<T> = T extends Array<infer U> ? U : never;
+
+type ArrayField<T> = BaseField<T> & {
+  type: "array";
+  itemFields: TFieldConfig<ArrayItemType<T>>[];
+  minItems?: number;
+  maxItems?: number;
+  Component?: never;
+  subFields?: never;
+};
+
 // Primitive field cannot have subFields or Component
-type PrimitiveField<T, Type extends Exclude<TFieldType, "nested" | "custom"> = Exclude<TFieldType, "nested" | "custom">> =
+type PrimitiveField<T, Type extends Exclude<TFieldType, "nested" | "custom" | "array"> = Exclude<TFieldType, "nested" | "custom" | "array">> =
   BaseField<T> & {
     type: Type;
     subFields?: never;
@@ -80,17 +96,26 @@ type PrimitiveField<T, Type extends Exclude<TFieldType, "nested" | "custom"> = E
   };
 
 // TFieldConfig union type
-export type TFieldConfig<T = any> = NestedField<T> | CustomField<T> | PrimitiveField<T>;
+export type TFieldConfig<T = any> = NestedField<T> | CustomField<T> | ArrayField<T> | PrimitiveField<T>;
 
 export type TDefaultValue<T> = {
   [K in keyof T]: T[K] extends object
+  ? T[K] extends Date | Function
   ? {
-    isNested: boolean;
-    notIncluded?: boolean;
-    value: TDefaultValue<T[K]>;
+    value: T[K];  // Treat Date and Function as primitives
+  }
+  : T[K] extends Array<infer U>
+  ? {
+    value: {
+      isNested?: boolean;
+      value: TDefaultValue<U>;  // Arrays get optional isNested and recursive for their elements
+    }[]
   }
   : {
-    notIncluded?: boolean;
-    value: T[K];
+    isNested: boolean;
+    value: TDefaultValue<T[K]>;  // Other objects get recursive nesting
+  }
+  : {
+    value: T[K];  // Primitives
   };
 };

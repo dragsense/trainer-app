@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams, TQueryParams } from "@/@types/api/param.type";
+import { IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import { TQueryParams } from "@shared/types/api/param.type";
 
 type Mode = "paged" | "infinite";
 
@@ -24,7 +25,7 @@ type Options<T> = InfiniteOptions<T> | PagedOptions<T>;
 /** ---- Return Types (discriminated by `mode`) ---- */
 type CommonReturn<T> = {
   data: IPaginatedResponse<T> | undefined;
-  params: IListParams;
+  params: IListQueryParams;
   pagination: {
     page: number;
     limit: number;
@@ -55,14 +56,14 @@ type InfiniteReturn<T> = CommonReturn<T> & {
 
 export function useApiPaginatedQuery<T = any>(
   queryKey: string | any[],
-  queryFn: (params: IListParams) => Promise<IPaginatedResponse<T>>,
-  initialParams: IListParams = { page: 1, limit: 10 },
+  queryFn: (params: IListQueryParams) => Promise<IPaginatedResponse<T>>,
+  initialParams: IListQueryParams = { page: 1, limit: 10 },
   options?: Options<T>
 ): Options<T> extends { mode: "infinite" } ? InfiniteReturn<T> : PagedReturn<T> {
   const mode: Mode = (options?.mode ?? "paged") as Mode;
   const reverseOrder = (options as InfiniteOptions<T> | undefined)?.reverseOrder ?? false;
 
-  const [params, setParams] = useState<IListParams>(initialParams);
+  const [params, setParams] = useState<IListQueryParams>(initialParams);
   const [accumulated, setAccumulated] = useState<T[]>([]);
   const [currentPage, setCurrentPage] = useState(initialParams.page ?? 1);
 

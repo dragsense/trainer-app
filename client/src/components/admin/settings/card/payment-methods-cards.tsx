@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Types
-import { IPaymentMethod } from "@/@types/setting.type";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+import { IPaymentMethod } from "@shared/interfaces/settings.interface";
+import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
 
 // Stores
 import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
@@ -21,11 +21,11 @@ interface PaymentMethodsCardsProps {
   storeKey: string;
 }
 
-const getPaymentMethodIcon = (key: PaymentMethodType) => {
+const getPaymentMethodIcon = (key: EPaymentMethodType) => {
   switch (key) {
-    case PaymentMethodType.CASH:
+    case EPaymentMethodType.CASH:
       return <DollarSign className="h-6 w-6 text-green-600" />;
-    case PaymentMethodType.STRIPE:
+    case EPaymentMethodType.STRIPE:
       return <CreditCard className="h-6 w-6 text-blue-600" />;
     default:
       return <DollarSign className="h-6 w-6 text-green-600" />;
@@ -122,7 +122,7 @@ export default function PaymentMethodsCards({
                       </Label>
                       <Switch
                         id={`enabled-${method.id}`}
-                        disabled={method.key === PaymentMethodType.CASH}
+                        disabled={method.key === EPaymentMethodType.CASH}
                         checked={method.isEnabled || false}
                         onCheckedChange={() => handleToggleMethod(method)}
                       />

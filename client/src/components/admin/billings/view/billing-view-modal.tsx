@@ -24,8 +24,8 @@ import {
 } from "lucide-react";
 
 // Types
-import { IBilling } from "@/@types/billing.type";
-import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { IBilling } from "@shared/interfaces/billing.interface";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 
 // Stores
 import { TSingleHandlerStore } from "@/stores";
@@ -89,24 +89,24 @@ function BillingDetailContent({ billing }: IBillingDetailContentProps) {
     </div>
   );
 
-  const getStatusColor = (status: BillingStatus) => {
+  const getStatusColor = (status: EBillingStatus) => {
     switch (status) {
-      case BillingStatus.PAID: return 'default';
-      case BillingStatus.PENDING: return 'secondary';
-      case BillingStatus.FAILED: return 'destructive';
-      case BillingStatus.OVERDUE: return 'outline';
+      case EBillingStatus.PAID: return 'default';
+      case EBillingStatus.PENDING: return 'secondary';
+      case EBillingStatus.FAILED: return 'destructive';
+      case EBillingStatus.OVERDUE: return 'outline';
       default: return 'secondary';
     }
   };
 
-  const getStatusConfig = (status: BillingStatus) => {
-    const statusConfig: Record<BillingStatus, { color: string; label: string }> = {
-      [BillingStatus.PAID]: { color: "bg-green-100 text-green-800", label: "Paid" },
-      [BillingStatus.PENDING]: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
-      [BillingStatus.FAILED]: { color: "bg-red-100 text-red-800", label: "Failed" },
-      [BillingStatus.OVERDUE]: { color: "bg-orange-100 text-orange-800", label: "Overdue" },
+  const getStatusConfig = (status: EBillingStatus) => {
+    const statusConfig: Record<EBillingStatus, { color: string; label: string }> = {
+      [EBillingStatus.PAID]: { color: "bg-green-100 text-green-800", label: "Paid" },
+      [EBillingStatus.PENDING]: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
+      [EBillingStatus.FAILED]: { color: "bg-red-100 text-red-800", label: "Failed" },
+      [EBillingStatus.OVERDUE]: { color: "bg-orange-100 text-orange-800", label: "Overdue" },
     };
-    return statusConfig[status] || statusConfig[BillingStatus.PENDING];
+    return statusConfig[status] || statusConfig[EBillingStatus.PENDING];
   };
 
   const config = getStatusConfig(billing.status);

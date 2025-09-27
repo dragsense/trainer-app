@@ -3,26 +3,22 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
 
-import { MessageResponse } from '@/interfaces/general.interface';
+import { IMessageResponse } from 'shared/interfaces';
 
-import { User } from '../users/entities/user.entity';
+import { User } from 'shared/entities';
 
-import { ResetPasswordWithTokenDto } from './dto/reset-password.dto';
-import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordWithTokenDto, SignupDto } from 'shared/dtos';
 
 import { UsersService } from '../users/users.service';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @Injectable()
 export class AuthService {
@@ -33,11 +29,11 @@ export class AuthService {
     private readonly userService: UsersService,
   ) { }
 
-  async register(
-    registerDto: RegisterDto,
-  ): Promise<MessageResponse> {
+  async signup(
+    signupDto: SignupDto,
+  ): Promise<IMessageResponse> {
 
-    const { firstName, lastName, ...userDtoData } = registerDto;
+    const { firstName, lastName, ...userDtoData } = signupDto;
 
     return await this.userService.create({
       ...userDtoData,
@@ -45,7 +41,7 @@ export class AuthService {
         firstName,
         lastName
       },
-      level: UserLevels[UserRole.TRAINER],
+      level: EUserLevels[EUserRole.TRAINER],
     });
   }
 
@@ -193,7 +189,7 @@ export class AuthService {
   async resetPassword(
     resetDta: ResetPasswordWithTokenDto,
   ): Promise<{ message: string }> {
-    const { token, newPassword } = resetDta;
+    const { token, password, confirmPassword } = resetDta;
 
     let payload;
     try {
@@ -202,7 +198,7 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired token');
     }
 
-    return await this.userService.resetPassword(payload.sub, { newPassword }, true);
+    return await this.userService.resetPassword(payload.sub, { password, confirmPassword }, true);
 
   }
 }

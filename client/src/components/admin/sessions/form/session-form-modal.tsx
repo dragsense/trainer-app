@@ -8,11 +8,12 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore } from "@/stores";
-import { ISession, TSessionData } from "@/@types/session.type";
-import { BillingCurrency } from "#/modules/v1/billings/enums/billing.enum";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
-import { IUser } from "@/@types/user.type";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+import { ISession } from "@shared/interfaces/session.interface";
+import { TSessionData } from "@shared/types/session.type";
+import { EBillingCurrency } from "@shared/enums/billing.enum";
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
+import { IUser } from "@shared/interfaces/user.interface";
+import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
 import { THandlerComponentProps } from "@/@types/handler-types";
 
 // Components
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 export interface ISessionFormModalExtraProps {
   open: boolean;
@@ -28,7 +30,7 @@ export interface ISessionFormModalExtraProps {
   trainerId?: number;
 }
 
-interface ISessionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TSessionData, ISession, ISessionFormModalExtraProps>> {
+interface ISessionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TSessionData, IMessageResponse, ISessionFormModalExtraProps>> {
 }
 
 export default function SessionFormModal({
@@ -83,7 +85,7 @@ export default function SessionFormModal({
     {
       id: "dateTime",
       name: "dateTime",
-      label: "Start Date",
+      label: "Start Date & Time",
       type: "datetime",
       required: true,
     },
@@ -111,7 +113,7 @@ export default function SessionFormModal({
       name: "currency",
       label: "Currency",
       type: "select",
-      options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
+      options: Object.values(EBillingCurrency).map((value) => ({ label: value, value })),
       required: false,
     },
     {
@@ -120,7 +122,7 @@ export default function SessionFormModal({
       label: "Payment Method",
       type: "select",
       required: false,
-      options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
+      options: Object.values(EPaymentMethodType).map((value) => ({ label: value, value })),
     },
     {
       id: "trainer",
@@ -138,7 +140,7 @@ export default function SessionFormModal({
           valueType: "number",
           disabled: !!trainerId,
           Component: (props) => (
-            <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
+            <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
           ),
         }
       ]
@@ -147,20 +149,21 @@ export default function SessionFormModal({
       id: "clients",
       name: "clients",
       label: "Clients",
-      type: "nested",
+      type: "array",
       required: true,
-      subFields: [
+      itemFields: [
         {
-          id: "ids",
-          name: "ids",
+          id: "id",
+          name: "id",
           label: "Select Clients",
           type: "custom",
           required: true,
           valueType: "number",
           Component: (props) => (
-            <UserSelect props={props} multiple={true} level={UserLevels[UserRole.USER]} />
+            <UserSelect props={props} multiple={true} level={EUserLevels[EUserRole.USER]} />
           ),
-        }
+        },
+        
       ]
     },
     {
@@ -270,7 +273,6 @@ export default function SessionFormModal({
         </div>
       </div>
 
-      <FormErrors />
     </ModalForm>
   </>
 }

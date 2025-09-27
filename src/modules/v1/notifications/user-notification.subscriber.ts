@@ -6,9 +6,9 @@ import {
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { User } from '../users/entities/user.entity';
-import { NotificationType } from './enums/notification.enum';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { User } from 'shared/entities';
+import { ENotificationType } from 'shared/enums';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @Injectable()
 @EventSubscriber()
@@ -40,7 +40,7 @@ export class UserNotificationSubscriber implements EntitySubscriberInterface<Use
   private async handleNewUser(user: User, event: InsertEvent<User>) {
     // Get all admin users to notify
     const adminUsers = await event.manager.find(User, {
-      where: { level: UserLevels[UserRole.SUPER_ADMIN] }, // Admin level
+      where: { level: EUserLevels[EUserRole.SUPER_ADMIN] }, // Admin level
       relations: ['profile'],
     });
 
@@ -48,7 +48,7 @@ export class UserNotificationSubscriber implements EntitySubscriberInterface<Use
       const adminUserIds = adminUsers.map(u => u.id);
       
       await UserNotificationSubscriber.notificationsService.createNotificationForUsers(
-        NotificationType.NEW_USER,
+        ENotificationType.NEW_USER,
         'New User Added',
         `A new user has been added to the system`,
         adminUserIds,

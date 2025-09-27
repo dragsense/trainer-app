@@ -31,16 +31,16 @@ import { UsersService } from './users.service';
 import {
   UserPaginatedDto,
   UserWithProfileSafeDto,
-} from './dto/user-responses.dto';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+} from 'shared/dtos';
+import { CreateUserDto } from 'shared/dtos';
+import { UpdateUserDto } from 'shared/dtos';
 
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
-import { UserRole, UserLevels } from '@/modules/v1/users/enums/user.enum';
+import { EUserRole, EUserLevels } from 'shared/enums';
 import { RoleLevelGuard } from '@/guards/level.guard';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UserListDto } from './dto/user-list.dto';
-import { UserAvailabilityDto } from './dto/user-availability.dto';
+import { ResetPasswordDto } from 'shared/dtos';
+import { UserListDto } from 'shared/dtos';
+import { UserAvailabilityDto } from 'shared/dtos';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
@@ -56,7 +56,7 @@ export class UsersController {
     description: 'Returns paginated list of users',
     type: UserPaginatedDto,
   })
-  @MinRoleLevel(UserLevels[UserRole.USER])
+  @MinRoleLevel(EUserLevels[EUserRole.USER])
   @Get()
   findAll(
     @Query() query: UserListDto,
@@ -65,7 +65,7 @@ export class UsersController {
     return this.usersService.findAll(query, user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.USER])
+  @MinRoleLevel(EUserLevels[EUserRole.USER])
   @ApiOperation({ summary: 'Get authenticated user' })
   @ApiResponse({
     status: 200,
@@ -90,7 +90,7 @@ export class UsersController {
     type: UserWithProfileSafeDto,
   })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -108,7 +108,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 409, description: 'Email is already taken' })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Post()
   create(@AuthUser() user: any, @Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto, user);
@@ -122,7 +122,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Put(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -136,7 +136,7 @@ export class UsersController {
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,
@@ -152,7 +152,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Put('me/reset-password')
   resetPassword(
     @AuthUser() user: any,

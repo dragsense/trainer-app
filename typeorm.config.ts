@@ -14,7 +14,10 @@ export default new DataSource({
   username: configService.get('DB_USER', 'postgres'),
   password: configService.get('DB_PASS', 'postgres'),
   database: configService.get('DB_NAME', 'trainer_app'),
-  entities: [join(__dirname, 'src/**/*.entity{.ts,.js}')],
+  entities: [
+    join(__dirname, 'src/**/*.entity{.ts,.js}'),
+    join(__dirname, 'shared/entities/*.entity{.ts,.js}')
+  ],
   migrations: [join(__dirname, 'src/migrations/*{.ts,.js}')],
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });

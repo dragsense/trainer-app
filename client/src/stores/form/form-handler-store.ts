@@ -51,7 +51,8 @@ export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<
           isSubmitting: false,
           error: null,
           response: null,
-          isSuccess: false
+          isSuccess: false,
+          values: initalValues,
         })
       }),
       {

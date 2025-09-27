@@ -10,12 +10,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IUser, TUserData, TUserResponse } from "@/@types/user.type";
-import { UserGender, UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { TUserData } from "@shared/types/user.type";
+import { IUser, TUserResponse } from "@shared/interfaces/user.interface";
 
 
 // Store
@@ -27,54 +26,9 @@ import { CredentialModal } from "@/components/shared-ui/credential-modal";
 
 // Services
 import { createUser, updateUser } from "@/services/user.api";
-import { extractValues, pickKeys } from "@/utils";
-
-
-const ProfileSchema = z.object({
-    firstName: z.string().min(2, {
-        message: "First name must be at least 2 characters",
-    }),
-    lastName: z.string().min(2, {
-        message: "Last name must be at least 2 characters",
-    }),
-    phoneNumber: z.string().min(10, {
-        message: "Phone number must be at least 10 characters",
-    }).optional(),
-    dateOfBirth: z.date().optional(),
-    // ─── Optional Personal Info ─────────
-    gender: z.nativeEnum(UserGender).optional(),
-    address: z.string().optional(),
-    // ─── User-Specific Info ──────────
-    bio: z.string().optional(),
-    specialties: z.array(z.string()).min(1, {
-        message: "At least one specialty is required",
-    }),
-
-    experience: z.number().min(1, {
-        message: "Experience must be a non-negative number",
-    }),
-    rating: z.number().min(0).max(5, {
-        message: "Rating must be between 0 and 5",
-    }),
-
-
-
-});
-
-// Schema
-export const UserSchema = z.object({
-    // ─── Basic Info ─────────────────────
-
-    email: z.string().email({
-        message: "Invalid email address",
-    }),
-
-
-    level: z.number(),
-
-    profile: ProfileSchema,
-
-});
+import { extractValues } from "@/utils";
+import { EUserGender } from "@shared/enums";
+import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
 
 
 export type TUserExtraProps = {
@@ -104,12 +58,13 @@ export default function UserForm({
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, setAction, extra } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
         extra: state.extra,
-        setAction: state.setAction
+        setAction: state.setAction,
+        reset: state.reset
     })));
 
 
@@ -127,21 +82,20 @@ export default function UserForm({
                 lastName: { value: "" },
                 phoneNumber: { value: "" },
                 bio: { value: "" },
-                dateOfBirth: { value: new Date() },
+                dateOfBirth: { value: new Date(new Date().setFullYear(new Date().getFullYear() - 12)) },
                 address: { value: "" },
-                gender: { value: UserGender.MALE },
+                gender: { value: EUserGender.MALE },
                 specialties: { value: [] },
-                experience: { value: 0 },
-                rating: { value: 0 },
+                experience: { value: 0 }
             }
 
         }
     };
 
     const initialValues = useMemo(() => {
+
         return extractValues(response, INITIAL_VALUES);
     }, [response]);
-
 
 
     if (isLoading) {
@@ -153,13 +107,11 @@ export default function UserForm({
     }
 
 
-
     const handleClose = () => {
+        reset();
         setAction('none');
         setCredentialModalContent({ open: false, email: "", password: "" });
     };
-
-
 
 
     return <>
@@ -168,12 +120,12 @@ export default function UserForm({
             FormComponent={UserFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={UserSchema}
+            dto={response?.id ? UpdateUserDto : CreateUserDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
-                if (response && response.user) {
+                if (response && 'user' in response && response.user) {
                     setCredentialModalContent({
                         open: true,
                         email: response.user.email,

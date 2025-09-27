@@ -2,8 +2,8 @@ import { Controller, Get, Patch, Body, UseGuards, Req } from '@nestjs/common';
 import { AppSettingService } from './app-setting.service';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { UpdateAppSettingDto } from './dto/update-app-setting.dto';
-import { AppSetting } from './entities/app-setting.entity';
+import { UpdateAppSettingDto } from 'shared/dtos';
+import { AppSetting } from 'shared/entities';
 
 @ApiTags('App Setting')
 @UseGuards(JwtAuthGuard)

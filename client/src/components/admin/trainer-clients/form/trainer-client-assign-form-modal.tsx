@@ -9,16 +9,15 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore } from "@/stores";
-import { TTrainerClientData } from "@/@types/trainer-client.type";
-import { IMessageResponse } from "@/@types/api/response.type";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
-import { IUser } from "@/@types/user.type";
+import { TTrainerClientData } from "@shared/types/trainer-clients.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
+import { IUser } from "@shared/interfaces/user.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { useShallow } from "zustand/react/shallow";
 
@@ -68,7 +67,7 @@ export default function TrainerClientAssignFormModal({
         )
     );
 
-    const fields = useMemo<TFieldConfig[]>(() => [
+    const fields = useMemo<TFieldConfig<TTrainerClientData>[]>(() => [
         {
             id: "trainerId",
             name: "trainerId",
@@ -79,7 +78,7 @@ export default function TrainerClientAssignFormModal({
             disabled: !!trainerId,
             valueType: "number",
             Component: (props) => (
-                <UserSelect props={props} level={UserLevels[UserRole.TRAINER]} />
+                <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
 
             ),
         },
@@ -93,7 +92,7 @@ export default function TrainerClientAssignFormModal({
             disabled: !!clientId,
             valueType: "number",
             Component: (props) => (
-                <UserSelect props={props} level={UserLevels[UserRole.USER]} />
+                <UserSelect props={props} level={EUserLevels[EUserRole.USER]} />
 
             ),
         },
@@ -143,7 +142,6 @@ export default function TrainerClientAssignFormModal({
                 {inputs}
             </div>
 
-            <FormErrors />
         </ModalForm>
     );
 }

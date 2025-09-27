@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserAvailability } from '../entities/user-availability.entity';
-import { User } from '../entities/user.entity';
-import { UpdateUserAvailabilityDto } from '../dto/update-user-availability.dto';
-import { CreateUserAvailabilityDto } from '../dto/create-user-availability.dto';
-import { MessageResponse } from '@/interfaces/general.interface';
+import { UserAvailability, User } from 'shared/entities';
+import { UpdateUserAvailabilityDto } from 'shared/dtos';
+import { CreateUserAvailabilityDto } from 'shared/dtos';
+import { IMessageResponse } from 'shared/interfaces';
 
 @Injectable()
 export class UserAvailabilityService {
@@ -37,7 +36,7 @@ export class UserAvailabilityService {
     userId: number,
     updateDto: UpdateUserAvailabilityDto,
     currentUserId: number,
-  ): Promise<MessageResponse> {
+  ): Promise<IMessageResponse> {
     // Check if user is updating their own availability or is an admin
     if (userId !== currentUserId) {
       const currentUser = await this.userRepository.findOne({

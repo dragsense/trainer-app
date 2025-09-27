@@ -20,9 +20,8 @@ import { SessionsModule } from './modules/v1/sessions/sessions.module';
 import { RemindersModule } from './modules/v1/reminders/reminders.module';
 
 // Entities for dashboard stats
-import { User } from './modules/v1/users/entities/user.entity';
-import { Session } from './modules/v1/sessions/entities/session.entity';
-import { Reminder } from './modules/v1/reminders/entities/reminder.entity';
+import { User, Session } from 'shared/entities';
+import { Reminder } from 'shared/entities';
 import { StripeModule } from './modules/v1/stripe/stripe.module';
 import { BillingsModule } from './modules/v1/billings/billings.module';
 import { NotificationsModule } from './modules/v1/notifications/notifications.module';

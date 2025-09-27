@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
-import { Reminder } from '../entities/reminder.entity';
-import { ReminderType, ReminderStatus, ReminderFrequency, ReminderActions } from '../enums/reminder.enum';
+import { Reminder } from 'shared/entities';
+import { EReminderType, EReminderStatus, EReminderFrequency, EReminderActions } from 'shared/enums';
 import { UsersService } from '@/modules/v1/users/users.service';
 import { ReminderEmailService } from './reminder-email.service';
 import { ReminderBillingService } from './reminder-billing.service';
@@ -24,7 +24,7 @@ export class ReminderSchedulerService {
     const now = new Date();
     const pendingReminders = await this.reminderRepository.find({
       where: {
-        status: ReminderStatus.SCHEDULED,
+        status: EReminderStatus.SCHEDULED,
         scheduledAt: LessThan(now),
       },
       relations: ['creator', 'recipient', 'session', 'billing'],
@@ -40,13 +40,13 @@ export class ReminderSchedulerService {
       // Send via configured delivery methods
       for (const method of reminder.actions) {
         switch (method.toLowerCase()) {
-          case ReminderActions.EMAIL.toLowerCase():
+          case EReminderActions.EMAIL.toLowerCase():
             await this.reminderEmailService.sendReminderEmail(reminder);
             break;
-          case ReminderActions.BILLING.toLowerCase():
+          case EReminderActions.BILLING.toLowerCase():
             await this.remiderBillingService.createReminderBilling(reminder);
             break;
-          case ReminderActions.NOTIFICATION.toLowerCase():
+          case EReminderActions.NOTIFICATION.toLowerCase():
             await this.reminderNotificationService.sendReminderNotification(reminder);
             break;
         }
@@ -54,7 +54,7 @@ export class ReminderSchedulerService {
  
 
       // Update reminder status
-      reminder.status = ReminderStatus.SENT;
+      reminder.status = EReminderStatus.SENT;
       reminder.sentAt = new Date();
       reminder.sentCount += 1;
       await this.reminderRepository.save(reminder);
@@ -63,7 +63,7 @@ export class ReminderSchedulerService {
       await this.reminderNotificationService.sendReminderStatusNotification(reminder, 'sent');
 
       // Schedule next attempt if needed
-      if (reminder.frequencyConfig?.frequency === ReminderFrequency.ONCE &&
+      if (reminder.frequencyConfig?.frequency === EReminderFrequency.ONCE &&
         reminder.isRecurring &&
         (!reminder.endDate || reminder.endDate > new Date()) &&
         reminder.sentCount < reminder.maxAttempts
@@ -71,12 +71,12 @@ export class ReminderSchedulerService {
         reminder.scheduledAt = new Date(
           reminder.scheduledAt.getTime() + reminder.retryInterval * 60000,
         );
-        reminder.status = ReminderStatus.SCHEDULED;
+        reminder.status = EReminderStatus.SCHEDULED;
         await this.reminderRepository.save(reminder);
       }
 
     } catch (error) {
-      reminder.status = ReminderStatus.FAILED;
+      reminder.status = EReminderStatus.FAILED;
       reminder.lastError = error.message;
       reminder.retryCount += 1;
 
@@ -103,7 +103,7 @@ export class ReminderSchedulerService {
       throw new NotFoundException('Reminder not found');
     }
 
-    reminder.status = ReminderStatus.CANCELLED;
+    reminder.status = EReminderStatus.CANCELLED;
     await this.reminderRepository.save(reminder);
     
     // Notify creator about cancellation
@@ -114,7 +114,7 @@ export class ReminderSchedulerService {
     const now = new Date();
     return this.reminderRepository.find({
       where: {
-        status: ReminderStatus.SCHEDULED,
+        status: EReminderStatus.SCHEDULED,
         scheduledAt: LessThan(now),
       },
       relations: ['creator', 'recipient', 'session'],
@@ -156,8 +156,8 @@ export class ReminderSchedulerService {
     const now = new Date();
     const failedReminders = await this.reminderRepository.find({
       where: [
-        { status: ReminderStatus.FAILED },
-        { status: ReminderStatus.RETRY }
+        { status: EReminderStatus.FAILED },
+        { status: EReminderStatus.RETRY }
       ],
       relations: ['creator', 'recipient', 'session'],
     });
@@ -170,7 +170,7 @@ export class ReminderSchedulerService {
       if (reminder.nextRetryAt && reminder.nextRetryAt <= now) {
         if (reminder.retryCount < reminder.maxAttempts) {
           try {
-            reminder.status = ReminderStatus.RETRY;
+            reminder.status = EReminderStatus.RETRY;
             reminder.retryCount += 1;
             reminder.nextRetryAt = new Date(now.getTime() + reminder.retryInterval * 60000);
             await this.reminderRepository.save(reminder);

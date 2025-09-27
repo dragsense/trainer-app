@@ -18,31 +18,31 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Types
-import { IBilling, IStripeInvoice, IStripeTransaction } from "@/@types/billing.type";
-import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { IBilling, IStripeInvoice, IStripeTransaction } from "@shared/interfaces/billing.interface";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 import { cn } from "@/lib/utils";
 
 
-const getStatusConfig = (status: BillingStatus) => {
-  const statusConfig: Record<BillingStatus, { color: string; label: string }> = {
-    [BillingStatus.PAID]: {
+const getStatusConfig = (status: EBillingStatus) => {
+  const statusConfig: Record<EBillingStatus, { color: string; label: string }> = {
+    [EBillingStatus.PAID]: {
       color: "bg-green-100 text-green-800",
       label: "Paid",
     },
-    [BillingStatus.PENDING]: {
+    [EBillingStatus.PENDING]: {
       color: "bg-yellow-100 text-yellow-800",
       label: "Pending",
     },
-    [BillingStatus.FAILED]: {
+    [EBillingStatus.FAILED]: {
       color: "bg-red-100 text-red-800",
       label: "Failed",
     },
-    [BillingStatus.OVERDUE]: {
+    [EBillingStatus.OVERDUE]: {
       color: "bg-orange-100 text-orange-800",
       label: "Overdue",
     },
   };
-  return statusConfig[status] || statusConfig[BillingStatus.PENDING];
+  return statusConfig[status] || statusConfig[EBillingStatus.PENDING];
 };
 
 export const columns = ({
@@ -168,7 +168,7 @@ export const columns = ({
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue<BillingStatus>("status");
+      const status = row.getValue<EBillingStatus>("status");
       const config = getStatusConfig(status);
       
       return (

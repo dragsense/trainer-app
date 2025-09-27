@@ -1,0 +1,14 @@
+export enum ESessionStatus {
+  SCHEDULED = 'SCHEDULED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  NO_SHOW = 'NO_SHOW',
+}
+
+export enum ESessionType {
+  ONE_ON_ONE = 'ONE_ON_ONE',
+  GROUP = 'GROUP',
+  WORKSHOP = 'WORKSHOP',
+  ASSESSMENT = 'ASSESSMENT',
+}

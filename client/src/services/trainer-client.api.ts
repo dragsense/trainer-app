@@ -2,9 +2,10 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
-import { TTrainerClientData, ITrainerClient } from "@/@types/trainer-client.type";
+import { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import { ITrainerClient } from "@shared/interfaces/trainer-clients.interface";
+import { TTrainerClientData } from "@shared/types/trainer-clients.type";
 
 // Constants
 const TRAINER_CLIENTS_API_PATH = "/trainer-clients";
@@ -12,7 +13,7 @@ const TRAINER_CLIENTS_API_PATH = "/trainer-clients";
 export const assignTrainerToClient = (data: Partial<TTrainerClientData>) =>
   apiRequest<IMessageResponse>(`${TRAINER_CLIENTS_API_PATH}`, "POST", data);
 
-export const fetchTrainerClients = (params?: IListParams, filterBy?: { trainerId?: number; clientId?: number }) => {
+export const fetchTrainerClients = (params?: IListQueryParams, filterBy?: { trainerId?: number; clientId?: number }) => {
   if (!params) {
     return apiRequest<IPaginatedResponse<ITrainerClient>>(`${TRAINER_CLIENTS_API_PATH}`, "GET");
   }

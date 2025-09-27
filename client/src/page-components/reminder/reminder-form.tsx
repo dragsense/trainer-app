@@ -9,15 +9,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { IHandlerComponentProps, THandlerComponentProps } from "@/@types/handler-types";
-import { IReminder, TReminderData } from "@/@types/reminder.type";
-import { ReminderActions, ReminderFrequency, ReminderType } from "#/modules/v1/reminders/enums/reminder.enum";
+import {  THandlerComponentProps } from "@/@types/handler-types";
+import { TReminderData } from "@shared/types/reminder.type";
+import { IReminder } from "@shared/interfaces/reminder.interface";
+import { EReminderActions, EReminderFrequency, EReminderType } from "@shared/enums/reminder.enum";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { ReminderFormModal } from "@/components/admin";
@@ -27,70 +28,9 @@ import { createReminder, updateReminder } from "@/services/reminder.api";
 import { IReminderFormExtraProps } from "@/components/admin/reminders/form/reminder-form-modal";
 import { useMemo } from "react";
 import { extractValues } from "@/utils";
+import { CreateReminderDto } from "@shared/dtos";
 
 
-export const ReminderSchema = z
-    .object({
-        type: z.nativeEnum(ReminderType),
-        message: z.string().min(5, "Message must be at least 5 characters"),
-        title: z.string().min(5, "Message must be at least 5 characters"),
-        scheduledAt: z.date().min(new Date(), "Scheduled date must be in the future"),
-        frequencyConfig: z.object({
-            frequency: z.nativeEnum(ReminderFrequency),
-            timeOfDay: z.string().optional(),
-            intervalMinutes: z
-                .number()
-                .min(5, "Minimum interval is 5 minutes")
-                .optional(),
-            weekdays: z.array(z.number()).optional(),
-            monthDays: z.array(z.number()).optional(),
-        }),
-        actions: z.array(z.nativeEnum(ReminderActions)).min(1, "At least one delivery method is required"),
-        recipientId: z.number().optional(),
-        sessionId: z.number().optional(),
-        billingId: z.number().optional(),
-        priority: z.number().min(1).max(5).optional(),
-        maxAttempts: z.number().min(1).max(10).optional(),
-        retryInterval: z.number().min(1).optional(),
-        isRecurring: z.boolean().default(false),
-        recurringInterval: z.number().min(1).optional(),
-        endDate: z.date().optional(),
-    })
-    .superRefine((data, ctx) => {
-        const { frequencyConfig } = data;
-        const { frequency, timeOfDay, intervalMinutes, weekdays, monthDays } = frequencyConfig;
-
-        if (frequency !== ReminderFrequency.ONCE) {
-            if (!timeOfDay && !intervalMinutes) {
-                ctx.addIssue({
-                    path: ["frequencyConfig", "timeOfDay"],
-                    code: z.ZodIssueCode.custom,
-                    message: "Select either a time of day or an interval for reminders",
-                });
-            }
-        }
-
-        if (frequency === ReminderFrequency.WEEKLY) {
-            if (!weekdays || weekdays.length === 0) {
-                ctx.addIssue({
-                    path: ["frequencyConfig", "weekdays"],
-                    code: z.ZodIssueCode.custom,
-                    message: "Select at least one day of the week",
-                });
-            }
-        }
-
-        if (frequency === ReminderFrequency.MONTHLY) {
-            if (!monthDays || monthDays.length === 0) {
-                ctx.addIssue({
-                    path: ["frequencyConfig", "monthDays"],
-                    code: z.ZodIssueCode.custom,
-                    message: "Select at least one date of the month",
-                });
-            }
-
-        }
-    });
 
 interface IReminderFormProps extends THandlerComponentProps<TSingleHandlerStore<IReminder, any>> {
 }
@@ -104,21 +44,22 @@ export default function ReminderForm({
     const queryReminder = useQueryClient();
 
     const INITIAL_VALUES: TDefaultValue<TReminderData> = {
-        type: { value: ReminderType.CUSTOM },
+        type: { value: EReminderType.CUSTOM },
         message: { value: "" },
         title: { value: "" },
 
         scheduledAt: { value: new Date() },
         frequencyConfig: {
+            isNested: true, 
             value: {
-                frequency: ReminderFrequency.ONCE,
-                intervalMinutes: 30,
-                weekdays: [],
-                monthDays: []
+                frequency: { value: EReminderFrequency.ONCE },
+                intervalMinutes: { value: 30 },
+                weekdays: { value: [] },
+                monthDays: { value: [] }
             }
         },
         endDate: { value: undefined },
-        actions: { value: [ReminderActions.EMAIL] },
+        actions: { value: [EReminderActions.EMAIL] },
         priority: { value: 2 },
         maxAttempts: { value: 3 },
         retryInterval: { value: 1440 },
@@ -166,7 +107,7 @@ export default function ReminderForm({
             FormComponent={ReminderFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={ReminderSchema}
+            dto={CreateReminderDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 queryReminder.invalidateQueries({ queryKey: [storeKey + "-list"] });

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StripeConnectController } from './stripe-connect.controller';
 import { StripeConnectService } from './stripe-connect.service';
-import { StripeConnectAccount } from './entities/stripe-connect-account.entity';
+import { StripeConnectAccount } from 'shared/entities';
 import { PaymentMethodsModule } from '../payment-methods/payment-methods.module';
 import { UsersModule } from '../../users/users.module';
 

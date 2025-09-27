@@ -20,6 +20,7 @@ import { useInput } from '@/hooks/use-input';
 // Stores
 import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
+import { TFieldConfig } from '@/@types/form/field.type';
 
 interface ILoginFormProps extends THandlerComponentProps<TFormHandlerStore<TLoginData, ILoginResponse, any>> {
 }
@@ -36,41 +37,44 @@ export default function LoginForm({
 
 
   const [showPassword, setShowPassword] = useState(false);
+
+  const fields: TFieldConfig<TLoginData>[] = [
+    {
+      id: 'email',
+      name: 'email',
+      label: 'Email',
+      type: 'email',
+      placeholder: 'username@example.com',
+      startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
+      required: true
+    },
+    {
+      id: 'password',
+      name: 'password',
+      label: 'Password',
+      type: showPassword ? 'text' : 'password',
+      required: true,
+      endAdornment: (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      ),
+      bottomAdornment: (
+        <span className="text-right">
+          <Link to="/forgot-password" className="text-sm hover:underline">
+            Forgot password?
+          </Link>
+        </span>
+      )
+    }
+  ];
+
   const { inputs } = useInput({
-    fields: [
-      {
-        id: 'email',
-        name: 'email',
-        label: 'Email',
-        type: 'email',
-        placeholder: 'username@example.com',
-        startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
-        required: true
-      },
-      {
-        id: 'password',
-        name: 'password',
-        label: 'Password',
-        type: showPassword ? 'text' : 'password',
-        required: true,
-        endAdornment: (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        ),
-        bottomAdornment: (
-          <span className="text-right">
-            <Link to="/forgot-password" className="text-sm hover:underline">
-              Forgot password?
-            </Link>
-          </span>
-        )
-      }
-    ],
+    fields,
     showRequiredAsterisk: true
   });
 

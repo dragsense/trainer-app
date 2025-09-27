@@ -2,10 +2,10 @@ import { Controller, Get, UseGuards, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
 import { MinRoleLevel } from '@/decorators/level.decorator';
 import { RoleLevelGuard } from '@/guards/level.guard';
-import { DashboardAnalyticsDto } from './dto/dashboard-analytics.dto';
+import { DashboardAnalyticsDto } from 'shared/dtos';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -13,7 +13,7 @@ import { DashboardAnalyticsDto } from './dto/dashboard-analytics.dto';
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) { }
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Get('stats')
   @ApiOperation({ summary: 'Get dashboard statistics overview' })
   @ApiResponse({ status: 200, description: 'Dashboard statistics retrieved successfully' })
@@ -23,7 +23,7 @@ export class DashboardController {
     return this.dashboardService.getDashboardStats(req.user, query);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Get('sessions/analytics')
   @ApiOperation({ summary: 'Get sessions analytics' })
   @ApiResponse({ status: 200, description: 'Sessions analytics retrieved successfully' })
@@ -35,7 +35,7 @@ export class DashboardController {
     return this.dashboardService.getSessionsAnalytics(req.user, query);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Get('reminders/analytics')
   @ApiOperation({ summary: 'Get reminders analytics' })
   @ApiResponse({ status: 200, description: 'Reminders analytics retrieved successfully' })
@@ -46,7 +46,7 @@ export class DashboardController {
 
 
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Get('billing/analytics')
   @ApiOperation({ summary: 'Get comprehensive billing analytics' })
   @ApiResponse({ status: 200, description: 'Billing analytics retrieved successfully' })

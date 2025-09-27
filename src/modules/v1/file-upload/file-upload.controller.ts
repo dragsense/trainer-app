@@ -12,7 +12,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { FileUploadService } from './file-upload.service';
-import { FileListDto } from './dto/file-list.dto';
+import { FileListDto } from 'shared/dtos';
 
 
 @ApiTags('File Upload')

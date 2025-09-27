@@ -8,9 +8,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
-import { NotificationSetting } from './entities/notification-setting.entity';
+import { NotificationSetting } from 'shared/entities';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
-import { UpdateNotificationSettingDto } from './dto/update-notification-setting.dto';
+import { UpdateNotificationSettingDto } from 'shared/dtos';
 import { NotificationSettingsService } from './notification-settings.service';
 
 @ApiTags('Notification Settings')

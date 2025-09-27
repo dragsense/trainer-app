@@ -3,16 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Reminder } from './entities/reminder.entity';
-import { CreateReminderDto } from './dto/create-reminder.dto';
-import { UpdateReminderDto } from './dto/update-reminder.dto';
-import { ReminderListDto } from './dto/reminder-list.dto';
-import { ReminderFrequency, ReminderStatus } from './enums/reminder.enum';
-import { User } from '@/modules/v1/users/entities/user.entity';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { MessageResponse } from '@/interfaces/general.interface';
+import { Reminder } from 'shared/entities';
+import { CreateReminderDto } from 'shared/dtos';
+import { UpdateReminderDto } from 'shared/dtos';
+import { ReminderListDto } from 'shared/dtos';
+import { EReminderFrequency, EReminderStatus } from 'shared/enums';
+import { User } from 'shared/entities';
+import { IPaginatedResponse } from 'shared/interfaces';
+import { IMessageResponse } from 'shared/interfaces';
 import { ReminderCreatedEvent, ReminderUpdatedEvent, ReminderDeletedEvent } from './events/reminder.events';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @Injectable()
 export class RemindersService {
@@ -22,7 +22,7 @@ export class RemindersService {
     private readonly eventEmitter: EventEmitter2,
   ) { }
 
-  async create(user: Pick<User, 'id'>, createReminderDto: CreateReminderDto): Promise<MessageResponse> {
+  async create(user: Pick<User, 'id'>, createReminderDto: CreateReminderDto): Promise<IMessageResponse> {
     // Validate frequency-specific fields
 
     const reminder = this.reminderRepository.create({
@@ -31,7 +31,7 @@ export class RemindersService {
       recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId } : undefined,
       session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
       billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
-      status: ReminderStatus.SCHEDULED,
+      status: EReminderStatus.SCHEDULED,
       sentCount: 0,
       maxAttempts: createReminderDto.maxAttempts || 3,
       retryInterval: createReminderDto.retryInterval || 60 // default 60 minutes
@@ -44,7 +44,7 @@ export class RemindersService {
       'reminder.created',
       new ReminderCreatedEvent(
         savedReminder.id,
-        savedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
+        savedReminder.frequencyConfig?.frequency || EReminderFrequency.ONCE,
         savedReminder.scheduledAt
       )
     );
@@ -53,7 +53,7 @@ export class RemindersService {
   }
 
 
-  async findAll(user: User, queryDto: ReminderListDto): Promise<PaginationResponse<Reminder>> {
+  async findAll(user: User, queryDto: ReminderListDto): Promise<IPaginatedResponse<Reminder>> {
     const {
       page = 1,
       limit = 10,
@@ -94,7 +94,7 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.session', 'session')
       .leftJoinAndSelect('reminder.billing', 'billing');
 
-    if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+    if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
     }
 
@@ -213,7 +213,7 @@ export class RemindersService {
     // Handle any other filters
     if (otherFilters && typeof otherFilters === 'object') {
       Object.entries(otherFilters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (value && value !== undefined && value !== null) {
           if (Array.isArray(value)) {
             query.andWhere(`reminder.${key} && ARRAY[:...${key}]`, { [key]: value });
           } else {
@@ -287,7 +287,7 @@ export class RemindersService {
       'reminder.updated',
       new ReminderUpdatedEvent(
         updatedReminder.id,
-        updatedReminder.frequencyConfig?.frequency || ReminderFrequency.ONCE,
+        updatedReminder.frequencyConfig?.frequency || EReminderFrequency.ONCE,
         updatedReminder.scheduledAt,
         oldStartAt
       )

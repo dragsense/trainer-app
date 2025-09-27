@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { PaymentMethod } from './entities/payment-method.entity';
-import { PaymentMethodType, PAYMENT_METHOD_CONFIGS } from './enums/payment-method-type.enum';
+import { PaymentMethod } from 'shared/entities';
+import { EPaymentMethodType, PAYMENT_METHOD_CONFIGS } from 'shared/enums';
 
 @Injectable()
 export class PaymentMethodsSeeder {
@@ -21,13 +21,13 @@ export class PaymentMethodsSeeder {
 
     const toSave: PaymentMethod[] = [];
 
-    for (const type of Object.values(PaymentMethodType)) {
+    for (const type of Object.values(EPaymentMethodType)) {
       const config = PAYMENT_METHOD_CONFIGS[type];
-      let isEnabled = type === PaymentMethodType.CASH;
+      let isEnabled = type === EPaymentMethodType.CASH;
 
       let initialConfig: Record<string, any> | null = null;
 
-      if (type === PaymentMethodType.STRIPE) {
+      if (type === EPaymentMethodType.STRIPE) {
         const stripeConfig = this.configService.get('stripe');
         if (stripeConfig?.secretKey && stripeConfig?.publishableKey) {
           initialConfig = {

@@ -6,9 +6,8 @@ import {
 } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { User } from '../users/entities/user.entity';
-import { Billing } from '../billings/entities/billing.entity';
-import { NotificationType } from './enums/notification.enum';
+import { User, Billing } from 'shared/entities';
+import { ENotificationType } from 'shared/enums';
 
 @Injectable()
 @EventSubscriber()
@@ -48,7 +47,7 @@ export class BillingNotificationSubscriber implements EntitySubscriberInterface<
       const adminUserIds = adminUsers.map(u => u.id);
       
       await BillingNotificationSubscriber.notificationsService.createNotificationForUsers(
-        NotificationType.INVOICE_GENERATED,
+        ENotificationType.INVOICE_GENERATED,
         'New Invoice Generated',
         `A new invoice has been generated for billing`,
         adminUserIds,

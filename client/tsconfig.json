@@ -8,7 +8,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "#/*": ["../src/*"]
+      "@shared/*": ["../shared/*"],
+      "@nestjs/swagger": ["./src/utils/swagger-stub.ts"],
+      "typeorm": ["./src/utils/typeorm-stub.ts"]
     }
   }
 }

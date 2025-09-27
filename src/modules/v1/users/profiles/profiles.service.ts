@@ -5,14 +5,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MessageResponse } from '@/interfaces/general.interface';
+import { IMessageResponse } from 'shared/interfaces';
+
+import { Profile, User } from 'shared/entities';
 
 
-import { Profile } from './entities/profile.entity';
-import { User } from '../entities/user.entity';
-
-
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateProfileDto } from 'shared/dtos';
 import { FileUploadService } from '../../file-upload/file-upload.service';
 
 @Injectable()
@@ -40,7 +38,7 @@ export class ProfilesService {
     return profile;
   }
 
-  async update(id: number, updateProfileDto: UpdateProfileDto, profileImage?: Express.Multer.File): Promise<MessageResponse> {
+  async update(id: number, updateProfileDto: UpdateProfileDto, profileImage?: Express.Multer.File): Promise<IMessageResponse> {
 
 
     const {

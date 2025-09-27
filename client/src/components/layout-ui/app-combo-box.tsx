@@ -97,7 +97,7 @@ export function AppComboBox<T>({
                   <Badge
                     key={getKey(item)}
                     variant="secondary"
-                    className="truncate max-w-[120px]"
+                    className="truncate"
                     title={getLabel(item)}
                   >
                     {getLabel(item)}

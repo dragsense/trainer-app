@@ -2,8 +2,8 @@
 import { useState } from 'react';
 
 // Types
-import { TSignupData } from '@/@types/auth.type';
-import { IMessageResponse } from '@/@types/api/response.type';
+import { TSignupData } from '@shared/types/auth.type';
+import { IMessageResponse } from '@shared/interfaces/api/response.interface';
 import { TFormHandlerStore } from '@/stores';
 import { THandlerComponentProps } from '@/@types/handler-types';
 
@@ -20,8 +20,8 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { FormErrors } from '../shared-ui/form-errors';
 import { AppCard } from '../layout-ui/app-card';
+import { TFieldConfig } from '@/@types/form/field.type';
 
 interface ISignupFormProps extends THandlerComponentProps<TFormHandlerStore<TSignupData, IMessageResponse, any>> {
 }
@@ -39,75 +39,79 @@ export default function SignupForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { inputs } = useInput({
-    fields: [
-      // ─── Basic Account Info ──────────────
-      {
-        id: 'email',
-        name: 'email',
-        label: 'Email',
-        type: 'email',
-        placeholder: 'username@example.com',
-        startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
-        required: true
-      },
-      {
-        id: 'password',
-        name: 'password',
-        label: 'Password',
-        type: showPassword ? 'text' : 'password',
-        required: true,
-        endAdornment: (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        )
-      },
-      {
-        id: 'confirmPassword',
-        name: 'confirmPassword',
-        label: 'Confirm Password',
-        type: showConfirmPassword ? 'text' : 'password',
-        required: true,
-        endAdornment: (
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        )
-      },
+  const fields: TFieldConfig<TSignupData>[] = [
+    {
+      id: 'email',
+      name: 'email',
+      label: 'Email',
+      type: 'email',
+      placeholder: 'username@example.com',
+      startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
+      required: true
+    },
+    {
+      id: 'password',
+      name: 'password',
+      label: 'Password',
+      type: showPassword ? 'text' : 'password',
+      required: true,
+      endAdornment: (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )
+    },
+    {
+      id: 'confirmPassword',
+      name: 'confirmPassword',
+      label: 'Confirm Password',
+      type: showConfirmPassword ? 'text' : 'password',
+      required: true,
+      endAdornment: (
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )
+    },
 
-      // ─── Profile Information ──────────────
-      {
-        id: "firstName",
-        name: "firstName",
-        label: "First Name",
-        placeholder: "John",
-        type: "text",
-        startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
-        required: true,
-      },
-      {
-        id: "lastName",
-        name: "lastName",
-        label: "Last Name",
-        placeholder: "Doe",
-        type: "text",
-        startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
-        required: true,
-      },
-    ],
+    // ─── Profile Information ──────────────
+    {
+      id: "firstName",
+      name: "firstName",
+      label: "First Name",
+      placeholder: "John",
+      type: "text",
+      startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
+      required: true,
+    },
+    {
+      id: "lastName",
+      name: "lastName",
+      label: "Last Name",
+      placeholder: "Doe",
+      type: "text",
+      startAdornment: <User className="h-4 w-4 text-muted-foreground" />,
+      required: true,
+    },
+  ];
+
+  const { inputs } = useInput({
+    fields,
     showRequiredAsterisk: true
   });
 
   return (
+    <Form<TSignupData, IMessageResponse>
+    formStore={store}
+  >
     <AppCard
       header={
         <>
@@ -132,9 +136,7 @@ export default function SignupForm({
         </div>
       }
     >
-      <Form<TSignupData, IMessageResponse>
-        formStore={store}
-      >
+     
         <div className="space-y-6">
           {/* Account Information Section */}
           <div>
@@ -153,8 +155,7 @@ export default function SignupForm({
           </div>
         </div>
 
-        <FormErrors />
-      </Form>
-    </AppCard>
+      </AppCard>
+    </Form>
   );
 }

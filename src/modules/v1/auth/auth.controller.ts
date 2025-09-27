@@ -18,11 +18,10 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 
-import { LoginDto, LoginResponseDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { ResetPasswordWithTokenDto } from './dto/reset-password.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { MessageResponseDto } from '@/shared-dto/general.dto';
+import { LoginDto, LoginResponseDto, SignupDto } from 'shared/dtos';
+import { ResetPasswordWithTokenDto } from 'shared/dtos';
+import { ForgotPasswordDto } from 'shared/dtos';
+import { MessageResponseDto } from 'shared/dtos';
 
 import { AuthService } from './auth.service';
 
@@ -72,8 +71,8 @@ export class AuthController {
       .json({ user, token, message: 'Logged in successfully' });
   }
 
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiBody({ type: RegisterDto })
+  @ApiOperation({ summary: 'Signup a new user' })
+  @ApiBody({ type: SignupDto })
   @ApiResponse({
     status: 204,
     description: 'User registered successfully.',
@@ -81,8 +80,9 @@ export class AuthController {
   })
   @ApiResponse({ status: 409, description: 'The email is already taken' })
   @Post('signup')
-  register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  signup(@Body() signupDto: SignupDto) {
+
+    return this.authService.signup(signupDto);
   }
 
 

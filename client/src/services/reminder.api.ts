@@ -2,9 +2,10 @@
 import { apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
-import { IReminder, TReminderData } from "@/@types/reminder.type";
+import { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
+import { IReminder } from "@shared/interfaces/reminder.interface";
+import { TReminderData } from "@shared/types/reminder.type";
 
 // Constants
 const REMINDERS_API_PATH = "/reminders";
@@ -23,7 +24,7 @@ export const updateReminder = (id: number) => (data: Partial<TReminderData>) =>
     );
 
 export const fetchReminders = (
-    params: IListParams
+    params: IListQueryParams
 ) => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append("page", params.page.toString());

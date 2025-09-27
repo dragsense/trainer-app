@@ -1,18 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
-import { Session } from '../sessions/entities/session.entity';
-import { Billing } from '../billings/entities/billing.entity';
-import { Reminder } from '../reminders/entities/reminder.entity';
-import { PaymentMethod } from '../settings/payment-methods/entities/payment-method.entity';
-import { BillingStatus, BillingCurrency } from '../billings/enums/billing.enum';
-import { SessionStatus } from '../sessions/enums/session.enum';
-import { ReminderStatus } from '../reminders/enums/reminder.enum';
-import { UserRole, UserLevels } from '../users/enums/user.enum';
-import { DashboardAnalyticsDto } from './dto/dashboard-analytics.dto';
-import { AnalyticsPeriod } from './enums/dashboard-analytics.enum';
-import { resolveDateRange } from '@/lib/date-range';
+import { User, Session, Billing } from 'shared/entities';
+import { Reminder } from 'shared/entities';
+
+import { EUserRole, EUserLevels } from 'shared/enums';
+import { DashboardAnalyticsDto } from 'shared/dtos';
+import { EAnalyticsPeriod, ESessionStatus, EBillingStatus } from 'shared/enums';
+import { resolveDateRange } from 'shared/lib/date-range';
 
 @Injectable()
 export class DashboardService {
@@ -31,7 +26,7 @@ export class DashboardService {
     const { period, from, to } = query;
     const { start, end } = resolveDateRange(period, from, to);
 
-    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const isAdmin = user.level === EUserLevels[EUserRole.SUPER_ADMIN];
 
     const dateFilter = { createdAt: Between(start, end) };
 
@@ -52,7 +47,7 @@ export class DashboardService {
       this.userRepository.count({
         where: {
           ...(isAdmin
-            ? { level: UserLevels[UserRole.USER] }
+            ? { level: EUserLevels[EUserRole.USER] }
             : { owner: { id: user.id } }),
           ...dateFilter,
         },
@@ -61,7 +56,7 @@ export class DashboardService {
       // Trainers (admin only)
       isAdmin
         ? this.userRepository.count({
-          where: { level: UserLevels[UserRole.TRAINER], ...dateFilter },
+          where: { level: EUserLevels[EUserRole.TRAINER], ...dateFilter },
         })
         : Promise.resolve(0),
 
@@ -69,7 +64,7 @@ export class DashboardService {
       isAdmin
         ? this.userRepository.count({
           where: {
-            level: UserLevels[UserRole.TRAINER],
+            level: EUserLevels[EUserRole.TRAINER],
             isActive: true,
             ...dateFilter,
           },
@@ -80,7 +75,7 @@ export class DashboardService {
       this.userRepository.count({
         where: {
           ...(isAdmin
-            ? { level: UserLevels[UserRole.USER], isActive: true }
+            ? { level: EUserLevels[EUserRole.USER], isActive: true }
             : { owner: { id: user.id }, isActive: true }),
           ...dateFilter,
         },
@@ -113,7 +108,7 @@ export class DashboardService {
       // Active Sessions
       this.sessionRepository.count({
         where: {
-          status: SessionStatus.SCHEDULED,
+          status: ESessionStatus.SCHEDULED,
           ...(isAdmin ? {} : { trainer: { id: user.id } }),
           ...dateFilter,
         },
@@ -122,7 +117,7 @@ export class DashboardService {
       // Pending Billings
       this.billingRepository.count({
         where: {
-          status: BillingStatus.PENDING,
+          status: EBillingStatus.PENDING,
           ...(isAdmin ? {} : { user: { id: user.id } }),
           ...dateFilter,
         },
@@ -131,7 +126,7 @@ export class DashboardService {
       // Completed Sessions
       this.sessionRepository.count({
         where: {
-          status: SessionStatus.COMPLETED,
+          status: ESessionStatus.COMPLETED,
           ...(isAdmin ? {} : { trainer: { id: user.id } }),
           ...dateFilter,
         },
@@ -140,7 +135,7 @@ export class DashboardService {
       // Paid Billings
       this.billingRepository.count({
         where: {
-          status: BillingStatus.PAID,
+          status: EBillingStatus.PAID,
           ...(isAdmin ? {} : { user: { id: user.id } }),
           ...dateFilter,
         },
@@ -186,15 +181,15 @@ export class DashboardService {
     const { start, end } = resolveDateRange(period, from, to);
 
 
-    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const isAdmin = user.level === EUserLevels[EUserRole.SUPER_ADMIN];
     const userCondition = isAdmin ? '' : `AND s."trainerId" = ${user.id}`;
 
 
     let groupBy = `DATE_TRUNC('month', s."dateTime")`;
-    if (period === AnalyticsPeriod.DAY) groupBy = `DATE_TRUNC('day', s."dateTime")`;
-    if (period === AnalyticsPeriod.WEEK) groupBy = `DATE_TRUNC('week', s."dateTime")`;
-    if (period === AnalyticsPeriod.MONTH) groupBy = `DATE_TRUNC('month', s."dateTime")`;
-    if (period === AnalyticsPeriod.YEAR) groupBy = `DATE_TRUNC('year', s."dateTime")`;
+    if (period === EAnalyticsPeriod.DAY) groupBy = `DATE_TRUNC('day', s."dateTime")`;
+    if (period === EAnalyticsPeriod.WEEK) groupBy = `DATE_TRUNC('week', s."dateTime")`;
+    if (period === EAnalyticsPeriod.MONTH) groupBy = `DATE_TRUNC('month', s."dateTime")`;
+    if (period === EAnalyticsPeriod.YEAR) groupBy = `DATE_TRUNC('year', s."dateTime")`;
 
     // use BETWEEN $1 AND $2 and pass start/end (DB driver handles Date or ISO)
     const sessionStatsQuery = `
@@ -257,16 +252,16 @@ export class DashboardService {
     const { period, from, to } = query;
     const { start, end } = resolveDateRange(period, from, to);
 
-    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const isAdmin = user.level === EUserLevels[EUserRole.SUPER_ADMIN];
     const userCondition = isAdmin ? '' : `AND r."creatorId" = ${user.id}`;
 
     // Dynamic grouping by selected period
     const groupBy =
-      period === AnalyticsPeriod.YEAR
+      period === EAnalyticsPeriod.YEAR
         ? `DATE_TRUNC('year', r."createdAt")`
-        : period === AnalyticsPeriod.MONTH
+        : period === EAnalyticsPeriod.MONTH
           ? `DATE_TRUNC('month', r."createdAt")`
-          : period === AnalyticsPeriod.WEEK
+          : period === EAnalyticsPeriod.WEEK
             ? `DATE_TRUNC('week', r."createdAt")`
             : `DATE_TRUNC('day', r."createdAt")`;
 
@@ -328,7 +323,7 @@ export class DashboardService {
     const { period, from, to } = query;
     const { start, end } = resolveDateRange(period, from, to);
 
-    const isAdmin = user.level === UserLevels[UserRole.SUPER_ADMIN];
+    const isAdmin = user.level === EUserLevels[EUserRole.SUPER_ADMIN];
     const PLATFORM_FEE_PERCENTAGE = 0.02;
     const userCondition = isAdmin ? '' : `AND "creatorId" = ${user.id}`;
 
@@ -349,11 +344,11 @@ export class DashboardService {
 
     /** 3. Timeline (dynamic based on period) */
     const groupBy =
-      period === AnalyticsPeriod.YEAR
+      period === EAnalyticsPeriod.YEAR
         ? `DATE_TRUNC('year', "createdAt")`
-        : period === AnalyticsPeriod.MONTH
+        : period === EAnalyticsPeriod.MONTH
           ? `DATE_TRUNC('month', "createdAt")`
-          : period === AnalyticsPeriod.WEEK
+          : period === EAnalyticsPeriod.WEEK
             ? `DATE_TRUNC('week', "createdAt")`
             : `DATE_TRUNC('day', "createdAt")`;
 

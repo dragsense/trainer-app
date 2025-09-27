@@ -1,13 +1,12 @@
 import { apiRequest } from "@/utils/fetcher";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { ILoginResponse } from "@shared/interfaces/auth.interface";
 import {
-  IAuthUser,
   TLoginData,
-  ILoginResponse,
   TSignupData,
   TForgotPasswordData,
-  TResetPasswordData,
-} from "@/@types/auth.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+  TAuthResetPasswordData,
+} from "@shared/types/auth.type";
 
 const AUTH_API_PATH = "/auth";
 
@@ -24,7 +23,7 @@ export const signupWithReferral = async (data: TSignupData, referralCode: string
 export const forgotPassword = async (data: TForgotPasswordData) =>
   apiRequest<IMessageResponse>(`${AUTH_API_PATH}/send-reset-link`, "POST", data, undefined);
 
-export const resetPassword = async (data: TResetPasswordData) =>
+export const resetPassword = async (data: TAuthResetPasswordData) =>
   apiRequest<IMessageResponse>(`${AUTH_API_PATH}/reset-password`, "POST", data, undefined);
 
 export const logout = async () =>

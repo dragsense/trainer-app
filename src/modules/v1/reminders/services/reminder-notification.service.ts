@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NotificationsService } from '../../notifications/notifications.service';
-import { Reminder } from '../entities/reminder.entity';
-import { ReminderType } from '../enums/reminder.enum';
-import { NotificationType } from '../../notifications/enums/notification.enum';
-import { CreateNotificationDto } from '../../notifications/dto/create-notification.dto';
-import { User } from '../../users/entities/user.entity';
+import { Reminder } from 'shared/entities';
+import { EReminderType } from 'shared/enums';
+import { ENotificationType } from 'shared/enums';
+import { CreateNotificationDto } from 'shared/dtos';
+import { User } from 'shared/entities';
 
 @Injectable()
 export class ReminderNotificationService {
@@ -44,21 +44,21 @@ export class ReminderNotificationService {
         const recipients: User[] = [];
 
         switch (reminder.type) {
-            case ReminderType.SESSION:
+            case EReminderType.SESSION:
                 // Send to all session clients
                 if (reminder.session?.clients) {
                     recipients.push(...reminder.session.clients.filter(client => client.id));
                 }
                 break;
 
-            case ReminderType.BILLING:
+            case EReminderType.BILLING:
                 // Send to the billing user
                 if (reminder.billing?.user?.id) {
                     recipients.push(reminder.billing.user);
                 }
                 break;
 
-            case ReminderType.CUSTOM:
+            case EReminderType.CUSTOM:
             default:
                 // Send to the reminder recipient
                 if (reminder.recipient?.id) {
@@ -84,9 +84,9 @@ export class ReminderNotificationService {
 
     private getNotificationTitle(reminder: Reminder): string {
         const titleMap = {
-            [ReminderType.SESSION]: '🏋️ Session Reminder',
-            [ReminderType.BILLING]: '💳 Payment Reminder',
-            [ReminderType.CUSTOM]: reminder.message?.split('\n')[0] || '🔔 Custom Reminder',
+            [EReminderType.SESSION]: '🏋️ Session Reminder',
+            [EReminderType.BILLING]: '💳 Payment Reminder',
+            [EReminderType.CUSTOM]: reminder.message?.split('\n')[0] || '🔔 Custom Reminder',
         };
         return titleMap[reminder.type];
     }
@@ -95,7 +95,7 @@ export class ReminderNotificationService {
         const firstName = recipient.profile?.firstName || 'there';
 
         switch (reminder.type) {
-            case ReminderType.SESSION:
+            case EReminderType.SESSION:
                 if (!reminder.session) return 'You have an upcoming session.';
 
                 const sessionDate = reminder.session.dateTime ? new Date(reminder.session.dateTime) : null;
@@ -109,7 +109,7 @@ export class ReminderNotificationService {
 
                 return `Hi ${firstName}! Your ${reminder.session.type || 'training'} session is scheduled for ${sessionDateTime}. Don't forget to prepare!`;
 
-            case ReminderType.BILLING:
+            case EReminderType.BILLING:
                 if (!reminder.billing) return 'You have a pending payment.';
 
                 const amount = reminder.billing.invoiceAmount || 0;
@@ -122,7 +122,7 @@ export class ReminderNotificationService {
 
                 return `Hi ${firstName}! Payment of ${formattedAmount} is due ${dueDate}. Click to view payment options.`;
 
-            case ReminderType.CUSTOM:
+            case EReminderType.CUSTOM:
             default:
                 const customMessage = reminder.message || 'You have a new reminder.';
                 const messageLines = customMessage.split('\n');
@@ -132,24 +132,24 @@ export class ReminderNotificationService {
         }
     }
 
-    private getNotificationType(reminder: Reminder): NotificationType {
+    private getNotificationType(reminder: Reminder): ENotificationType {
         const typeMap = {
-            [ReminderType.SESSION]: NotificationType.SESSION_SCHEDULED,
-            [ReminderType.BILLING]: NotificationType.BILLING_DUE,
-            [ReminderType.CUSTOM]: NotificationType.GENERAL,
+            [EReminderType.SESSION]: ENotificationType.SESSION_SCHEDULED,
+            [EReminderType.BILLING]: ENotificationType.BILLING_DUE,
+            [EReminderType.CUSTOM]: ENotificationType.GENERAL,
         };
         return typeMap[reminder.type];
     }
 
     private getNotificationLink(reminder: Reminder): string | undefined {
         switch (reminder.type) {
-            case ReminderType.SESSION:
+            case EReminderType.SESSION:
                 return reminder.session?.id ? `/sessions/${reminder.session.id}` : '/sessions';
 
-            case ReminderType.BILLING:
+            case EReminderType.BILLING:
                 return reminder.billing?.id ? `/billing/${reminder.billing.id}` : '/billing';
 
-            case ReminderType.CUSTOM:
+            case EReminderType.CUSTOM:
             default:
                 return '/dashboard';
         }
@@ -173,7 +173,7 @@ export class ReminderNotificationService {
                 userId: reminder.creator.id,
                 title: `Reminder ${status.charAt(0).toUpperCase() + status.slice(1)}`,
                 message: statusMessages[status],
-                type: NotificationType.GENERAL,
+                type: ENotificationType.GENERAL,
                 link: `/reminders/${reminder.id}`,
             });
 

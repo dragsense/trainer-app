@@ -1,20 +1,20 @@
 // hooks/use-searchable-resource.ts
-import { IListParams } from "@/@types/api/param.type";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
 import { useApiPaginatedQuery } from "./use-api-paginated-query";
 
-import { IUser } from "@/@types/user.type";
+import { IUser } from "@shared/interfaces/user.interface";
 import { fetchUsers } from "@/services/user.api";
 
-import { ISession } from "@/@types/session.type";
+import { ISession } from "@shared/interfaces/session.interface";
 import { fetchSessions } from "@/services/session.api";
 
-import { IBilling } from "@/@types/billing.type";
+import { IBilling } from "@shared/interfaces/billing.interface";
 import { fetchBillings } from "@/services/billing.api";
 
 export function useSearchableResource<T>(
   key: string,
-  fetcher: (params: IListParams) => Promise<any>,
-  initialParams: IListParams = { page: 1, limit: 10 }
+  fetcher: (params: IListQueryParams) => Promise<any>,
+  initialParams: IListQueryParams = { page: 1, limit: 10 }
 ) {
   const { data, isLoading, error, setFilters } = useApiPaginatedQuery<T>(
     [key],
@@ -32,17 +32,17 @@ export function useSearchableResource<T>(
 
 
 
-export function useSearchableUsers({ level, initialParams }: { level?: number, initialParams?: IListParams }) {
+export function useSearchableUsers({ level, initialParams }: { level?: number, initialParams?: IListQueryParams }) {
   return useSearchableResource<IUser>(
     "searchable-users" + (level ? `-${level}` : ""),
-    (params: IListParams) => fetchUsers(params, level),
+    (params: IListQueryParams) => fetchUsers(params, level),
     initialParams
   );
 }
 
 
 
-export function useSearchableSessions(initialParams?: IListParams) {
+export function useSearchableSessions(initialParams?: IListQueryParams) {
   return useSearchableResource<ISession>(
     "searchable-sessions",
     fetchSessions,
@@ -50,7 +50,7 @@ export function useSearchableSessions(initialParams?: IListParams) {
   );
 }
 
-export function useSearchableBillings(initialParams?: IListParams) {
+export function useSearchableBillings(initialParams?: IListQueryParams) {
   return useSearchableResource<IBilling>(
     "searchable-billings",
     fetchBillings,

@@ -2,19 +2,22 @@
 import { apiFileRequest, apiRequest } from "@/utils/fetcher";
 
 // Types
-import { IMessageResponse, IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
+import { IMessageResponse, IPaginatedResponse } from "@shared/interfaces/api/response.interface";
+import { IListQueryParams } from "@shared/interfaces/api/param.interface";
 import {
     IUser,
-    TResetPasswordData,
-    TUserData,
     IProfile,
-    TProfileData,
     IUserAvailability,
+    TUserResponse,
+    
+} from "@shared/interfaces/user.interface";
+import {
+    TUserData,
     TUpdateUserAvailabilityData,
     TCreateUserAvailabilityData,
-    TUpdateProfileData
-} from "@/@types/user.type";
+    TUpdateProfileData,
+    TUserResetPasswordData
+} from "@shared/types/user.type";
 import { generateQueryParams } from "@/utils";
 
 // Constants
@@ -27,7 +30,7 @@ export const me = async () =>
 
 
 export const createUser = (data: TUserData) =>
-    apiRequest<{ user: IUser, message: string }>(`${USERS_API_PATH}`, "POST", data);
+    apiRequest<TUserResponse>(`${USERS_API_PATH}`, "POST", data);
 
 export const updateUser = (id: number) => (data: Partial<TUserData>) =>
     apiRequest<IMessageResponse>(
@@ -37,7 +40,7 @@ export const updateUser = (id: number) => (data: Partial<TUserData>) =>
     );
 
 export const fetchUsers = (
-    params: IListParams,
+    params: IListQueryParams,
     level?: number
 ) => {
 
@@ -92,7 +95,7 @@ export const updateProfile = (data: TUpdateProfileData) => {
     return apiFileRequest<IMessageResponse>(`${PROFILES_API_PATH}/profile/me`, "PATCH", formData);
 }
 
-export const changePassword = (data: TResetPasswordData) =>
+export const changePassword = (data: TUserResetPasswordData) =>
     apiRequest<IMessageResponse>(`${USERS_API_PATH}/me/reset-password`, "PUT", data);
 
 // Availability API functions

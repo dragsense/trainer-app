@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrainerClientsService } from './trainer-clients.service';
 import { TrainerClientsController } from './trainer-clients.controller';
-import { TrainerClient } from './entities/trainer-client.entity';
-import { User } from '../users/entities/user.entity';
+import { TrainerClient } from 'shared/entities';
+import { User } from 'shared/entities';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TrainerClient, User])],

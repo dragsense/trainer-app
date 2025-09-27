@@ -7,12 +7,12 @@ import {
 } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Session } from '../entities/session.entity';
+import { Session } from 'shared/entities';
 import { BillingsService } from '@/modules/v1/billings/billings.service';
-import { BillingCurrency, BillingStatus, BillingType } from '../../billings/enums/billing.enum';
-import { CreateBillingDto } from '../../billings/dto/create-billing.dto';
-import { User } from '../../users/entities/user.entity';
-import { Billing } from '../../billings/entities/billing.entity';
+import { EBillingCurrency, EBillingStatus, EBillingType } from 'shared/enums';
+import { CreateBillingDto } from 'shared/dtos';
+import { User } from 'shared/entities';
+import { Billing } from 'shared/entities';
 
 @EventSubscriber()
 @Injectable()
@@ -102,9 +102,9 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
     const createBillingDto: CreateBillingDto = {
       userId: user.id,
       sessionId: session.id,
-      type: BillingType.SESSION,
-      status: BillingStatus.PENDING,
-      currency: session.currency as BillingCurrency || BillingCurrency.USD,
+      type: EBillingType.SESSION,
+      status: EBillingStatus.PENDING,
+      currency: session.currency as EBillingCurrency || EBillingCurrency.USD,
       issueDate: new Date(),
       dueDate,
       paymentMethodType: session.paymentMethodType,

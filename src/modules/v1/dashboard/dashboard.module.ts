@@ -4,11 +4,8 @@ import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
 
 // Entities
-import { User } from '../users/entities/user.entity';
-import { Session } from '../sessions/entities/session.entity';
-import { Billing } from '../billings/entities/billing.entity';
-import { Reminder } from '../reminders/entities/reminder.entity';
-import { PaymentMethod } from '../settings/payment-methods/entities/payment-method.entity';
+import { User, Session, Billing } from 'shared/entities';
+import { Reminder, PaymentMethod } from 'shared/entities';
 
 @Module({
   imports: [

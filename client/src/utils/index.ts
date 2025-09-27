@@ -1,3 +1,5 @@
+import { formatValue } from "@shared/lib/utils";
+
 export function pickKeys<T extends object, K extends keyof T>(
   obj: T,
   keys: K[]
@@ -19,15 +21,34 @@ export function extractValues<T extends object>(
 
     if (initField && typeof initField === "object" && "value" in initField) {
       const field = initField.value;
+      
+      // Handle nested objects
       if (field && typeof field === "object" && "isNested" in initField) {
-        result[key] = { value: extractValues(response?.[key] ?? {}, field) }
-      } else
+        if (Array.isArray(field)) {
+          // Handle array of nested objects
+          result[key] = {
+            value: (response?.[key] || field).map((item: any, index: number) => {
+              const arrayItem = field[index] || field[0];
+              return {
+                isNested: arrayItem.isNested,
+                value: extractValues(item, arrayItem.value)
+              };
+            })
+          };
+        } else {
+          // Handle single nested object
+          result[key] = {
+            isNested: initField.isNested,
+            value: extractValues(response?.[key] ?? {}, field)
+          };
+        }
+      } else {
+        // Handle primitive values
         result[key] = {
-          value: response?.[key] !== undefined ? response[key] : initField.value,
+          value: response?.[key] !== undefined ? response[key] : field,
         };
+      }
     }
-
-
   }
 
   return result;
@@ -41,10 +62,27 @@ export function unwrapValues<T extends object>(formValues: T): any {
 
     if (field && typeof field === "object" && "value" in field) {
       const value = field.value;
-      if (value && typeof value === "object" && !Array.isArray(value)) {
+      
+      // Handle arrays
+      if (Array.isArray(value)) {
+        result[key] = value.map((item: any) => {
+          if (item && typeof item === "object" && "isNested" in item) {
+            return unwrapValues(item.value);
+          } else if (item && typeof item === "object" && "value" in item) {
+            return unwrapValues(item);
+          } else {
+            return item;
+          }
+        });
+      }
+      // Handle nested objects
+      else if (value && typeof value === "object" && !(value instanceof Date)) {
         result[key] = unwrapValues(value);
-      } else
-        result[key] = field.value;
+      } 
+      // Handle primitive values
+      else {
+        result[key] = value;
+      }
     }
   }
 
@@ -52,24 +90,7 @@ export function unwrapValues<T extends object>(formValues: T): any {
 }
 
 
-export function flatten<T>(arr: (T | T[])[]): T[] {
-  return arr.reduce<T[]>((acc, item) => {
-    if (Array.isArray(item)) return acc.concat(flatten(item));
-    return acc.concat(item);
-  }, []);
-}
 
-function formatValue(value: unknown): string {
-  if (value instanceof Date) {
-    return value.toISOString().split("T")[0];
-  }
-
-  if (typeof value === "boolean") {
-    return value ? "true" : "false";
-  }
-
-  return String(value);
-}
 
 export function generateQueryParams(
   queryParams: URLSearchParams,

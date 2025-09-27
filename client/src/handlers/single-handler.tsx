@@ -5,7 +5,7 @@ import React, { useEffect, useMemo } from "react";
 import {
   IActionComponent,
 } from "@/@types/handler-types";
-import { TQueryParams } from "@/@types/api/param.type";
+import { TQueryParams } from "@shared/types/api/param.type";
 
 
 // Custom Hooks
@@ -91,7 +91,6 @@ export function SingleHandler<
   ));
 
   const queryKey = [singleStoreKey, id, JSON.stringify(filteredExtra)];
-
 
   useApiQuery<IData>(
     queryKey,

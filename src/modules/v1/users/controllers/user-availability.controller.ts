@@ -12,12 +12,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UserAvailabilityService } from '../services/user-availability.service';
-import { UpdateUserAvailabilityDto } from '../dto/update-user-availability.dto';
-import { CreateUserAvailabilityDto } from '../dto/create-user-availability.dto';
-import { UserAvailability } from '../entities/user-availability.entity';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '../entities/user.entity';
 import { JwtAuthGuard } from '../../auth/gaurds/jwt-auth.gaurd';
+import { CreateUserAvailabilityDto, UpdateUserAvailabilityDto } from 'shared/dtos';
+import { User, UserAvailability } from 'shared/entities';
+
+
 
 @ApiTags('User Availability')
 @ApiBearerAuth()

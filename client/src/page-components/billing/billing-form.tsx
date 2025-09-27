@@ -9,13 +9,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IBilling, TBillingData } from "@/@types/billing.type";
-import { BillingCurrency, BillingStatus, BillingType } from "#/modules/v1/billings/enums/billing.enum";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
+import { TBillingData } from "@shared/types/billing.type";
+import { IBilling } from "@shared/interfaces/billing.interface";
+import { EBillingCurrency, EBillingStatus, EBillingType } from "@shared/enums/billing.enum";
+import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
 
 // Store
 import { TFormHandlerStore, TSingleHandlerStore } from "@/stores";
@@ -28,48 +29,7 @@ import { createBilling, updateBilling } from "@/services/billing.api";
 import { IBillingFormExtraProps } from "@/components/admin/billings/form/billing-form-modal";
 import { useMemo } from "react";
 import { extractValues } from "@/utils";
-
-
-
-
-// Schema
-export const LineItemSchema = z.object({
-    description: z.string().min(1, "Description is required"),
-    quantity: z.number().min(1, "Quantity must be at least 1"),
-    unitPrice: z.number().min(0, "Unit price cannot be negative"),
-    amount: z.number().min(0, "Amount cannot be negative"),
-    tax: z.number().min(0, "Tax cannot be negative").optional(),
-}).superRefine((data, ctx) => {
-    const expectedAmount = data.quantity * data.unitPrice;
-    if (data.amount !== expectedAmount) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["amount"],
-            message: `Amount must equal quantity × unitPrice (${expectedAmount})`,
-        });
-    }
-});
-
-export const BillingSchema = z.object({
-    type: z.nativeEnum(BillingType),
-    status: z.nativeEnum(BillingStatus).optional(),
-    currency: z.nativeEnum(BillingCurrency).optional(),
-    paymentMethodType: z.nativeEnum(PaymentMethodType),
-    userId: z.number().min(1, "User is required"),
-    issueDate: z.date().optional(),
-    dueDate: z
-        .date()
-        .optional()
-        .refine(
-            (date) => !date || date > new Date(),
-            { message: "Due date must be in the future" }
-        ),
-    lineItems: z.array(LineItemSchema).min(1, "At least one line item is required"),
-    totalTax: z.number().optional(),
-    discount: z.number().optional(),
-    notes: z.string().optional(),
-    terms: z.string().optional(),
-});
+import { CreateBillingDto } from "@shared/dtos";
 
 
 interface IBillingFormProps extends THandlerComponentProps<TSingleHandlerStore<IBilling, IBillingFormExtraProps>> {
@@ -87,16 +47,27 @@ export default function BillingForm({
 
     const INITIAL_VALUES: TDefaultValue<TBillingData> = {
         stripeInvoiceId: { value: "" },
-        type: { value: BillingType.INDIVIDUAL },
-        status: { value: BillingStatus.PENDING },
+        type: { value: EBillingType.INDIVIDUAL },
+        status: { value: EBillingStatus.PENDING },
         invoiceAmount: { value: 0 },
-        currency: { value: BillingCurrency.USD },
-        paymentMethodType: { value: PaymentMethodType.CASH },
+        currency: { value: EBillingCurrency.USD },
+        paymentMethodType: { value: EPaymentMethodType.CASH },
         userId: { value: 0 },
         sessionId: { value: 0 },
         issueDate: { value: new Date() },
         dueDate: { value: new Date() },
-        lineItems: { value: [], isNested: true },
+        lineItems: {
+            value: [{
+                isNested: true,
+                value: {
+                    description: { value: "" },
+                    quantity: { value: 0 },
+                    unitPrice: { value: 0 },
+                    amount: { value: 0 },
+                    tax: { value: 0 },
+                }
+            }],
+        },
         totalTax: { value: 0 },
         discount: { value: 0 },
         totalAmount: { value: 0 },
@@ -109,7 +80,7 @@ export default function BillingForm({
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-  
+
 
     const { action, response, isLoading, setAction } = store(useShallow(state => ({
         action: state.action,
@@ -142,7 +113,7 @@ export default function BillingForm({
             FormComponent={BillingFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={BillingSchema}
+            dto={CreateBillingDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 queryBilling.invalidateQueries({ queryKey: [storeKey + "-list"] });

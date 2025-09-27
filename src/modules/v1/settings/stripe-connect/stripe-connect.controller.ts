@@ -10,21 +10,21 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { StripeConnectService } from './stripe-connect.service';
 import { AuthUser } from '@/decorators/user.decorator';
-import { User } from '@/modules/v1/users/entities/user.entity';
+import { User } from 'shared/entities';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
-import { CreateStripeConnectDto } from './dto/create-stripe-connect.dto';
+import { CreateStripeConnectDto } from 'shared/dtos';
 import {
   StripeConnectStatusDto,
   StripeConnectCreateResponseDto,
-} from './dto/stripe-connect-responses.dto';
+} from 'shared/dtos';
 import { RoleLevelGuard } from '@/guards/level.guard';
-import { UserLevels, UserRole } from '../../users/enums/user.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
 import { MinRoleLevel } from '@/decorators/level.decorator';
 
 @ApiTags('Settings - Stripe Connect')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
-@MinRoleLevel(UserLevels[UserRole.TRAINER])
+@MinRoleLevel(EUserLevels[EUserRole.TRAINER])
 @Controller('settings/stripe-connect')
 export class StripeConnectController {
   constructor(private readonly stripeConnectService: StripeConnectService) { }

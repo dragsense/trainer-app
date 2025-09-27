@@ -12,18 +12,18 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PaymentMethodsService } from './payment-methods.service';
-import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
-import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
-import { PaymentMethodListDto } from './dto/payment-method-list.dto';
-import { PaymentMethod } from './entities/payment-method.entity';
+import { CreatePaymentMethodDto } from 'shared/dtos';
+import { UpdatePaymentMethodDto } from 'shared/dtos';
+import { PaymentMethodListDto } from 'shared/dtos';
+import { PaymentMethod } from 'shared/entities';
 import { PaymentMethodsSeeder } from './payment-methods.seeder';
 import { JwtAuthGuard } from '@/modules/v1/auth/gaurds/jwt-auth.gaurd';
 import { RoleLevelGuard } from '@/guards/level.guard';
 import { MinRoleLevel } from '@/decorators/level.decorator';
-import { UserLevels, UserRole } from '../../users/enums/user.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
-@MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+@MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
 @ApiTags('Payment Methods')
 @Controller('settings/payment-methods')
 export class PaymentMethodsController {

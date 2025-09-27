@@ -14,7 +14,7 @@ import { SessionForm } from "@/page-components";
 import { deleteSession, fetchSession, fetchSessions } from "@/services/session.api";
 
 // Types
-import { ISession } from "@/@types/session.type";
+import { ISession } from "@shared/interfaces/session.interface";
 
 
 // Layouts

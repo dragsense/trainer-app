@@ -19,20 +19,19 @@ import {
 
 import { AuthUser } from '@/decorators/user.decorator';
 import { SessionsService } from './sessions.service';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { UpdateSessionDto } from './dto/update-session.dto';
+import { CreateSessionDto } from 'shared/dtos';
+import { UpdateSessionDto } from 'shared/dtos';
 import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.gaurd';
 import { RoleLevelGuard } from '@/guards/level.guard';
 import { MinRoleLevel } from '@/decorators/level.decorator';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
-import { SessionListDto } from './dto/session-list.dto';
-import { MessageResponseDto } from '@/shared-dto/general.dto';
-import { MessageResponse } from '@/interfaces/general.interface';
-import { SessionListResponseDto } from './dto/session-response.dto';
-import { Session } from './entities/session.entity';
-import { User } from '../users/entities/user.entity';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { SessionStatus } from './enums/session.enum';
+import { EUserLevels, EUserRole } from 'shared/enums';
+import { SessionListDto } from 'shared/dtos';
+import { MessageResponseDto } from 'shared/dtos';
+import { IMessageResponse } from 'shared/interfaces';
+import { SessionPaginatedDto } from 'shared/dtos';
+import { Session, User } from 'shared/entities';
+import { IPaginatedResponse } from 'shared/interfaces';
+  import { ESessionStatus } from 'shared/enums';
 
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
@@ -41,7 +40,7 @@ import { SessionStatus } from './enums/session.enum';
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
-  @MinRoleLevel(UserLevels[UserRole.TRAINER])
+  @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
   @Post()
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
@@ -60,24 +59,24 @@ export class SessionsController {
   }
 
 
-  @MinRoleLevel(UserLevels[UserRole.USER])
+  @MinRoleLevel(EUserLevels[EUserRole.USER])
   @Get()
   @ApiOperation({ summary: 'Get all sessions with pagination and filters' })
   @ApiResponse({
     status: 200,
     description: 'List of sessions',
-    type: SessionListResponseDto
+    type: SessionPaginatedDto
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Insufficient role level' })
   async findAll(
     @Query() queryDto: SessionListDto,
     @AuthUser() user: User
-  ): Promise<PaginationResponse<Session>> {
+  ): Promise<IPaginatedResponse<Session>> {
     return this.sessionsService.findAll(queryDto, user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific session' })
   @ApiResponse({
@@ -95,7 +94,7 @@ export class SessionsController {
     return this.sessionsService.findOne(id, user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Patch(':id')
   @ApiOperation({ summary: 'Update a session' })
   @ApiResponse({
@@ -115,7 +114,7 @@ export class SessionsController {
     return this.sessionsService.update(id, updateSessionDto, user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update session status' })
   @ApiResponse({
@@ -129,13 +128,13 @@ export class SessionsController {
   @ApiResponse({ status: 404, description: 'Session not found' })
   async updateStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: SessionStatus,
+    @Body('status') status: ESessionStatus,
     @AuthUser() user: User
   ): Promise<Session> {
     return this.sessionsService.updateStatus(id, status, user);
   }
 
-  @MinRoleLevel(UserLevels[UserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Delete(':id')
   @ApiOperation({ summary: 'Cancel/delete a session' })
   @ApiResponse({
@@ -150,7 +149,7 @@ export class SessionsController {
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @AuthUser() user: User
-  ): Promise<MessageResponse> {
+  ): Promise<IMessageResponse> {
     return this.sessionsService.remove(id, user);
   }
 }

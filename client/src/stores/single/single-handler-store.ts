@@ -4,7 +4,7 @@ import { devtools } from 'zustand/middleware';
 
 // Types 
 import { ISingleHandlerState } from '@/@types/handler-types/single.type';
-import { TQueryParams } from '@/@types/api/param.type';
+import { TQueryParams } from '@shared/types/api/param.type';
 
 // Config
 import { config } from '@/config';

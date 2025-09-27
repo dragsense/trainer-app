@@ -7,7 +7,7 @@ import { useAuthUser } from "@/hooks/use-auth-user";
 
 // Config
 import { CLIENT_ROUTES, COMMON_ROUTES, PUBLIC_ROUTES, ROOT_ROUTE, TRAINER_ROUTES } from "@/config/routes.config";
-import { UserLevels, UserRole } from "#/modules/v1/users/enums/user.enum";
+import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 
 // Layout Components
 import { AppLoader } from "@/components/layout-ui/app-loader";
@@ -26,7 +26,7 @@ export default function PrivateRoute() {
 
 
   if (location.pathname !== ROOT_ROUTE) {
-    if (user.level === UserLevels[UserRole.TRAINER]) {
+    if (user.level === EUserLevels[EUserRole.TRAINER]) {
       const isTrainerRoute = (
         Object.values(TRAINER_ROUTES) as readonly string[]
       ).includes(location.pathname);
@@ -36,7 +36,7 @@ export default function PrivateRoute() {
 
       }
     } else {
-      if (user.level === UserLevels[UserRole.USER]) {
+      if (user.level === EUserLevels[EUserRole.USER]) {
         const isClientRoute = (
           Object.values(CLIENT_ROUTES) as readonly string[]
         ).includes(location.pathname);

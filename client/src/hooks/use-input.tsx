@@ -171,6 +171,7 @@ export function useInput<T>({
                         id="date-picker"
                         className="w-32 justify-between font-normal"
                       >
+                       
                         {controllerField.value
                           ? new Date(controllerField.value).toLocaleDateString()
                           : "Select date"}
@@ -209,6 +210,7 @@ export function useInput<T>({
                     <PopoverContent className="w-auto p-4 space-y-2" align="start">
                       <Calendar
                         mode="single"
+                        captionLayout="dropdown"
                         selected={
                           controllerField.value ? new Date(controllerField.value) : undefined
                         }

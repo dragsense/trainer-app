@@ -1,7 +1,7 @@
 // External Libraries
 // Types
-import { ICombinedDashboardData } from "@/@types/dashboard.type"
-import { AnalyticsPeriod } from "#/modules/v1/dashboard/enums/dashboard-analytics.enum";
+import { ICombinedDashboardData } from "@shared/interfaces/dashboard.interface"
+import { EAnalyticsPeriod } from "@shared/enums/dashboard-analytics.enum";
 
 // Handlers
 import { SingleHandler } from '@/handlers';
@@ -47,10 +47,10 @@ export default function DashboardPage() {
       }}
       enabled={true}
       singleProps={{
-        period: AnalyticsPeriod.MONTH,
+        period: EAnalyticsPeriod.MONTH,
       }}
       initialParams={{
-        period: AnalyticsPeriod.MONTH,
+        period: EAnalyticsPeriod.MONTH,
         customRange: undefined
       }}
     />

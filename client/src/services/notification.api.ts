@@ -1,7 +1,8 @@
 import { apiRequest } from '@/utils/fetcher';
-import { INotification, TNotficationData } from '@/@types/notification.type';
-import { INotificationSetting } from '@/@types/setting.type';
-import { IMessageResponse } from '@/@types/api/response.type';
+import { INotification } from '@shared/interfaces/notification.interface';
+import { INotificationSetting } from '@shared/interfaces/settings.interface';
+import { IMessageResponse } from '@shared/interfaces/api/response.interface';
+import { TNotficationData } from '@shared/types/notification.type';
 
 const BASE_URL = '/notifications';
 

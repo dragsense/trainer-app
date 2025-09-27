@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Reminder } from '../entities/reminder.entity';
-import { ReminderType, ReminderStatus } from '../enums/reminder.enum';
+import { Reminder } from 'shared/entities';
+import { EReminderType, EReminderStatus } from 'shared/enums';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../../users/entities/user.entity';
+import { User } from 'shared/entities';
 
 interface ReminderStats {
-  status: ReminderStatus;
-  type: ReminderType;
+  status: EReminderStatus;
+  type: EReminderType;
   count: number;
 }
 
@@ -31,9 +31,9 @@ export class ReminderEmailService {
 
   private getReminderSubject(reminder: Reminder): string {
     const subjectMap = {
-      [ReminderType.SESSION]: 'Upcoming Session Reminder',
-      [ReminderType.BILLING]: 'Billing Due Reminder',
-      [ReminderType.CUSTOM]: reminder.message?.split('\n')[0] || 'Custom Reminder',
+      [EReminderType.SESSION]: 'Upcoming Session Reminder',
+      [EReminderType.BILLING]: 'Billing Due Reminder',
+      [EReminderType.CUSTOM]: reminder.message?.split('\n')[0] || 'Custom Reminder',
     };
     return subjectMap[reminder.type];
   }
@@ -42,7 +42,7 @@ export class ReminderEmailService {
     let content = '';
 
     switch (reminder.type) {
-      case ReminderType.SESSION:
+      case EReminderType.SESSION:
         if (!reminder.session) break;
         const sessionDate = reminder.session.dateTime ? new Date(reminder.session.dateTime) : null;
         const sessionDateTime = sessionDate ? sessionDate.toLocaleDateString('en-US', {
@@ -109,7 +109,7 @@ export class ReminderEmailService {
         `;
         break;
 
-      case ReminderType.BILLING:
+      case EReminderType.BILLING:
         if (!reminder.billing) break;
         const amount = reminder.billing.invoiceAmount || 0;
         const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -175,7 +175,7 @@ export class ReminderEmailService {
         `;
         break;
 
-      case ReminderType.CUSTOM:
+      case EReminderType.CUSTOM:
       default:
         const title = reminder.title || 'You have a new reminder.';
         const body = reminder.message || 'No additional details provided.';
@@ -289,21 +289,21 @@ export class ReminderEmailService {
     const recipients: User[] = [];
 
     switch (reminder.type) {
-      case ReminderType.SESSION:
+      case EReminderType.SESSION:
         // Send to all session clients
         if (reminder.session?.clients) {
           recipients.push(...reminder.session.clients.filter(client => client.email));
         }
         break;
 
-      case ReminderType.BILLING:
+      case EReminderType.BILLING:
         // Send to the billing user
         if (reminder.billing?.user?.email) {
           recipients.push(reminder.billing.user);
         }
         break;
 
-      case ReminderType.CUSTOM:
+      case EReminderType.CUSTOM:
       default:
         // Send to the reminder recipient
         if (reminder.recipient?.email) {

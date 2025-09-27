@@ -1,19 +1,18 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Billing } from './entities/billing.entity';
-import { CreateBillingDto } from './dto/create-billing.dto';
-import { UpdateBillingDto, UpdateBillingStatusDto } from './dto/update-billing.dto';
-import { User } from '@/modules/v1/users/entities/user.entity';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { BillingListDto } from './dto/billing-list.dto';
+import { Billing } from 'shared/entities';
+import { CreateBillingDto, UpdateBillingDto, UpdateBillingStatusDto } from 'shared/dtos';
+import { User } from 'shared/entities';
+import { IFileUpload, IPaginatedResponse } from 'shared/interfaces';
+import { BillingListDto } from 'shared/dtos';
 import { UsersService } from '../users/users.service';
-import { BillingCurrency, BillingStatus } from './enums/billing.enum';
+import { EBillingCurrency, EBillingStatus } from 'shared/enums';
 import { SessionsService } from '../sessions/sessions.service';
-import { Session } from '../sessions/entities/session.entity';
+import { Session } from 'shared/entities';
 import { PaymentMethodsService } from '../settings/payment-methods/payment-methods.service';
-import { UserLevels, UserRole } from '../users/enums/user.enum';
-import { FileUpload } from '../file-upload/entities/file-upload.entity';
+import { EUserLevels, EUserRole } from 'shared/enums';
+import { FileUpload } from 'shared/entities';
 import { FileUploadService } from '../file-upload/file-upload.service';
 
 @Injectable()
@@ -77,8 +76,8 @@ export class BillingsService {
       user,
       session,
       stripeInvoiceId,
-      status: status || BillingStatus.PENDING,
-      currency: currency || BillingCurrency.USD,
+      status: status || EBillingStatus.PENDING,
+      currency: currency || EBillingCurrency.USD,
       lineItems,
       totalTax,
       discount,
@@ -97,7 +96,7 @@ export class BillingsService {
     }
   }
 
-  async findAll(queryDto: BillingListDto, user: User): Promise<PaginationResponse<Billing>> {
+  async findAll(queryDto: BillingListDto, user: User): Promise<IPaginatedResponse<Billing>> {
     const {
       page = 1,
       limit = 10,
@@ -129,7 +128,7 @@ export class BillingsService {
       .leftJoinAndSelect('user.profile', 'profile')
       .leftJoin('billing.creator', 'creator');
 
-    if (user && user.level !== UserLevels[UserRole.SUPER_ADMIN]) {
+    if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.where('creator.id = :userId', { userId: user.id });
     }
 
@@ -305,11 +304,11 @@ export class BillingsService {
 
 
     if (documents && documents.length > 0) {
-      const uploadedDocs: FileUpload[] = [];
+      const uploadedDocs: IFileUpload[] = [];
       for (const file of documents) {
 
         const uploaded = await this.fileUploadService.uploadFile(file, 'billings');
-        uploadedDocs.push(uploaded);
+        uploadedDocs.push(uploaded as IFileUpload) ;
       }
       billing.documents = [...billing.documents, ...uploadedDocs];
     }

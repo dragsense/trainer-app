@@ -3,7 +3,7 @@
 // Types
 import { IStripeTransaction } from "@/@types/billing.type";
 import { IPaginatedResponse } from "@/@types/api/response.type";
-import { IListParams } from "@/@types/api/param.type";
+import { IListQueryParams } from "@/@types/api/param.type";
 
 // Handlers
 import { ListHandler } from "@/handlers";
@@ -61,7 +61,7 @@ export default function BillingTransactionsPage() {
     <ListHandler<IStripeTransaction>
       ListComponent={StripeTransactionTable}
       storeKey={"stripeTransactions"}
-      queryFn={async (params: IListParams): Promise<IPaginatedResponse<IStripeTransaction>> => {
+      queryFn={async (params: IListQueryParams): Promise<IPaginatedResponse<IStripeTransaction>> => {
         const [chargesResponse] = await Promise.all([
           fetchStripeCharges({ 
             limit: params.limit || 10

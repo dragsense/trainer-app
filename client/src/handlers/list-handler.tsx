@@ -2,10 +2,10 @@
 import React, { useEffect } from "react";
 
 // Types
-import { IPaginatedResponse } from "@/@types/api/response.type";
+import { IPaginatedResponse } from "@shared/interfaces/api/response.interface";
 import {
-  IListParams,
-} from "@/@types/api/param.type";
+  IListQueryParams,
+} from "@shared/interfaces/api/param.interface";
 
 // Custom Hooks
 import { useApiPaginatedQuery } from "@/hooks/use-api-paginated-query";
@@ -26,10 +26,10 @@ interface IListHandlerProps<
   TExtraProps extends Record<string, any> = {},
 > {
   storeKey: string;
-  queryFn: (params: IListParams) => Promise<IPaginatedResponse<TData>>;
+  queryFn: (params: IListQueryParams) => Promise<IPaginatedResponse<TData>>;
   ListComponent: React.ComponentType<{ storeKey: string, store: TListHandlerStore<TData, TExtraProps> }>;
   listProps?: TExtraProps;
-  initialParams?: IListParams;
+  initialParams?: IListQueryParams;
 };
 
 export function ListHandler<

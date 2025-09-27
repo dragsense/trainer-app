@@ -6,17 +6,17 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Session } from './entities/session.entity';
-import { CreateSessionDto } from './dto/create-session.dto';
-import { UpdateSessionDto } from './dto/update-session.dto';
-import { SessionListDto } from './dto/session-list.dto';
+import { Session } from 'shared/entities';
+import { CreateSessionDto } from 'shared/dtos';
+import { UpdateSessionDto } from 'shared/dtos';
+import { SessionListDto } from 'shared/dtos';
 import { UsersService } from '../users/users.service';
 import { UserAvailabilityService } from '../users/services/user-availability.service';
-import { MessageResponse } from '@/interfaces/general.interface';
-import { PaginationResponse } from '@/interfaces/pagination-response.interface';
-import { User } from '../users/entities/user.entity';
-import { SessionStatus } from './enums/session.enum';
-import { UserRole, UserLevels } from '../users/enums/user.enum';
+import { IMessageResponse } from 'shared/interfaces';
+import { IPaginatedResponse } from 'shared/interfaces';
+import { User } from 'shared/entities';
+import { ESessionStatus } from 'shared/enums';
+import { EUserRole, EUserLevels } from 'shared/enums';
 import { StripeConnectService } from '../settings/stripe-connect/stripe-connect.service';
 
 @Injectable()
@@ -28,21 +28,21 @@ export class SessionsService {
     private readonly userAvailabilityService: UserAvailabilityService,
   ) { }
 
-  async create(user: User, createSessionDto: CreateSessionDto): Promise<MessageResponse> {
+  async create(user: User, createSessionDto: CreateSessionDto): Promise<IMessageResponse> {
     const { trainer, clients: clientsData, dateTime, ...data } = createSessionDto;
 
     // Validate users exist and have correct roles
     const trainerUser = await this.usersService.findOne({ id: trainer.id });
 
-    if (!trainerUser || trainerUser.level !== UserLevels[UserRole.TRAINER]) {
+    if (!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
       throw new BadRequestException('Invalid trainer ID');
     }
 
-    if (!clientsData.ids || clientsData.ids.length === 0) {
-      throw new BadRequestException('Invalid client ID');
+    if (!clientsData || clientsData.length === 0) {
+      throw new BadRequestException('At least one client is required');
     }
 
-    const clients = await this.usersService.findByIds(clientsData.ids);
+    const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
 
     if (clients.length === 0) throw new NotFoundException("No valid members found");
 
@@ -64,14 +64,14 @@ export class SessionsService {
       trainer: trainerUser,
       clients,
       creator: user,
-      status: SessionStatus.SCHEDULED
+      status: ESessionStatus.SCHEDULED
     });
 
     await this.sessionsRepository.save(session);
     return { message: 'Session created successfully' };
   }
 
-  async findAll(queryDto: SessionListDto, user: User): Promise<PaginationResponse<Session>> {
+  async findAll(queryDto: SessionListDto, user: User): Promise<IPaginatedResponse<Session>> {
     const {
       page = 1,
       limit = 10,
@@ -96,12 +96,12 @@ export class SessionsService {
 
     // Role-based filtering
     const userLevel = user.level;
-    if (userLevel === UserLevels[UserRole.TRAINER]) {
+    if (userLevel === EUserLevels[EUserRole.TRAINER]) {
       query.where('session.trainer.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.USER]) {
+    } else if (userLevel === EUserLevels[EUserRole.USER]) {
       query.leftJoin('session.clients', 'clients').
         where('clients.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
+    } else if (userLevel === EUserLevels[EUserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else {
       throw new ForbiddenException('Invalid role');
@@ -181,11 +181,11 @@ export class SessionsService {
 
     // Role-based access control
     const userLevel = user.level;
-    if (userLevel === UserLevels[UserRole.TRAINER]) {
+    if (userLevel === EUserLevels[EUserRole.TRAINER]) {
       query.andWhere('trainer.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.USER]) {
+    } else if (userLevel === EUserLevels[EUserRole.USER]) {
       query.andWhere('client.id = :userId', { userId: user.id });
-    } else if (userLevel === UserLevels[UserRole.SUPER_ADMIN]) {
+    } else if (userLevel === EUserLevels[EUserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else { 
       throw new ForbiddenException('Invalid role');
@@ -204,7 +204,7 @@ export class SessionsService {
     const session = await this.findOne(id, user);
 
     // Only allow updates for scheduled sessions
-    if (session.status !== SessionStatus.SCHEDULED) {
+    if (session.status !== ESessionStatus.SCHEDULED) {
       throw new BadRequestException('Can only update scheduled sessions');
     }
 
@@ -213,7 +213,7 @@ export class SessionsService {
     // Update trainer if specified
     if (trainer) {
       const trainerUser = await this.usersService.findOne({ id: trainer.id });
-      if (!trainerUser || trainerUser.level !== UserLevels[UserRole.TRAINER]) {
+      if (!trainerUser || trainerUser.level !== EUserLevels[EUserRole.TRAINER]) {
         throw new BadRequestException('Invalid trainer ID');
       }
 
@@ -241,11 +241,11 @@ export class SessionsService {
     }
 
     if (clientsData) {
-      if (!clientsData.ids || clientsData.ids.length === 0) {
-        throw new BadRequestException('Invalid client IDs');
+      if (!clientsData || clientsData.length === 0) {
+        throw new BadRequestException('At least one client is required');
       }
 
-      const clients = await this.usersService.findByIds(clientsData.ids);
+      const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
       if (clients.length === 0) {
         throw new NotFoundException('No valid clients found');
       }
@@ -260,7 +260,7 @@ export class SessionsService {
     return this.findOne(session.id, user);
   }
 
-  async updateStatus(id: number, status: SessionStatus, user: User): Promise<Session> {
+  async updateStatus(id: number, status: ESessionStatus, user: User): Promise<Session> {
     const session = await this.findOne(id, user);
 
     // Validate status transition
@@ -275,11 +275,11 @@ export class SessionsService {
     return this.findOne(session.id, user);
   }
 
-  async remove(id: number, user: User): Promise<MessageResponse> {
+  async remove(id: number, user: User): Promise<IMessageResponse> {
     const session = await this.findOne(id, user);
 
     // Only allow deletion of scheduled sessions
-    if (session.status !== SessionStatus.SCHEDULED) {
+    if (session.status !== ESessionStatus.SCHEDULED) {
       throw new BadRequestException('Can only delete scheduled sessions');
     }
 
@@ -309,7 +309,7 @@ export class SessionsService {
     const query = this.sessionsRepository
       .createQueryBuilder('session')
       .where('session.trainer.id = :trainerId', { trainerId })
-      .andWhere('session.status = :status', { status: SessionStatus.SCHEDULED })
+      .andWhere('session.status = :status', { status: ESessionStatus.SCHEDULED })
       .andWhere(
         '(session.dateTime, session.dateTime + session.duration * interval \'1 minute\') OVERLAPS (:start, :end)',
         { start: sessionStart, end: sessionEnd }
@@ -344,14 +344,14 @@ export class SessionsService {
     }
   }
 
-  private isValidStatusTransition(currentStatus: SessionStatus, newStatus: SessionStatus): boolean {
+  private isValidStatusTransition(currentStatus: ESessionStatus, newStatus: ESessionStatus): boolean {
     // Define valid status transitions
-    const validTransitions: Record<SessionStatus, SessionStatus[]> = {
-      [SessionStatus.SCHEDULED]: [SessionStatus.IN_PROGRESS, SessionStatus.CANCELLED, SessionStatus.NO_SHOW],
-      [SessionStatus.IN_PROGRESS]: [SessionStatus.COMPLETED],
-      [SessionStatus.COMPLETED]: [],
-      [SessionStatus.CANCELLED]: [],
-      [SessionStatus.NO_SHOW]: []
+    const validTransitions: Record<ESessionStatus, ESessionStatus[]> = {
+      [ESessionStatus.SCHEDULED]: [ESessionStatus.IN_PROGRESS, ESessionStatus.CANCELLED, ESessionStatus.NO_SHOW],
+      [ESessionStatus.IN_PROGRESS]: [ESessionStatus.COMPLETED],
+      [ESessionStatus.COMPLETED]: [],
+      [ESessionStatus.CANCELLED]: [],
+      [ESessionStatus.NO_SHOW]: []
     };
 
     return validTransitions[currentStatus]?.includes(newStatus) || false;

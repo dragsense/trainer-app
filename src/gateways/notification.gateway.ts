@@ -56,14 +56,20 @@ export class NotificationGateway implements OnGatewayInit {
 
     // Static method to send notifications to specific users
     static sendNotificationToUser(userId: number, notification: any) {
+        if (!userId) {
+            return;
+        }
         if (NotificationGateway.instance?.server) {
             NotificationGateway.instance.server.to(`user_${userId}`).emit('newNotification', notification);
             NotificationGateway.instance.logger.log(`📨 Sent notification to user ${userId}`);
         }
     }
 
-    // Static method to send notifications to multiple users
+    // Static method to send notifications to multiple usesrs
     static sendNotificationToUsers(userIds: number[], notification: any) {
+        if (userIds.length === 0) {
+            return;
+        }
         if (NotificationGateway.instance?.server) {
             userIds.forEach(userId => {
                 NotificationGateway.instance.server.to(`user_${userId}`).emit('newNotification', notification);
@@ -74,6 +80,9 @@ export class NotificationGateway implements OnGatewayInit {
 
     // Static method to update unread count
     static updateUnreadCount(userId: number, count: number) {
+        if (!userId) {
+            return;
+        }
         if (NotificationGateway.instance?.server) {
             NotificationGateway.instance.server.to(`user_${userId}`).emit('unreadCountUpdate', { count });
             NotificationGateway.instance.logger.log(`📊 Updated unread count for user ${userId}: ${count}`);

@@ -1,1 +1,1 @@
-export { default as SessionFormModal } from "./session-form-modal";
+export { default as SessionFormModal, type ISessionFormModalExtraProps } from "./session-form-modal";

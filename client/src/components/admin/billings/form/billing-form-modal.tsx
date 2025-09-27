@@ -8,21 +8,20 @@ import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
-import { IBilling, TBillingData } from "@/@types/billing.type";
-import { BillingCurrency, BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
-import { IUser } from "@/@types/user.type";
-import { PaymentMethodType } from "#/modules/v1/settings/payment-methods/enums/payment-method-type.enum";
-
+import { TFormHandlerStore } from "@/stores";
+import {  TBillingData } from "@shared/types/billing.type";
+import { EBillingCurrency, EBillingStatus } from "@shared/enums/billing.enum";
+import { IUser } from "@shared/interfaces/user.interface";
+import { EPaymentMethodType }   from "@shared/enums/payment-method.enum";
+import { IBilling } from "@shared/interfaces/billing.interface";
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { LineItemInput } from "./line-item-input";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { useShallow } from "zustand/shallow";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 
 
@@ -54,7 +53,7 @@ export default function BillingFormModal({
 
   const {open, onClose, isEditing} = extra;
 
-  const fields = useMemo<TFieldConfig[]>(() => [
+  const fields = useMemo<TFieldConfig<TBillingData>[]>(() => [
     {
       id: "userId",
       name: "userId",
@@ -104,7 +103,7 @@ export default function BillingFormModal({
       label: "Status",
       type: "select",
       required: false,
-      options: Object.values(BillingStatus).map((value) => ({ label: value, value })),
+      options: Object.values(EBillingStatus).map((value) => ({ label: value, value })),
     },
     {
       id: "currency",
@@ -112,7 +111,7 @@ export default function BillingFormModal({
       label: "Currency",
       type: "select",
       required: false,
-      options: Object.values(BillingCurrency).map((value) => ({ label: value, value })),
+      options: Object.values(EBillingCurrency).map((value) => ({ label: value, value })),
     },
      {
       id: "paymentMethodType",
@@ -120,7 +119,7 @@ export default function BillingFormModal({
       label: "Payment Method",
       type: "select",
       required: false,
-      options: Object.values(PaymentMethodType).map((value) => ({ label: value, value })),
+      options: Object.values(EPaymentMethodType).map((value) => ({ label: value, value })),
     },
     {
       id: "totalTax",
@@ -199,8 +198,6 @@ export default function BillingFormModal({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {inputs}
       </div>
-
-         <FormErrors />
     </ModalForm>
 
   </>

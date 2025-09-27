@@ -8,11 +8,11 @@ import { ReminderSchedulerService } from './services/reminder-scheduler.service'
 import { ReminderSubscriber } from './services/reminder-subscriber.service';
 import { ReminderEmailService } from './services/reminder-email.service';
 import { ReminderNotificationService } from './services/reminder-notification.service';
-import { Reminder } from './entities/reminder.entity';
+import { Reminder } from 'shared/entities';
 import { UsersModule } from '../users/users.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ReminderBillingService } from './services/reminder-billing.service';
-import { Billing } from '../billings/entities/billing.entity';
+import { Billing } from 'shared/entities';
 import { BillingsModule } from '../billings/billings.module';
 
 @Module({

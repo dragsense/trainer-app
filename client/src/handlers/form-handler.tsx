@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 
 // UI Components
@@ -24,9 +24,11 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 // Stores
 import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore, TFormHandlerStore } from "@/stores";
 import { toast } from "sonner";
-import { TQueryParams } from "@/@types/api/param.type";
+import { TQueryParams } from "@shared/types/api/param.type";
 import { useShallow } from "zustand/shallow";
 import { pickKeys, unwrapValues } from "@/utils";
+import { ClassConstructor } from "class-transformer";
+import { classValidatorResolver } from "@/lib/validation";
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Record<string, any> = {}> {
@@ -42,14 +44,13 @@ export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Rec
   onError?: (error: Error) => void;
   initialValues: Readonly<TDefaultValue<TFormData>>;
   validationMode?: EVALIDATION_MODES;
-  validationSchema: z.ZodType<TFormData, any, TFormData>;
+  dto: ClassConstructor<any>;
   storeKey: string;
 }
 
 
 export function FormHandler<TFormData extends FieldValues, TResponse = any, TExtraProps extends Record<string, any> = {}>({
   initialParams = {},
-
   mutationFn,
   FormComponent,
   formProps,
@@ -57,14 +58,13 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
   onError,
   initialValues,
   validationMode = EVALIDATION_MODES.OnChange,
-  validationSchema,
+  dto,
   storeKey,
 }: IFormHandlerProps<TFormData, TResponse, TExtraProps>) {
 
   const formStoreKey = storeKey + "-form";
 
   const values = useMemo(() => {
-
     return unwrapValues(initialValues) as TFormData;
   }, [initialValues]);
 
@@ -82,12 +82,9 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
   const handleSubmit = async (formData: TFormData) => {
 
     const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
-      if (!config.notIncluded) {
-        acc[key] = formData[key] ?? config.value;
-      }
+      acc[key] = formData[key] ?? config.value;
       return acc;
     }, {} as Record<string, any>) as TFormData;
-
 
 
     try {
@@ -132,7 +129,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
   }, [formStoreKey]);
 
   const form = useForm<TFormData>({
-    resolver: zodResolver(validationSchema),
+    resolver: classValidatorResolver(dto),
     defaultValues: (values || {}) as DefaultValues<TFormData>,
     mode: validationMode,
   });

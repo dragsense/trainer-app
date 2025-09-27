@@ -7,15 +7,15 @@ import { Loader2, } from 'lucide-react';
 import CompactDashboard from './compact-dashboard';
 
 // Types
-import { ICombinedDashboardData } from '@/@types/dashboard.type';
-import { AnalyticsPeriod } from "#/modules/v1/dashboard/enums/dashboard-analytics.enum";
+import { ICombinedDashboardData } from '@shared/interfaces/dashboard.interface';
+import { EAnalyticsPeriod } from "@shared/enums/dashboard-analytics.enum";
 
 import { DateRange } from 'react-day-picker';
 
 
 
 export interface IExtraProps {
-  period: AnalyticsPeriod
+  period: EAnalyticsPeriod
   customRange?: DateRange
 }
 

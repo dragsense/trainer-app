@@ -1,14 +1,12 @@
 // External Libraries
-import React from "react";
-import { z } from "zod";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { TDefaultValue } from "@/@types/form/field.type";
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TResetPasswordData } from "@/@types/auth.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { TAuthResetPasswordData } from "@shared/types/auth.type";
 
 // Handlers
 import { FormHandler } from "@/handlers";
@@ -18,41 +16,36 @@ import { ResetPasswordForm } from "@/components/auth";
 
 // Services
 import { resetPassword } from "@/services/auth.api";
+import { ResetPasswordWithTokenDto } from "@shared/dtos/auth-dtos/auth-reset-password.dto";
 
 // Config
 import { PUBLIC_ROUTES } from "@/config/routes.config";
 
-// Schema
-const resetPasswordSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters")
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"]
-});
+
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
-  const RESET_PASSWORD_INITIAL_VALUES: TDefaultValue<TResetPasswordData> = {
+  const RESET_PASSWORD_INITIAL_VALUES: TDefaultValue<TAuthResetPasswordData> = {
+    token: { value: token ?? "" },
     password: { value: "" },
-    confirmPassword: { notIncluded: true, value: "" }
+    confirmPassword: { value: "" }
   };
-
+  
   if (!token) {
     navigate(PUBLIC_ROUTES.LOGIN);
     return null;
   }
 
   return (
-    <FormHandler<TResetPasswordData, IMessageResponse>
-      mutationFn={(data) => resetPassword({ ...data, token })}
+    <FormHandler<TAuthResetPasswordData, IMessageResponse>
+      mutationFn={resetPassword}
       FormComponent={ResetPasswordForm}
       initialValues={RESET_PASSWORD_INITIAL_VALUES}
       validationMode={EVALIDATION_MODES.OnChange}
-      validationSchema={resetPasswordSchema}
+      dto={ResetPasswordWithTokenDto}
       onSuccess={() => {
         toast.success('Password reset successfully')
         navigate(PUBLIC_ROUTES.LOGIN)

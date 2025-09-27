@@ -2,8 +2,8 @@
 import { useState } from 'react';
 
 // Types
-import { TResetPasswordData } from '@/@types/auth.type';
-import { IMessageResponse } from '@/@types/api/response.type';
+import { TAuthResetPasswordData } from '@shared/types/auth.type';
+import { IMessageResponse } from '@shared/interfaces/api/response.interface';
 import { TFormHandlerStore } from '@/stores';
 import { THandlerComponentProps } from '@/@types/handler-types';
 
@@ -20,10 +20,11 @@ import { useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
-import { FormErrors } from '../shared-ui/form-errors';
 import { AppCard } from '../layout-ui/app-card';
+import { TFieldConfig } from '@/@types/form/field.type';
+import { FormErrors } from '../shared-ui/form-errors';
 
-interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TResetPasswordData, IMessageResponse, any>> {
+interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TAuthResetPasswordData, IMessageResponse, any>> {
 }
 
 export default function ResetPasswordForm({
@@ -39,56 +40,61 @@ export default function ResetPasswordForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const fields: TFieldConfig<TAuthResetPasswordData>[] = [
+    {
+      id: 'password',
+      name: 'password',
+      label: 'New Password',
+      type: showPassword ? 'text' : 'password',
+      placeholder: 'Enter your new password',
+      required: true,
+      endAdornment: (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )
+    },
+    {
+      id: 'confirmPassword',
+      name: 'confirmPassword',
+      label: 'Confirm New Password',
+      type: showConfirmPassword ? 'text' : 'password',
+      placeholder: 'Confirm your new password',
+      required: true,
+      endAdornment: (
+        <button
+          type="button"
+          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      )
+    }
+  ]
+
   const { inputs } = useInput({
-    fields: [
-      {
-        id: 'newPassword',
-        name: 'newPassword',
-        label: 'New Password',
-        type: showPassword ? 'text' : 'password',
-        placeholder: 'Enter your new password',
-        required: true,
-        endAdornment: (
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        )
-      },
-      {
-        id: 'confirmPassword',
-        name: 'confirmPassword',
-        label: 'Confirm New Password',
-        type: showConfirmPassword ? 'text' : 'password',
-        placeholder: 'Confirm your new password',
-        required: true,
-        endAdornment: (
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        )
-      }
-    ],
+    fields,
     showRequiredAsterisk: true
   });
-
+ 
   return (
-    <AppCard
-      header={
-        <>
-          <h2 className="text-md font-semibold">Reset Password</h2>
-          <p className="text-sm text-muted-foreground">Enter your new password to reset your account</p>
-        </>
-      }
-      footer={
-       <div className="flex flex-col gap-4 w-full">
+    <Form<TAuthResetPasswordData, IMessageResponse>
+      formStore={store}
+    >
+      <AppCard
+        header={
+          <>
+            <h2 className="text-md font-semibold">Reset Password</h2>
+            <p className="text-sm text-muted-foreground">Enter your new password to reset your account</p>
+          </>
+        }
+        footer={
+          <div className="flex flex-col gap-4 w-full">
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Reset Password
@@ -102,17 +108,14 @@ export default function ResetPasswordForm({
               </p>
             </div>
           </div>
-      }
-    >
-      <Form<TResetPasswordData, IMessageResponse>
-        formStore={store}
+        }
       >
+
         <div className="flex flex-col gap-4 w-full">
           {inputs}
         </div>
-
         <FormErrors />
-      </Form>
-    </AppCard>
+      </AppCard>
+    </Form>
   );
 }

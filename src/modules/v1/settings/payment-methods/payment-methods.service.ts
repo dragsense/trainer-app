@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PaymentMethod } from './entities/payment-method.entity';
-import { CreatePaymentMethodDto } from './dto/create-payment-method.dto';
-import { UpdatePaymentMethodDto } from './dto/update-payment-method.dto';
-import { PaymentMethodListDto } from './dto/payment-method-list.dto';
-import { PAYMENT_METHOD_CONFIGS, PaymentMethodType } from './enums/payment-method-type.enum';
-import { MessageResponse } from '@/interfaces/general.interface';
+import { PaymentMethod } from 'shared/entities';
+import { CreatePaymentMethodDto } from 'shared/dtos';
+import { UpdatePaymentMethodDto } from 'shared/dtos';
+import { PaymentMethodListDto } from 'shared/dtos';
+import { PAYMENT_METHOD_CONFIGS, EPaymentMethodType } from 'shared/enums';
+import { IMessageResponse } from 'shared/interfaces';
 
 @Injectable()
 export class PaymentMethodsService {
@@ -91,7 +91,7 @@ export class PaymentMethodsService {
     
 
     query
-      .orderBy(`paymentMethod.${sortColumn}`, sortOrder as 'ASC' | 'DESC')
+        .orderBy(`paymentMethod.${sortColumn}`, sortOrder as 'ASC' | 'DESC')
 
     const data = await query.getMany();
 
@@ -106,7 +106,7 @@ export class PaymentMethodsService {
     return paymentMethod;
   }
 
-  async toggleEnabled(id: number): Promise<MessageResponse> {
+  async toggleEnabled(id: number): Promise<IMessageResponse> {
     const method = await this.findOne(id);
 
     method.isEnabled = !method.isEnabled;
@@ -130,7 +130,7 @@ export class PaymentMethodsService {
   async updateSettings(id: number, settings: { isEnabled?: boolean; config?: Record<string, any> }): Promise<PaymentMethod> {
     const paymentMethod = await this.findOne(id);
 
-    if (settings.isEnabled !== undefined && paymentMethod.key !== PaymentMethodType.CASH) {
+    if (settings.isEnabled !== undefined && paymentMethod.key !== EPaymentMethodType.CASH) {
       paymentMethod.isEnabled = settings.isEnabled;
     }
     if (settings.config !== undefined) {
@@ -153,7 +153,7 @@ export class PaymentMethodsService {
     });
   }
 
-  async findByKey(key: PaymentMethodType): Promise<PaymentMethod | null> {
+  async findByKey(key: EPaymentMethodType): Promise<PaymentMethod | null> {
     return this.paymentMethodRepo.findOne({
       where: { key, isEnabled: true },
       select: ['id', 'name', 'key', 'config']
@@ -161,7 +161,7 @@ export class PaymentMethodsService {
   }
 
   async getStripeConfig(): Promise<{ secretKey: string; webhookSecret?: string; publishableKey: string } | null> {
-    const stripeMethod = await this.findByKey(PaymentMethodType.STRIPE);
+    const stripeMethod = await this.findByKey(EPaymentMethodType.STRIPE);
 
 
     if (!stripeMethod || !stripeMethod.config) {

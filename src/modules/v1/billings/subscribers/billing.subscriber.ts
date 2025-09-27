@@ -8,10 +8,10 @@ import {
 } from 'typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import { Billing } from '../entities/billing.entity';
+import { Billing } from 'shared/entities';
 import { UsersService } from '@/modules/v1/users/users.service';
-import { BillingStatus, BillingType } from '../enums/billing.enum';
-import { Profile } from '@/modules/v1/users/profiles/entities/profile.entity';
+import { EBillingStatus, EBillingType, EPaymentMethodType } from 'shared/enums';
+import { Profile } from 'shared/entities';
 import { StripeInvoiceService } from '@/modules/v1/stripe/services/stripe-invoice.service';
 import Stripe from 'stripe';
 import { StripeBillingService } from '../../stripe/services/stripe-billing.service';
@@ -73,7 +73,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
       const newStatus = event.entity.status;
       const oldStatus = event.databaseEntity.status;
 
-      if (newStatus === BillingStatus.PAID && oldStatus !== BillingStatus.PAID) {
+      if (newStatus === EBillingStatus.PAID && oldStatus !== EBillingStatus.PAID) {
         const billing = await event.manager.getRepository(Billing).findOne({
           where: { id: event.entity.id },
           relations: ['user']
@@ -163,7 +163,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
       Math.floor(dueDateTimestamp),
       false,
       {
-        ...(newBilling.status === BillingStatus.PAID ? { paid_out_of_band: true } : {})
+        ...(newBilling.status === EBillingStatus.PAID ? { paid_out_of_band: true } : {})
       }
     );
 
@@ -239,7 +239,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
                   </tr>
                   <tr style="border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 12px 0; font-weight: 600; color: #374151;">Payment Method:</td>
-                    <td style="padding: 12px 0; color: #1f2937;">${billing.paymentMethod?.key === 'cash' ? 'Cash Payment' : 'Online Payment (Stripe)'}</td>
+                    <td style="padding: 12px 0; color: #1f2937;">${billing.paymentMethod?.key === EPaymentMethodType.CASH ? 'Cash Payment' : 'Online Payment (Stripe)'}</td>
                   </tr>
                   <tr style="border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 12px 0; font-weight: 600; color: #374151;">Invoice Amount:</td>
@@ -292,7 +292,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
               ` : ''}
 
               <!-- Session Details -->
-              ${billing.type === BillingType.SESSION ? `
+              ${billing.type === EBillingType.SESSION ? `
               <div style="background: #fef3c7; padding: 24px; border-radius: 12px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
                 <h3 style="color: #92400e; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">🏋️ Training Session</h3>
                 <table style="width: 100%; border-collapse: collapse;">

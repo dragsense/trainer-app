@@ -5,35 +5,30 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AppDialog } from "@/components/layout-ui/app-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { BillingStatus } from "#/modules/v1/billings/enums/billing.enum";
+import { EBillingStatus } from "@shared/enums/billing.enum";
 
 // Types
-import { IBilling } from "@/@types/billing.type";
-import { TActionComponentProps } from "@/@types/handler-types";
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
-import { FileUpload } from "#/modules/v1/file-upload/entities/file-upload.entity";
-
+import { IBilling } from "@shared/interfaces/billing.interface";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { TSingleHandlerStore } from "@/stores";
+import { IFileUpload } from "@shared/interfaces/file-upload.interface";
 // API
 import { updateBillingStatus } from "@/services/billing.api";
-import { set } from "date-fns";
 
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
 
 
-interface IBillingStatusDialogProps extends TActionComponentProps<any> {
-    storeKey: string;
+interface IBillingStatusDialogProps extends THandlerComponentProps<TSingleHandlerStore<IBilling, any>> {
 }
 
-export default function BillingStatusDialog({ storeKey }: IBillingStatusDialogProps) {
-    const singleStoreKey = `${storeKey}-single`;
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling>>(singleStoreKey);
+export default function BillingStatusDialog({ storeKey, store }: IBillingStatusDialogProps) {
 
-    if (!singleStore) {
-        return <div>Single store "{singleStoreKey}" not found. Did you forget to register it?</div>;
+    if (!store) {
+        return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { response: billing, id, setAction } = singleStore(
+    const { response: billing, id, setAction } = store(
         useShallow((state) => ({
             action: state.action,
             id: state.id,
@@ -43,8 +38,8 @@ export default function BillingStatusDialog({ storeKey }: IBillingStatusDialogPr
     );
 
     const [open, setOpen] = useState(false);
-    const [selectedStatus, setSelectedStatus] = useState<BillingStatus | undefined>();
-    const [existingDocs, setExistingDocs] = useState<FileUpload[]>([]);
+    const [selectedStatus, setSelectedStatus] = useState<EBillingStatus | undefined>();
+    const [existingDocs, setExistingDocs] = useState<IFileUpload[]>([]);
     const [newFiles, setNewFiles] = useState<File[]>([]);
     const [removedDocIds, setRemovedDocIds] = useState<number[]>([]);
 
@@ -114,15 +109,15 @@ export default function BillingStatusDialog({ storeKey }: IBillingStatusDialogPr
                 >
                     {/* Status Select */}
                     <Select
-                        disabled={billing?.status === BillingStatus.PAID}
+                        disabled={billing?.status === EBillingStatus.PAID}
                         value={selectedStatus}
-                        onValueChange={(val: BillingStatus) => setSelectedStatus(val)}
+                        onValueChange={(val: EBillingStatus) => setSelectedStatus(val)}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
-                            {Object.values(BillingStatus).map((status) => (
+                            {Object.values(EBillingStatus).map((status) => (
                                 <SelectItem key={status} value={status}>
                                     {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
                                 </SelectItem>
