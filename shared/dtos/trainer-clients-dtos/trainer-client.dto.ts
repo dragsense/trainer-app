@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { ListQueryDto } from "../common/list-query.dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
@@ -20,7 +20,7 @@ export class CreateTrainerClientDto {
 
 
 
-export class UpdateTrainerClientDto extends PartialType(CreateTrainerClientDto) { }
+export class UpdateTrainerClientDto extends createPartialType(CreateTrainerClientDto) { }
 
 
 

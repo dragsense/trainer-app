@@ -10,7 +10,8 @@ import {
   ValidateNested,
   IsArray
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { Type } from 'class-transformer';
 import { ESessionType, ESessionStatus } from '../../enums/session.enum';
 import { EBillingCurrency } from '../../enums/billing.enum';
@@ -127,17 +128,16 @@ export class CreateSessionDto {
   trainer: UserDto;
 
   @ApiProperty({ 
-    type: () => [UserDto],
+    type: () => [Number],
     description: 'Clients assigned to the session - only id field required for each',
     isArray: true
   })
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => UserDto)
-  clients: UserDto[];
+  @Type(() => Number)
+  clients: number[];
 }
 
-export class UpdateSessionDto extends PartialType(CreateSessionDto) {}
+export class UpdateSessionDto extends createPartialType(CreateSessionDto) {}
 
 export class BookSessionDto {
   @IsNumber()

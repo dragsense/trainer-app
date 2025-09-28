@@ -1,61 +1,53 @@
 /**
- * Universal Type Utilities for Frontend and Backend
- * Works with both React and NestJS environments
+ * Frontend-compatible Type Utilities
+ * Works with React and other frontend frameworks
  */
 
 /**
- * Custom OmitType that works on both frontend and backend
- * This actually removes properties from the class definition
+ * Frontend-compatible OmitType
+ * Creates a new class with omitted properties
  */
-export function createOmitType<T, K extends keyof T>(
+export function createOmitType<T extends Record<string, any>, K extends keyof T>(
   baseClass: new (...args: any[]) => T,
   omittedKeys: readonly K[]
-) {
-  // Create a new class that doesn't inherit the omitted properties
+): new (...args: any[]) => Omit<T, K> {
   class OmittedClass {
     constructor(...args: any[]) {
       // Create instance of base class
       const baseInstance = new baseClass(...args);
       
-      // Copy only the properties that are NOT omitted
+      // Copy all properties except omitted ones
       Object.keys(baseInstance).forEach(key => {
         if (!omittedKeys.includes(key as K)) {
           (this as any)[key] = (baseInstance as any)[key];
         }
       });
-      
-      // Copy methods from base class
-      Object.getOwnPropertyNames(baseClass.prototype).forEach(methodName => {
-        if (methodName !== 'constructor' && typeof (baseInstance as any)[methodName] === 'function') {
-          (this as any)[methodName] = (baseInstance as any)[methodName].bind(this);
-        }
-      });
     }
   }
-
-  // Copy static properties
-  Object.setPrototypeOf(OmittedClass, baseClass);
-  Object.setPrototypeOf(OmittedClass.prototype, baseClass.prototype);
-
+  
   return OmittedClass as any;
 }
 
 /**
- * Alternative: Simple class that extends without omitted properties
+ * Frontend-compatible PartialType
+ * Creates a new class with all properties optional
  */
-export function omitType<T, K extends keyof T>(
-  baseClass: new (...args: any[]) => T,
-  omittedKeys: readonly K[]
-) {
-  return class extends baseClass {
+export function createPartialType<T extends Record<string, any>>(
+  baseClass: new (...args: any[]) => T
+): new (...args: any[]) => Partial<T> {
+  class PartialClass {
     constructor(...args: any[]) {
-      super(...args);
-      // Remove omitted properties
-      omittedKeys.forEach(key => {
-        delete (this as any)[key];
+      // Create instance of base class
+      const baseInstance = new baseClass(...args);
+      
+      // Copy all properties
+      Object.keys(baseInstance).forEach(key => {
+        (this as any)[key] = (baseInstance as any)[key];
       });
     }
-  } as any;
+  }
+  
+  return PartialClass as any;
 }
 
 /**

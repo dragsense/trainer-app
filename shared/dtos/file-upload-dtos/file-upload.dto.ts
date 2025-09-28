@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { Type } from 'class-transformer';
 import { EFileType } from '../../enums/file-upload.enum';
 import { ListQueryDto } from '../common/list-query.dto';
@@ -32,7 +33,7 @@ export class CreateFileUploadDto {
   userId?: number;
 }
 
-export class UpdateFileUploadDto extends PartialType(CreateFileUploadDto) {}
+export class UpdateFileUploadDto extends createPartialType(CreateFileUploadDto) {}
 
 export class FileListDto extends ListQueryDto<IFileUpload> {
   @ApiPropertyOptional({ enum: EFileType })

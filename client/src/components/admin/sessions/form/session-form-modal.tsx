@@ -47,6 +47,8 @@ export default function SessionFormModal({
   const onClose = store((state) => state.extra.onClose)
   const trainerId = store((state) => state.extra.trainerId)
 
+  const users = useSearchableUsers({ level: EUserLevels[EUserRole.USER] })
+
   const UserSelect = ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
     <SearchableInputWrapper<IUser>
       {...props}
@@ -149,22 +151,11 @@ export default function SessionFormModal({
       id: "clients",
       name: "clients",
       label: "Clients",
-      type: "array",
+      type: "multiSelect",
+      options: users?.response?.data?.map((user) => ({ label: user.email, value: user.id })) || [],
       required: true,
-      itemFields: [
-        {
-          id: "id",
-          name: "id",
-          label: "Select Clients",
-          type: "custom",
-          required: true,
-          valueType: "number",
-          Component: (props) => (
-            <UserSelect props={props} multiple={true} level={EUserLevels[EUserRole.USER]} />
-          ),
-        },
-        
-      ]
+ 
+
     },
     {
       id: "description",

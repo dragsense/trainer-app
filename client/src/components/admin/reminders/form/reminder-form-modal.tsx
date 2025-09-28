@@ -8,8 +8,7 @@ import { useSearchableBillings, useSearchableSessions, useSearchableUsers } from
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
-import { IReminder } from "@shared/interfaces/reminder.interface";
+import { TFormHandlerStore } from "@/stores";
 import { TReminderData } from "@shared/types/reminder.type";
 import { EReminderType, EReminderFrequency, EReminderActions } from "@shared/enums/reminder.enum";
 import { IBilling } from "@shared/interfaces/billing.interface";
@@ -22,7 +21,6 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 
 // Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { useShallow } from "zustand/shallow";
@@ -400,7 +398,6 @@ export default function ReminderFormModal({
         {categorizedContent}
       </div>
 
-       <FormErrors />
     </ModalForm>
   );
 }

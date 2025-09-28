@@ -9,7 +9,7 @@ import { ProfileForm } from "@/page-components";
 import { fetchProfile } from "@/services/user.api";
 
 // Types
-import { IProfile } from "@/@types/user.type";
+import { IProfile } from "@shared/interfaces/user.interface";
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";

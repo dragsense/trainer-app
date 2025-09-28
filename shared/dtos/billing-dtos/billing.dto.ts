@@ -1,4 +1,5 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import {
   IsEnum,
   IsNotEmpty,
@@ -41,7 +42,7 @@ export class AmountCalculationConstraint implements ValidatorConstraintInterface
 export class FutureDateConstraint implements ValidatorConstraintInterface {
   validate(date: Date, args: ValidationArguments) {
     if (!date) return true; // Optional field, so empty is valid
-    return date > new Date();
+    return new Date(date) > new Date();
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -165,7 +166,7 @@ export class CreateBillingDto {
   paymentMethodType: EPaymentMethodType;
 }
 
-export class UpdateBillingDto extends PartialType(CreateBillingDto) {}
+export class UpdateBillingDto extends createPartialType(CreateBillingDto) {}
 
 export class UpdateBillingStatusDto {
   @ApiProperty({ enum: EBillingStatus, example: EBillingStatus.PAID })

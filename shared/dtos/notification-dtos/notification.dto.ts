@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsBoolean, IsNumber } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { ENotificationType, ENotificationStatus } from '../../enums/notification.enum';
 import { Type } from 'class-transformer';
 import { PaginationMetaDto } from '../common/pagination.dto';
@@ -40,7 +41,7 @@ export class CreateNotificationDto {
   
 }
 
-export class UpdateNotificationDto extends PartialType(CreateNotificationDto) {}
+export class UpdateNotificationDto extends createPartialType(CreateNotificationDto) {}
 
 
 export class NotificationPaginatedDto extends PaginationMetaDto {

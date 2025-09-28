@@ -84,12 +84,7 @@ export default function SessionForm({
             }
         },
         clients: {
-            value: [{
-                isNested: true,
-                value: {
-                    id: { value: 0 }
-                }
-            }]
+            value: []
         }
     };
 

@@ -1,4 +1,5 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateAppSettingDto {
@@ -8,5 +9,5 @@ export class CreateAppSettingDto {
   allowNotification?: boolean;
 }
 
-export class UpdateAppSettingDto extends PartialType(CreateAppSettingDto) {
+export class UpdateAppSettingDto extends createPartialType(CreateAppSettingDto) {
 }

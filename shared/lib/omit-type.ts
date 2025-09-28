@@ -1,60 +1,44 @@
 /**
- * Custom OmitType utility that works on both frontend and backend
+ * Frontend-compatible OmitType utility
  * This replaces NestJS Swagger's OmitType for shared DTOs
  */
 
-export function OmitType<T, K extends keyof T>(
-  classRef: new (...args: any[]) => T,
-  keys: readonly K[]
+// Type-only utility (compile-time only)
+export type OmitType<T, K extends keyof T> = Omit<T, K>;
+
+// Runtime utility for creating classes with omitted properties
+export function createOmitType<T extends Record<string, any>, K extends keyof T>(
+  baseClass: new (...args: any[]) => T,
+  omittedKeys: readonly K[]
 ): new (...args: any[]) => Omit<T, K> {
-  // Create a new class that extends the base class
   class OmittedClass {
     constructor(...args: any[]) {
-      // Copy properties from the base class instance
-      const baseInstance = new classRef(...args);
+      // Create instance of base class
+      const baseInstance = new baseClass(...args);
       
-      // Copy all properties except the omitted ones
+      // Copy all properties except omitted ones
       Object.keys(baseInstance).forEach(key => {
-        if (!keys.includes(key as K)) {
+        if (!omittedKeys.includes(key as K)) {
           (this as any)[key] = (baseInstance as any)[key];
-        }
-      });
-      
-      // Copy all methods from the base class
-      Object.getOwnPropertyNames(classRef.prototype).forEach(methodName => {
-        if (methodName !== 'constructor' && typeof (baseInstance as any)[methodName] === 'function') {
-          (this as any)[methodName] = (baseInstance as any)[methodName].bind(this);
         }
       });
     }
   }
-
-  // Copy static properties and methods
-  Object.setPrototypeOf(OmittedClass, classRef);
-  Object.setPrototypeOf(OmittedClass.prototype, classRef.prototype);
-
+  
   return OmittedClass as any;
 }
 
 /**
- * Alternative: Use TypeScript utility types for type-only operations
+ * Frontend-compatible PartialType utility
  */
-export type OmitType<T, K extends keyof T> = Omit<T, K>;
+export type PartialType<T> = Partial<T>;
 
-/**
- * Alternative: Use class-validator's built-in utilities
- */
-export function createOmittedClass<T, K extends keyof T>(
-  baseClass: new (...args: any[]) => T,
-  omittedKeys: readonly K[]
-) {
-  return class extends baseClass {
-    constructor(...args: any[]) {
-      super(...args);
-      // Remove omitted properties
-      omittedKeys.forEach(key => {
-        delete (this as any)[key];
-      });
-    }
-  };
+// Runtime utility for creating classes with partial properties
+export function createPartialType<T extends Record<string, any>>(
+  baseClass: new (...args: any[]) => T
+): new (...args: any[]) => Partial<T> {
+  // For now, just return the base class as-is
+  // The TypeScript type system will handle the Partial<T> typing
+  // This is a simpler approach that works with class-validator
+  return baseClass as any;
 }

@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsArray, ArrayNotEmpty,  Max, Matches, IsPositive, IsBoolean, Min, IsDateString, ValidateIf, ValidateNested, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import { EReminderType, EReminderActions, EReminderStatus, EReminderFrequency } from '../../enums/reminder.enum';
 import { FrequencyConfigDto } from './frequency-config.dto';
 import { Type } from 'class-transformer';
@@ -11,10 +12,10 @@ import { Reminder } from '../../entities/reminders/reminder.entity';
 import { ListQueryDto } from '../common/list-query.dto';
 
 @ValidatorConstraint({ name: 'futureDate', async: false })
-export class FutureDateConstraint implements ValidatorConstraintInterface {
+class FutureDateConstraint implements ValidatorConstraintInterface {
   validate(date: Date, args: ValidationArguments) {
     if (!date) return true; // Optional field, so empty is valid
-    return date > new Date();
+    return new Date(date) > new Date();
   }
 
   defaultMessage(args: ValidationArguments) {
@@ -23,7 +24,7 @@ export class FutureDateConstraint implements ValidatorConstraintInterface {
 }
 
 @ValidatorConstraint({ name: 'frequencyConfig', async: false })
-export class FrequencyConfigConstraint implements ValidatorConstraintInterface {
+class FrequencyConfigConstraint implements ValidatorConstraintInterface {
   validate(frequencyConfig: any, args: ValidationArguments) {
     const { frequency, timeOfDay, intervalMinutes, weekdays, monthDays } = frequencyConfig;
 
@@ -220,7 +221,7 @@ export class CreateReminderDto {
   endDate?: Date;
 }
 
-export class UpdateReminderDto extends PartialType(CreateReminderDto) { }
+export class UpdateReminderDto extends createPartialType(CreateReminderDto) { }
 
 
 

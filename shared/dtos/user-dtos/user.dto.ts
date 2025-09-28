@@ -10,7 +10,8 @@ import {
   ValidateNested,
   IsNumber
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional, PartialType, OmitType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, OmitType, createPartialType } from '../../lib/omit-type';
 import { EUserLevels, EUserRole } from '../../enums/user.enum';
 import { CreateProfileDto } from './profile.dto';
 import { Type } from 'class-transformer';
@@ -54,7 +55,7 @@ export class CreateUserDto {
   profile: CreateProfileDto;
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateUserDto extends createPartialType(CreateUserDto) {
   @ApiPropertyOptional({
     example: 'acct_1234567890',
     description: 'Stripe Connect account ID for trainers'

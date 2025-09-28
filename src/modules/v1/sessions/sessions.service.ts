@@ -42,7 +42,7 @@ export class SessionsService {
       throw new BadRequestException('At least one client is required');
     }
 
-    const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
+    const clients = await this.usersService.findByIds(clientsData);
 
     if (clients.length === 0) throw new NotFoundException("No valid members found");
 
@@ -245,7 +245,7 @@ export class SessionsService {
         throw new BadRequestException('At least one client is required');
       }
 
-      const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
+      const clients = await this.usersService.findByIds(clientsData);
       if (clients.length === 0) {
         throw new NotFoundException('No valid clients found');
       }

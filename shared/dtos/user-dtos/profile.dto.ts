@@ -1,5 +1,6 @@
 
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 import {
   IsString,
   IsNumber,
@@ -106,4 +107,4 @@ export class CreateProfileDto {
 }
 
 
-export class UpdateProfileDto extends PartialType(CreateProfileDto) { }
+export class UpdateProfileDto extends createPartialType(CreateProfileDto) { }

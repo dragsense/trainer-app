@@ -7,11 +7,12 @@ import { Loader2 } from "lucide-react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IProfile, TUpdateProfileData } from "@/@types/user.type";
+import { IProfile } from "@shared/interfaces/user.interface";
+import { TUpdateProfileData } from "@shared/types/user.type";
 
 // Store
 import { TSingleHandlerStore } from "@/stores";
@@ -24,21 +25,8 @@ import { updateProfile } from "@/services/user.api";
 import { extractValues } from "@/utils";
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { UpdateProfileDto } from "@shared/dtos/user-dtos/profile.dto";
 
-// Schema
-export const ProfileSchema = z.object({
-    firstName: z.string().min(2, {
-        message: "First name must be at least 2 characters",
-    }),
-    lastName: z.string().min(2, {
-        message: "Last name must be at least 2 characters",
-    }),
-    phoneNumber: z.string().optional(),
-    address: z.string().optional(),
-    bio: z.string().optional(),
-    fitnessGoals: z.array(z.string()).optional(),
-    image: z.any().optional(),
-});
 
 interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IProfile, any>> { }
 
@@ -96,7 +84,7 @@ export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
             FormComponent={ProfileCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={ProfileSchema}
+            dto={UpdateProfileDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });

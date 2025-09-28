@@ -1,10 +1,8 @@
 // React & Hooks
 import React, { ReactNode, useEffect, useMemo } from "react";
-import { z } from "zod";
 
 // External Libraries
 import { DefaultValues, FieldValues, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 
 // Types
@@ -80,11 +78,12 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
 
   const handleSubmit = async (formData: TFormData) => {
-
-    const submissionData = Object.entries(initialValues).reduce((acc, [key, config]) => {
-      acc[key] = formData[key] ?? config.value;
-      return acc;
-    }, {} as Record<string, any>) as TFormData;
+    // Use the formData directly since it already contains the properly structured data from react-hook-form
+    const submissionData = formData as TFormData;
+    
+    console.log('Form submission data:', submissionData);
+    console.log('Form data type:', typeof submissionData);
+    console.log('Form data keys:', Object.keys(submissionData));
 
 
     try {

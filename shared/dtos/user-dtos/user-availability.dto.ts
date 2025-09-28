@@ -11,7 +11,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartialType, createPartialType } from '../../lib/omit-type';
 
 
 export class TimeSlotDto {
@@ -221,6 +222,6 @@ export class CreateUserAvailabilityDto {
 }
 
 
-export class UpdateUserAvailabilityDto extends PartialType(CreateUserAvailabilityDto) {
+export class UpdateUserAvailabilityDto extends createPartialType(CreateUserAvailabilityDto) {
 
 }
