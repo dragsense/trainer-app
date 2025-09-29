@@ -12,8 +12,8 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TDayKey, TUpdateUserAvailabilityData } from "@/@types/user.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TDayKey, TUpdateUserAvailabilityData } from "@shared/types/user.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 // Stores
 import { TFormHandlerStore } from "@/stores";
@@ -84,7 +84,7 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
                     label: `Start Time #${i + 1}`,
                     type: "time",
                     required: true,
-                    disabled: ({ values }) => !values.weeklySchedule[day.key].enabled
+                    disabled: ({ values }) => !values.weeklySchedule?.[day.key]?.enabled
                 });
                 fields.push({
                     id: `${day.key}.timeSlots[${i}].end`,
@@ -92,7 +92,7 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
                     label: `End Time #${i + 1}`,
                     type: "time",
                     required: true,
-                    disabled: ({ values }) => !values.weeklySchedule[day.key].enabled
+                    disabled: ({ values }) => !values.weeklySchedule?.[day.key]?.enabled
                 });
             }
         });
@@ -175,17 +175,15 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
     );
 
     return (
-        <AppCard
-            header={
-                <>
-                    <h2 className="text-md font-semibold">Update Availability</h2>
-                    <p className="text-sm text-muted-foreground">Set your weekly schedule and unavailable periods</p>
-                </>
-            }
-            footer={footerContent}
-        >
-            <Form
-                formStore={store}
+        <Form formStore={store}>
+            <AppCard
+                header={
+                    <>
+                        <h2 className="text-md font-semibold">Update Availability</h2>
+                        <p className="text-sm text-muted-foreground">Set your weekly schedule and unavailable periods</p>
+                    </>
+                }
+                footer={footerContent}
             >
                 <div className="space-y-8">
                     {DAYS_OF_WEEK.map((day) => {
@@ -193,7 +191,6 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
                             <div key={day.key} className="border p-4 rounded-md">
                                 <h4 className="font-medium mb-2">{day.label}</h4>
                                 {inputs.find((i) => i.props.name === `weeklySchedule.${day.key}.enabled`)}
-
 
                                 <>
                                     {Array.from({ length: timeSlotCounts[day.key] }).map((_, idx) => (
@@ -230,7 +227,6 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
                                         <Plus className="w-4 h-4 mr-1" /> Add Time Slot
                                     </Button>
                                 </>
-
                             </div>
                         );
                     })}
@@ -265,10 +261,8 @@ export default function AvailabilityCardForm({ storeKey, store }: IAvailabilityC
                         </Button>
                     </div>
                 </div>
-
-                <FormErrors />
-            </Form>
-
-        </AppCard>
+            </AppCard>
+            <FormErrors />
+        </Form>
     );
 }

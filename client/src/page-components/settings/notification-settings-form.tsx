@@ -1,5 +1,4 @@
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
@@ -8,11 +7,12 @@ import { useMemo } from "react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { INotificationSetting, TNotificationSettingData } from "@/@types/setting.type";
+import { INotificationSetting } from "@shared/interfaces/settings.interface";
+import { TNotificationSettingData } from "@shared/types/settings.type";
 
 // Store
 import { TSingleHandlerStore } from "@/stores";
@@ -24,15 +24,10 @@ import { NotificationSettingCardForm } from "@/components/admin";
 import { updateNotificationSettings } from "@/services/setting.api";
 import { extractValues } from "@/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { UpdateNotificationSettingDto } from '@shared/dtos/settings-dtos/notification-setting.dto';
 
 // Schema
-export const NotificationSettingsSchema = z.object({
-    emailNotifications: z.boolean().optional(),
-    newUserNotifications: z.boolean().optional(),
-    userUpdateNotifications: z.boolean().optional(),
-    billingNotifications: z.boolean().optional(),
-    sessionNotifications: z.boolean().optional(),
-});
+ 
 
 interface INotificationSettingsFormProps extends THandlerComponentProps<TSingleHandlerStore<INotificationSetting, any>> {}
 
@@ -97,7 +92,7 @@ export default function NotificationSettingsForm({ storeKey, store }: INotificat
             FormComponent={NotificationSettingCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={NotificationSettingsSchema}
+            dto={UpdateNotificationSettingDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={(response) => {
                 // Refresh the notification settings data

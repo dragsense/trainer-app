@@ -13,15 +13,14 @@ import { TFieldConfig } from "@/@types/form/field.type";
 
 // Stores
 import { TFormHandlerStore } from "@/stores";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { TResetPasswordData } from "@/@types/user.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TUserResetPasswordData } from "@shared/types/user.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 
 
-interface ISecurityCardFormProps extends THandlerComponentProps<TFormHandlerStore<Omit<TResetPasswordData, 'currentPassword'>, IMessageResponse>> {
+interface ISecurityCardFormProps extends THandlerComponentProps<TFormHandlerStore<Omit<TUserResetPasswordData, 'currentPassword'>, IMessageResponse>> {
 }
 
 export default function SecurityCardForm({ storeKey, store }: ISecurityCardFormProps) {
@@ -76,6 +75,10 @@ export default function SecurityCardForm({ storeKey, store }: ISecurityCardFormP
     );
 
     return (
+        <Form
+               
+        formStore={store}
+    >
         <AppCard
             header={
                 <>
@@ -85,16 +88,14 @@ export default function SecurityCardForm({ storeKey, store }: ISecurityCardFormP
             }
             footer={footerContent}
         >
-            <Form
-               
-                formStore={store}
-            >
+          
                 <div className="space-y-4">
                     {inputs}
                 </div>
 
-                <FormErrors />
-            </Form>
-        </AppCard>
+              
+            </AppCard>
+        </Form>
+
     );
 }

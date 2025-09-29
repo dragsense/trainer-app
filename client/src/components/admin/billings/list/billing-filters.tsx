@@ -198,7 +198,8 @@ export function BillingFilters({
           placeholder="Search billings..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-        />
+          className="flex-1"
+          />
         
         {/* Mobile filters (dropdown) */}
         <div className="xl:hidden flex items-center gap-2">

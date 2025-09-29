@@ -1,6 +1,5 @@
 
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 
@@ -8,14 +7,15 @@ import { Loader2 } from "lucide-react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IUserAvailability, TUpdateUserAvailabilityData } from "@/@types/user.type";
+import { IUserAvailability } from "@shared/interfaces/user.interface";
+import { TUpdateUserAvailabilityData } from "@shared/types/user.type";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { AvailabilityCardForm } from "@/components/admin";
@@ -30,58 +30,11 @@ import { useQueryClient } from "@tanstack/react-query";
 // UI Components
 import { Badge } from "@/components/ui/badge";
 
-// Reusable time slot schema
-const TimeSlotSchema = z.object({
-    start: z.string()
-        .min(5, "Must be HH:MM format")
-        .max(5, "Must be HH:MM format")
-        .refine(time => {
-            const [hours, minutes] = time.split(':').map(Number);
-            return hours >= 0 && hours <= 23 &&
-                minutes >= 0 && minutes <= 59;
-        }, "Invalid time (00:00-23:59)"),
-    end: z.string()
-        .min(5, "Must be HH:MM format")
-        .max(5, "Must be HH:MM format")
-}).refine(
-    slot => {
-        const [startH, startM] = slot.start.split(':').map(Number);
-        const [endH, endM] = slot.end.split(':').map(Number);
-        return endH > startH || (endH === startH && endM > startM);
-    },
-    { message: "End time must be after start time", path: ["end"] }
-);
+// DTOs
+import { UpdateUserAvailabilityDto } from "@shared/dtos/user-dtos/user-availability.dto";
 
-// Reusable day schema
-const DayScheduleSchema = z.object({
-    enabled: z.boolean(),
-    timeSlots: z.array(TimeSlotSchema)
-});
 
-// Reusable unavailable period schema
-const UnavailablePeriodSchema = z.object({
-    id: z.string().optional(),
-    startDate: z.date(),
-    endDate: z.date(),
-    reason: z.string()
-}).refine(
-    period => period.endDate >= period.startDate,
-    { message: "End date must be after start date", path: ["endDate"] }
-);
 
-// Schema
-export const AvailabilitySchema = z.object({
-    weeklySchedule: z.object({
-        monday: DayScheduleSchema,
-        tuesday: DayScheduleSchema,
-        wednesday: DayScheduleSchema,
-        thursday: DayScheduleSchema,
-        friday: DayScheduleSchema,
-        saturday: DayScheduleSchema,
-        sunday: DayScheduleSchema
-    }),
-    unavailablePeriods: z.array(UnavailablePeriodSchema).optional()
-});
 
 
 interface IAvailabilityProps extends THandlerComponentProps<TSingleHandlerStore<IUserAvailability, any>> {
@@ -186,9 +139,9 @@ export default function Availability({
             FormComponent={AvailabilityCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={AvailabilitySchema}
+            dto={UpdateUserAvailabilityDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            onSuccess={(response) => {
+            onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}
         />

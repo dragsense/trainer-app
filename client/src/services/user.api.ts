@@ -73,6 +73,7 @@ export const updateProfile = (data: TUpdateProfileData) => {
 
     const formData = new FormData();
 
+    console.log(data);
 
     Object.entries(data).forEach(([key, value]) => {
         if (value === undefined || value === null) return;

@@ -71,7 +71,7 @@ export function UserFilters({
           placeholder="Search trainers..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-       
+          className="flex-1"
         />
         
         {/* Mobile filters (dropdown) */}

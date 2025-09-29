@@ -1,32 +1,31 @@
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+
+// Handlers
+import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
-import { TActionComponentProps, THandlerComponentProps } from "@/@types/handler-types";
-import { IAppSetting, TAppSettingData } from "@/@types/setting.type";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { IAppSetting } from "@shared/interfaces/settings.interface";
+import { TAppSettingData } from "@shared/types/settings.type";
 
 // Store
-import { TSingleHandlerStore, TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import AppSettingCardForm from "@/components/admin/settings/form/app-setting-card-form";
 
 // Services
 import { updateAppSettings } from "@/services/setting.api";
-import { useMemo } from "react";
 import { extractValues } from "@/utils";
-import { FormHandler } from "@/handlers";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
+import { UpdateAppSettingDto } from "@shared/dtos/settings-dtos/app-setting.dto";
 
-// Schema
-export const AppSettingsSchema = z.object({
-    allowNotification: z.boolean().optional(),
-});
 
 interface IAppSettingsFormProps extends THandlerComponentProps<TSingleHandlerStore<IAppSetting, any>> {}
 
@@ -76,9 +75,9 @@ export default function AppSettingsForm({ storeKey, store }: IAppSettingsFormPro
             FormComponent={AppSettingCardForm}
             storeKey={storeKey}
             initialValues={initialValues}
-            validationSchema={AppSettingsSchema}
+            dto={UpdateAppSettingDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            onSuccess={(response) => {
+            onSuccess={() => {
                 // Refresh the app settings data
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}

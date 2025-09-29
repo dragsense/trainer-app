@@ -10,11 +10,11 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TNotificationSettingData } from "@/@types/setting.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TNotificationSettingData } from "@shared/types/settings.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { THandlerComponentProps } from "@/@types/handler-types";
@@ -87,6 +87,7 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
     );
 
     return (
+        <Form formStore={store}>
         <AppCard
             header={
                 <>
@@ -96,7 +97,7 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
             }
             footer={footerContent}
         >
-            <Form formStore={store}>
+            
                 <div className="space-y-6">
                     {/* General Notifications Section */}
                     <div>
@@ -136,8 +137,8 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
                     </div>
                 </div>
 
-                <FormErrors />
-            </Form>
+           
         </AppCard>
+        </Form>
     );
 }

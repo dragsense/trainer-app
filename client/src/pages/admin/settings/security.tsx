@@ -12,9 +12,9 @@ import { changePassword } from "@/services/user.api";
 
 // Types
 import { TDefaultValue } from "@/@types/form/field.type";
-import { IMessageResponse } from "@/@types/api/response.type";
-import { TResetPasswordData } from "@/@types/user.type";
-
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { TUserResetPasswordData } from "@shared/types/user.type";
+import { ResetPasswordDto } from "@shared/dtos/user-dtos/reset-password.dto";    
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -29,16 +29,16 @@ const passwordSchema = z.object({
 
 export default function SecurityPage() {
 
-    const INITIAL_VALUES: TDefaultValue<TResetPasswordData & { confirmPassword: string }> = {
+    const INITIAL_VALUES: TDefaultValue<TUserResetPasswordData & { confirmPassword: string }> = {
         currentPassword: { value: "" },
-        newPassword: { value: "" },
-        confirmPassword: { value: "", notIncluded: true },
+        password: { value: "" },
+        confirmPassword: { value: "" },
     };
 
-    return (<FormHandler<Omit<TResetPasswordData, 'currentPassword'>, IMessageResponse>
+    return (<FormHandler<Omit<TUserResetPasswordData, 'currentPassword'>, IMessageResponse>
         storeKey={'securitySettings'}
         FormComponent={SecurityCardForm}
-        validationSchema={passwordSchema}
+        dto={ResetPasswordDto}
         initialValues={INITIAL_VALUES}
         mutationFn={changePassword}
     />

@@ -1,5 +1,4 @@
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 
@@ -7,14 +6,15 @@ import { Loader2 } from "lucide-react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { IMessageResponse } from "@/@types/api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TDefaultValue } from "@/@types/form/field.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { IPaymentMethod, TUpdatePaymentMethodData } from "@/@types/setting.type";
+import { IPaymentMethod } from "@shared/interfaces/settings.interface";
+import { TUpdatePaymentMethodData } from "@shared/types/settings.type";
 
 // Store
-import { TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { PaymentMethodConfigFormModal } from "@/components/admin";
@@ -22,6 +22,7 @@ import { PaymentMethodConfigFormModal } from "@/components/admin";
 // Services
 import { updatePaymentMethod } from "@/services/setting.api";
 import { IPaymentMethodConfigFormModalExtraProps } from "@/components/admin/settings/form/payment-method-config-modal-form";
+import { UpdatePaymentMethodDto } from '@shared/dtos/settings-dtos/payment-method.dto';
 
 
 interface IPaymentMethodConfigFormProps extends THandlerComponentProps<TSingleHandlerStore<IPaymentMethod[], any>> {
@@ -55,24 +56,6 @@ export default function PaymentMethodConfigForm({
 
   const properties = paymentMethod?.configSchema?.properties;
 
-  const ConfigSchema = z.object({
-    config: paymentMethod.configSchema
-      ? z.object(
-        Object.keys(properties || {}).reduce((acc, key) => {
-          const prop = properties![key];
-          if (prop.type === 'string') {
-            acc[key] = z.string().min(1, `${prop.title || key} is required`);
-          } else if (prop.type === 'number') {
-            acc[key] = z.number().min(1, `${prop.title || key} is required`);
-          } else if (prop.type === 'boolean') {
-            acc[key] = z.boolean();
-          }
-          return acc;
-        }, {} as Record<string, any>)
-      )
-      : z.object({})
-  });
-
 
   const defaultValues = {
     config: {
@@ -101,11 +84,11 @@ export default function PaymentMethodConfigForm({
 
   return <>
     <FormHandler<TUpdatePaymentMethodData, IMessageResponse, IPaymentMethodConfigFormModalExtraProps>
-      mutationFn={updatePaymentMethod(paymentMethod?.id)}
+      mutationFn={updatePaymentMethod(paymentMethod?.id as number)}
       FormComponent={PaymentMethodConfigFormModal}
       storeKey={storeKey}
       initialValues={initialValues}
-      validationSchema={ConfigSchema}
+      dto={UpdatePaymentMethodDto}
       validationMode={EVALIDATION_MODES.OnSubmit}
       formProps={{
         properties,

@@ -66,13 +66,6 @@ export class CreateProfileDto {
   @IsString({ each: true })
   specialties?: string[];
 
-  @ApiProperty({ example: 5, minimum: 0, maximum: 5, required: false })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  @Max(5)
-  rating?: number;
-
   @ApiProperty({ example: 3, description: 'Years of experience', required: false })
   @IsOptional()
   @IsNumber()

@@ -10,8 +10,8 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TAppSettingData } from "@/@types/setting.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TAppSettingData } from "@shared/types/settings.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 // Stores
 import { TFormHandlerStore } from "@/stores";
@@ -55,26 +55,23 @@ export default function AppSettingCardForm({ storeKey, store }: IAppSettingCardF
     );
 
     return (
-        <AppCard
-            header={
-                <>
-                    <h2 className="text-md font-semibold">Application Settings</h2>
-                    <p className="text-sm text-muted-foreground">Configure general application preferences</p>
-                </>
-            }
-            footer={footerContent}
-        >
-            <Form
-                formStore={store}
+        <Form formStore={store}>
+            <AppCard
+                header={
+                    <>
+                        <h2 className="text-md font-semibold">Application Settings</h2>
+                        <p className="text-sm text-muted-foreground">Configure general application preferences</p>
+                    </>
+                }
+                footer={footerContent}
             >
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-4">
                         {inputs}
                     </div>
                 </div>
-
-                <FormErrors />
-            </Form>
-        </AppCard>
+            </AppCard>
+            <FormErrors />
+        </Form>
     );
 }

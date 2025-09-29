@@ -12,8 +12,8 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TUpdatePaymentMethodData } from "@/@types/setting.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TUpdatePaymentMethodData } from "@shared/types/settings.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 // Stores
 import { TFormHandlerStore } from "@/stores";
@@ -122,7 +122,7 @@ export default function PaymentMethodConfigFormModal({ storeKey, store }: IPayme
                 </div>
             </div>
 
-            <FormErrors />
+            
         </ModalForm>
     );
 }

@@ -76,8 +76,8 @@ export function ReminderFilters({
         <SelectContent>
           <SelectItem value="all">All Types</SelectItem>
           <SelectItem value={EReminderType.SESSION}>Session</SelectItem>
-          <SelectItem value={EReminderType.PAYMENT}>Payment</SelectItem>
-          <SelectItem value={EReminderType.GENERAL}>General</SelectItem>
+          <SelectItem value={EReminderType.BILLING}>Payment</SelectItem>
+          <SelectItem value={EReminderType.CUSTOM}>General</SelectItem>
         </SelectContent>
       </Select>
 
@@ -259,7 +259,7 @@ export function ReminderFilters({
           placeholder="Search reminders..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-         
+
         />
         
         {/* Mobile filters (dropdown) */}

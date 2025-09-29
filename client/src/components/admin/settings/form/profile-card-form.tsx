@@ -10,11 +10,11 @@ import { useInput } from "@/hooks/use-input";
 
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
-import { TUpdateProfileData } from "@/@types/user.type";
-import { IMessageResponse } from "@/@types/api/response.type";
+import { TUpdateProfileData } from "@shared/types/user.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 // Stores
-import { TFormHandlerStore, useRegisteredStore } from "@/stores";
+import { TFormHandlerStore } from "@/stores";
 
 // Custom Components
 import ProfileImageUpload from "@/components/shared-ui/profile-image-upload";
@@ -112,6 +112,7 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
     );
 
     return (
+        <Form formStore={store}>
         <AppCard
             header={
                 <>
@@ -121,7 +122,7 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
             }
             footer={footerContent}
         >
-            <Form formStore={store}>
+           
                 <div className="space-y-6">
                     {/* Profile Image Section */}
                     <div className="flex justify-center">
@@ -145,8 +146,8 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
                     </div>
                 </div>
 
-                <FormErrors />
-            </Form>
+            
         </AppCard>
+        </Form>
     );
 }

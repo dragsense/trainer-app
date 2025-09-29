@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Filter, Plus, Table, List } from "lucide-react";
 
 // Types
-import { IReminder } from "@/@types/reminder.type";
+import { IReminder } from "@shared/interfaces/reminder.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
