@@ -42,8 +42,8 @@ export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
         address: { value: "" },
         bio: { value: "" },
         fitnessGoals: { value: [] },
-        image: { value: null },
-    }; 
+        image: { isNested: true, value: { value: null } },
+    };
 
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
@@ -55,7 +55,7 @@ export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
         isLoading: state.isLoading,
     })));
 
-    
+
     const initialValues = useMemo(() => {
         return extractValues(response, INITIAL_VALUES);
     }, [response]);

@@ -11,7 +11,7 @@ import { TReminderData } from "@shared/types/reminder.type";
 const REMINDERS_API_PATH = "/reminders";
 
 export const me = async () =>
-  apiRequest<IReminder>(`${REMINDERS_API_PATH}/me`, "GET");
+    apiRequest<IReminder>(`${REMINDERS_API_PATH}/me`, "GET");
 
 export const createReminder = (data: Partial<TReminderData>) =>
     apiRequest<IReminder>(`${REMINDERS_API_PATH}`, "POST", data);
@@ -36,8 +36,12 @@ export const fetchReminders = (
         Object.keys(params.filters).length > 0
     ) {
         Object.entries(params.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                queryParams.append(key, value.toString());
+            if (value) {
+                if (value instanceof Date)
+                    queryParams.append(key, value.toISOString());
+                else
+                    queryParams.append(key, value.toString());
+
             }
         });
     }

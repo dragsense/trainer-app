@@ -356,7 +356,7 @@ export class ReminderListDto extends ListQueryDto<IReminder> {
   @IsOptional()
   @IsDateString()
   @Type(() => Date)
-  startDateFrom?: Date;
+  startDateAfter?: Date;
 
   @ApiProperty({
     description: 'Filter by start date range (end)',
@@ -365,7 +365,7 @@ export class ReminderListDto extends ListQueryDto<IReminder> {
   @IsOptional()
   @IsDateString()
   @Type(() => Date)
-  startDateTo?: Date;
+  startDateBefore?: Date;
 
   @ApiProperty({
     description: 'Filter by scheduled date range (start)',
@@ -374,7 +374,7 @@ export class ReminderListDto extends ListQueryDto<IReminder> {
   @IsOptional()
   @IsDateString()
   @Type(() => Date)
-  scheduledDateFrom?: Date;
+  scheduledDateAfter?: Date;
 
   @ApiProperty({
     description: 'Filter by scheduled date range (end)',
@@ -383,7 +383,7 @@ export class ReminderListDto extends ListQueryDto<IReminder> {
   @IsOptional()
   @IsDateString()
   @Type(() => Date)
-  scheduledDateTo?: Date;
+  scheduledDateBefore?: Date;
 
   @ApiProperty({
     description: 'Filter by delivery method',

@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect } from "react"
 import { X, FileImage } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { IFileUpload } from "@/@types/file-upload.type";
+import { IFileUpload } from "@shared/interfaces/file-upload.interface";
 
 // Utilities
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
 
 interface ProfileImageUploadProps {
-    onImageUpload?: (file: any) => void
+    onChange?: (file: any) => void
     maxSizeInMB?: number
     acceptedTypes?: string[]
     value: File | IFileUpload | null
@@ -15,7 +15,7 @@ interface ProfileImageUploadProps {
 }
 
 export default function ProfileImageUpload({
-    onImageUpload,
+    onChange,
     maxSizeInMB = 3,
     acceptedTypes = ["image/svg+xml", "image/png", "image/jpeg", "image/gif"],
     value,
@@ -61,7 +61,7 @@ export default function ProfileImageUpload({
 
     const handleFileUpload = (file: File) => {
         if (validateFile(file)) {
-            onImageUpload?.(file)
+            onChange?.(file)
         }
     }
 
@@ -95,7 +95,7 @@ export default function ProfileImageUpload({
     const removeImage = () => {
         setUploadedImage(null)
         setError(null)
-        onImageUpload?.(null)
+        onChange?.(null)
     }
 
     return (

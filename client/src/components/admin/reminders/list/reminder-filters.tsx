@@ -38,27 +38,21 @@ export function ReminderFilters({
 
   const handleDateSelect = (date: Date | DateRange | undefined, dateType: 'scheduled' | 'start') => {
     if (!date) {
-      onFilterChange(dateType + 'Date');
+      onFilterChange(dateType + 'DateAfter');
       return;
     }
 
     if (date instanceof Date) {
-      onFilterChange(dateType + 'Date', { 
-        [dateType + 'DateFrom']: date, 
-        [dateType + 'DateTo']: undefined 
-      });
+      onFilterChange(dateType + 'DateAfter', date);
+      onFilterChange(dateType + 'DateBefore');
     } else if ("from" in date) {
       const { from, to } = date;
       if (from && to && from.getTime() !== to.getTime()) {
-        onFilterChange(dateType + 'Date', { 
-          [dateType + 'DateFrom']: from, 
-          [dateType + 'DateTo']: to 
-        });
+        onFilterChange(dateType + 'DateAfter', from);
+        onFilterChange(dateType + 'DateBefore', to);
       } else if (from) {
-        onFilterChange(dateType + 'Date', { 
-          [dateType + 'DateFrom']: from, 
-          [dateType + 'DateTo']: undefined 
-        });
+        onFilterChange(dateType + 'DateAfter', from);
+        onFilterChange(dateType + 'DateBefore');
       }
     }
   };
@@ -115,22 +109,7 @@ export function ReminderFilters({
         </SelectContent>
       </Select>
 
-      {/* Delivery Method Filter */}
-      <Select
-        value={filters.deliveryMethod || "all"}
-        onValueChange={(value) => onFilterChange("deliveryMethod", value === "all" ? undefined : value)}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Delivery" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Methods</SelectItem>
-          <SelectItem value="EMAIL">Email</SelectItem>
-          <SelectItem value="SMS">SMS</SelectItem>
-          <SelectItem value="PUSH">Push</SelectItem>
-          <SelectItem value="IN_APP">In-App</SelectItem>
-        </SelectContent>
-      </Select>
+
 
       {/* Priority Filter */}
       <Select
@@ -148,95 +127,15 @@ export function ReminderFilters({
         </SelectContent>
       </Select>
 
-      {/* User ID Filters */}
-      <Input
-        placeholder="Creator ID"
-        type="number"
-        value={filters.creatorId || ""}
-        onChange={(e) => onFilterChange("creatorId", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[120px]"
-      />
-
-      <Input
-        placeholder="Recipient ID"
-        type="number"
-        value={filters.recipientId || ""}
-        onChange={(e) => onFilterChange("recipientId", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[120px]"
-      />
-
-      {/* Email Filters */}
-      <Input
-        placeholder="Creator Email"
-        value={filters.creatorEmail || ""}
-        onChange={(e) => onFilterChange("creatorEmail", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      <Input
-        placeholder="Recipient Email"
-        value={filters.recipientEmail || ""}
-        onChange={(e) => onFilterChange("recipientEmail", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Session/Payment ID Filters */}
-      <Input
-        placeholder="Session ID"
-        type="number"
-        value={filters.sessionId || ""}
-        onChange={(e) => onFilterChange("sessionId", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[120px]"
-      />
-
-      <Input
-        placeholder="Payment ID"
-        type="number"
-        value={filters.paymentId || ""}
-        onChange={(e) => onFilterChange("paymentId", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[120px]"
-      />
-
-      {/* Title Filter */}
-      <Input
-        placeholder="Title"
-        value={filters.title || ""}
-        onChange={(e) => onFilterChange("title", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Message Filter */}
-      <Input
-        placeholder="Message"
-        value={filters.message || ""}
-        onChange={(e) => onFilterChange("message", e.target.value || undefined)}
-        className="w-[160px]"
-      />
-
-      {/* Time of Day Filter */}
-      <Input
-        placeholder="Time (HH:mm)"
-        value={filters.timeOfDay || ""}
-        onChange={(e) => onFilterChange("timeOfDay", e.target.value || undefined)}
-        className="w-[120px]"
-      />
-
-      {/* Interval Minutes Filter */}
-      <Input
-        placeholder="Interval (min)"
-        type="number"
-        value={filters.intervalMinutes || ""}
-        onChange={(e) => onFilterChange("intervalMinutes", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[120px]"
-      />
+     
 
       {/* Date Range Filters */}
       <DatePicker
         placeholder="Scheduled Date"
         mode="range"
-        value={filters.scheduledDate ? { 
-          from: filters.scheduledDate.scheduledDateFrom, 
-          to: filters.scheduledDate.scheduledDateTo 
+        value={filters.scheduledDateAfter ? { 
+          from: filters.scheduledDateAfter, 
+          to: filters.scheduledDateBefore 
         } : undefined}
         onSelect={(date) => handleDateSelect(date, 'scheduled')}
       />
@@ -244,9 +143,9 @@ export function ReminderFilters({
       <DatePicker
         placeholder="Start Date"
         mode="range"
-        value={filters.startDate ? { 
-          from: filters.startDate.startDateFrom, 
-          to: filters.startDate.startDateTo 
+        value={filters.startDateAfter ? { 
+          from: filters.startDateAfter, 
+          to: filters.startDateBefore 
         } : undefined}
         onSelect={(date) => handleDateSelect(date, 'start')}
       />
@@ -259,7 +158,7 @@ export function ReminderFilters({
           placeholder="Search reminders..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
-
+          className="flex-1"
         />
         
         {/* Mobile filters (dropdown) */}

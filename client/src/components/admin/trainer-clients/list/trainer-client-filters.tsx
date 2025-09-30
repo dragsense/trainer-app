@@ -100,6 +100,7 @@ export function TrainerClientFilters({
           placeholder="Search assignments..."
           value={filters.search || ""}
           onChange={(e) => onFilterChange("search", e.target.value)}
+          className="flex-1"
         />
         
         {/* Mobile filters (dropdown) */}

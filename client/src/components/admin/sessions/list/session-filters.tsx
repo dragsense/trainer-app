@@ -34,19 +34,23 @@ export function SessionFilters({
 
   const handleDateSelect = (date: Date | DateRange | undefined) => {
     if (!date) {
-      onFilterChange('joined');
+      onFilterChange('startDateAfter');
       return;
     }
 
     if (date instanceof Date) {
-      onFilterChange('joined', { createdAfter: date, createdBefore: undefined });
+      onFilterChange('startDateAfter', date);
+      onFilterChange('startDateBefore');
     } else if ("from" in date) {
       const { from: createdAfter, to: createdBefore } = date;
 
       if (createdAfter && createdBefore && createdAfter.getTime() !== createdBefore.getTime()) {
-        onFilterChange('joined', { createdAfter, createdBefore });
+        onFilterChange('startDateAfter', createdAfter);
+        onFilterChange('startDateBefore', createdBefore);
+
       } else if (createdAfter) {
-        onFilterChange('joined', { createdAfter, createdBefore: undefined });
+        onFilterChange('startDateAfter', createdAfter);
+        onFilterChange('startDateBefore');
       }
     }
   };
@@ -54,11 +58,11 @@ export function SessionFilters({
   const renderFilters = (
     <>
       <DatePicker
-        placeholder="Joined"
+        placeholder="Start At"
         mode="range"
-        value={filters.joined ? { 
-          from: filters.joined.createdAfter, 
-          to: filters.joined.createdBefore 
+        value={filters.joined ? {
+          from: filters.startDateAfter,
+          to: filters.startDateBefore
         } : undefined}
         onSelect={handleDateSelect}
       />
@@ -66,53 +70,53 @@ export function SessionFilters({
   );
 
   return (
-      <div className="flex-1 flex items-center gap-2 flex-wrap">
-        <Input
-          placeholder="Search trainers..."
-          value={filters.search || ""}
-          onChange={(e) => onFilterChange("search", e.target.value)}
-          className="flex-1"
-        />
-        
-        {/* Mobile filters (dropdown) */}
-        <div className="xl:hidden flex items-center gap-2">
-          <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              collisionPadding={20}
-              align="start"
-              className="w-64 p-2"
-            >
-              <div className="flex flex-col gap-2">
-                {renderFilters}
-                {hasActiveFilters && (
-                  <Button variant="outline" onClick={onClearFilters} size="sm">
-                    <XIcon className="h-4 w-4 mr-2" />
-                    Clear Filters
-                  </Button>
-                )}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {/* Desktop filters (always visible) */}
-        <div className="hidden xl:flex items-center gap-2">
-          {renderFilters}
-        </div>
+    <div className="flex-1 flex items-center gap-2 flex-wrap">
+      <Input
+        placeholder="Search trainers..."
+        value={filters.search || ""}
+        onChange={(e) => onFilterChange("search", e.target.value)}
+        className="flex-1"
+      />
 
-        {hasActiveFilters && (
-          <Button variant="outline" onClick={onClearFilters} className="hidden lg:flex">
-            <XIcon className="h-4 w-4 mr-2" />
-            Clear Filters
-          </Button>
-        )}
+      {/* Mobile filters (dropdown) */}
+      <div className="xl:hidden flex items-center gap-2">
+        <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            collisionPadding={20}
+            align="start"
+            className="w-64 p-2"
+          >
+            <div className="flex flex-col gap-2">
+              {renderFilters}
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={onClearFilters} size="sm">
+                  <XIcon className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-   
+
+      {/* Desktop filters (always visible) */}
+      <div className="hidden xl:flex items-center gap-2">
+        {renderFilters}
+      </div>
+
+      {hasActiveFilters && (
+        <Button variant="outline" onClick={onClearFilters} className="hidden lg:flex">
+          <XIcon className="h-4 w-4 mr-2" />
+          Clear Filters
+        </Button>
+      )}
+    </div>
+
   );
 }

@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { Calendar, Clock, DollarSign, MapPin, Users, MoreHorizontal, Eye, Edit, Trash2, Timer, CalendarDays, Clock3 } from "lucide-react";
 
 // Types
-import { ISession } from "@/@types/session.type";
+import { ISession } from "@shared/interfaces/session.interface";
 
 // UI Components
 import { Badge } from "@/components/ui/badge";
@@ -178,10 +178,10 @@ export function itemViews({ handleEdit, handleDelete, handleView }: ItemViewHand
       header: "Price",
       cell: ({ row }) => {
         const session = row.original;
+        const currency = session.currency;
         return (
           <div className="flex items-center gap-1">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">${(session.pricePerClient / 100).toFixed(2)}</span>
+            <span className="text-sm">{currency || 'USD'} {(session.pricePerClient / 100).toFixed(2)}</span>
           </div>
         );
       },
@@ -266,9 +266,7 @@ export function itemViews({ handleEdit, handleDelete, handleView }: ItemViewHand
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-wrap">
-                <Badge variant="outline" className="text-xs">
-                  {session.type.replace('_', ' ')}
-                </Badge>
+              
                 <Badge className={
                   session.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800 border-blue-200' :
                   session.status === 'COMPLETED' ? 'bg-green-100 text-green-800 border-green-200' :
@@ -281,7 +279,7 @@ export function itemViews({ handleEdit, handleDelete, handleView }: ItemViewHand
             </div>
 
             {/* Main Session Info - Responsive Layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-2">
               {/* Date & Time */}
               <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
                 <CalendarDays className="h-4 w-4 text-blue-600 flex-shrink-0" />

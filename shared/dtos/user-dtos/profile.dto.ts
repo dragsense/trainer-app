@@ -70,7 +70,7 @@ export class CreateProfileDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  @Min(1)
+  @Min(0)
   experience?: number;
 
 

@@ -40,9 +40,19 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
             id: "image",
             name: "image",
             label: "Profile Image",
-            type: "custom",
+            type: "nested",
             required: false,
-            Component: (props) => <ProfileImageUpload {...props} />,
+            subFields: [
+                {
+                    id: "path",
+                    name: "path",
+                    label: "Profile Image",
+                    type: "custom",
+                    required: false,
+                    Component: (props) => <ProfileImageUpload {...props} />,
+
+                },
+            ],
         },
 
         // ─── Basic Info ──────────────
@@ -113,16 +123,16 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
 
     return (
         <Form formStore={store}>
-        <AppCard
-            header={
-                <>
-                    <h2 className="text-md font-semibold">Update Profile</h2>
-                    <p className="text-sm text-muted-foreground">Manage your personal information</p>
-                </>
-            }
-            footer={footerContent}
-        >
-           
+            <AppCard
+                header={
+                    <>
+                        <h2 className="text-md font-semibold">Update Profile</h2>
+                        <p className="text-sm text-muted-foreground">Manage your personal information</p>
+                    </>
+                }
+                footer={footerContent}
+            >
+
                 <div className="space-y-6">
                     {/* Profile Image Section */}
                     <div className="flex justify-center">
@@ -146,8 +156,8 @@ export default function ProfileCardForm({ storeKey, store }: IProfileCardFormPro
                     </div>
                 </div>
 
-            
-        </AppCard>
+
+            </AppCard>
         </Form>
     );
 }

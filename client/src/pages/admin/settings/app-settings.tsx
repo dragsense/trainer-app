@@ -9,9 +9,9 @@ import { AppSettingsForm } from "@/page-components";
 import { fetchAppSettings } from "@/services/setting.api";
 
 // Types
-import { IAppSetting } from "@/@types/setting.type";
+import { IAppSetting } from "@shared/interfaces/settings.interface";
 
-// Layouts
+// Layouts  
 import { PageInnerLayout } from "@/layouts";
 
 

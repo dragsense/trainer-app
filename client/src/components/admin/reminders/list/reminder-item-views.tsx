@@ -18,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppCard } from "@/components/layout-ui/app-card";
 
 // Types
-import { IReminder } from "@/@types/reminder.type";
+import { IReminder } from "@shared/interfaces/reminder.interface";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -335,10 +335,7 @@ export const listItem = ({
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-wrap">
-                <Badge className={`${typeConfig.color} border text-xs flex items-center gap-1`}>
-                  <TypeIcon className="h-3 w-3" />
-                  {reminder.type}
-                </Badge>
+            
                 <Badge className={`${statusConfig.color} border text-xs flex items-center gap-1`}>
                   <StatusIcon className="h-3 w-3" />
                   {reminder.status.replace('_', ' ')}
@@ -352,7 +349,7 @@ export const listItem = ({
             </div>
 
             {/* Main Reminder Info - Responsive Layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-2">
               {/* Schedule & Time */}
               <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
                 <CalendarDays className="h-4 w-4 text-blue-600 flex-shrink-0" />
@@ -417,7 +414,7 @@ export const listItem = ({
             )}
 
             {/* Additional Status Info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
               {reminder.sentAt && (
                 <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
                   <Mail className="h-4 w-4 text-green-600 flex-shrink-0" />

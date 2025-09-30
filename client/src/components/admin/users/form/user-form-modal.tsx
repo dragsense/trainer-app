@@ -13,12 +13,14 @@ import { TUserData, TUserResponse } from "@/@types/user.type";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { THandlerComponentProps } from "@/@types/handler-types";
+import { EUserLevels } from "@shared/enums/user.enum";
 
 
 export interface IUserFormModalExtraProps {
   open: boolean;
   onClose: () => void;
   isEditing?: boolean;
+  level: number;
 }
 
 interface IUserFormModalProps extends THandlerComponentProps<TFormHandlerStore<TUserData, TUserResponse, IUserFormModalExtraProps>> {
@@ -37,7 +39,7 @@ export default function UserFormModal({
   const open = store((state) => state.extra.open)
   const isEditing = store((state) => state.extra.isEditing)
   const onClose = store((state) => state.extra.onClose)
-
+  const level = store((state) => state.extra.level)
 
   const fields: TFieldConfig<TUserData>[] = [
     // ─── Basic Info ──────────────
@@ -130,7 +132,7 @@ export default function UserFormModal({
           placeholder: "Short description about yourself...",
           required: false,
         },
-        {
+        ...(level === EUserLevels.TRAINER ? [{
           id: "specialties",
           name: "specialties",
           label: "Specialties",
@@ -152,6 +154,7 @@ export default function UserFormModal({
           min: 0,
           required: false,
         },
+      ] : []),
     
       ]
     }

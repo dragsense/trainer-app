@@ -75,10 +75,10 @@ export class RemindersService {
       timeOfDay,
       intervalMinutes,
       priority,
-      startDateFrom,
-      startDateTo,
-      scheduledDateFrom,
-      scheduledDateTo,
+        startDateAfter,
+      startDateBefore,
+      scheduledDateAfter,
+      scheduledDateBefore,
       deliveryMethod,
       recipientEmail,
       creatorEmail,
@@ -92,7 +92,7 @@ export class RemindersService {
       .leftJoinAndSelect('reminder.recipient', 'recipient')
       .leftJoinAndSelect('recipient.profile', 'recipientProfile')
       .leftJoinAndSelect('reminder.session', 'session')
-      .leftJoinAndSelect('reminder.billing', 'billing');
+      .leftJoinAndSelect('reminder.billing', 'billing')
 
     if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
@@ -123,7 +123,7 @@ export class RemindersService {
     }
 
     if (frequency) {
-      query.andWhere('reminder.frequencyConfig->>\'frequency\' = :frequency', { frequency });
+      query.andWhere('reminder.frequencyConfig->\'frequency\' = :frequency', { frequency });
     }
 
     if (creatorId) {
@@ -163,11 +163,11 @@ export class RemindersService {
     }
 
     if (timeOfDay) {
-      query.andWhere('reminder.frequencyConfig->>\'timeOfDay\' = :timeOfDay', { timeOfDay });
+      query.andWhere('reminder.frequencyConfig->\'timeOfDay\' = :timeOfDay', { timeOfDay });
     }
 
     if (intervalMinutes) {
-      query.andWhere('reminder.frequencyConfig->>\'intervalMinutes\' = :intervalMinutes', { 
+      query.andWhere('reminder.frequencyConfig->\'intervalMinutes\' = :intervalMinutes', { 
         intervalMinutes: intervalMinutes.toString() 
       });
     }
@@ -176,20 +176,20 @@ export class RemindersService {
       query.andWhere('reminder.priority = :priority', { priority });
     }
 
-    if (startDateFrom) {
-      query.andWhere('reminder.startDate >= :startDateFrom', { startDateFrom });
+    if (startDateAfter) {
+      query.andWhere('reminder.startDate >= :startDateAfter', { startDateAfter });
     }
 
-    if (startDateTo) {
-      query.andWhere('reminder.startDate <= :startDateTo', { startDateTo });
+    if (startDateBefore) {
+      query.andWhere('reminder.startDate <= :startDateBefore', { startDateBefore });
     }
 
-    if (scheduledDateFrom) {
-      query.andWhere('reminder.scheduledAt >= :scheduledDateFrom', { scheduledDateFrom });
+      if (scheduledDateAfter) {
+      query.andWhere('reminder.scheduledAt >= :scheduledDateAfter', { scheduledDateAfter });
     }
 
-    if (scheduledDateTo) {
-      query.andWhere('reminder.scheduledAt <= :scheduledDateTo', { scheduledDateTo });
+    if (scheduledDateBefore) {
+      query.andWhere('reminder.scheduledAt <= :scheduledDateBefore', { scheduledDateBefore });
     }
 
     if (deliveryMethod) {

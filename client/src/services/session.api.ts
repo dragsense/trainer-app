@@ -11,7 +11,7 @@ import { TSessionData } from "@shared/types/session.type";
 const SESSIONS_API_PATH = "/sessions";
 
 export const me = async () =>
-  apiRequest<ISession>(`${SESSIONS_API_PATH}/me`, "GET");
+    apiRequest<ISession>(`${SESSIONS_API_PATH}/me`, "GET");
 
 export const createSession = (data: TSessionData) =>
     apiRequest<IMessageResponse>(`${SESSIONS_API_PATH}`, "POST", data);
@@ -36,9 +36,12 @@ export const fetchSessions = (
         Object.keys(params.filters).length > 0
     ) {
         Object.entries(params.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== "") {
-                queryParams.append(key, value.toString());
+            if (value) {
+                if (value instanceof Date)
+                    queryParams.append(key, value.toISOString());
+                else queryParams.append(key, value.toString());
             }
+
         });
     }
     let apiPath = `${SESSIONS_API_PATH}`;

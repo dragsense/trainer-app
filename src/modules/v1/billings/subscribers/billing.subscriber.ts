@@ -54,7 +54,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
 
       setTimeout(async () => {
 
-        await this.createStripeInvoice(billingWithRelations)
+       // await this.createStripeInvoice(billingWithRelations)
         await this.sendBillingEmail(billingWithRelations);
 
       }, 100)

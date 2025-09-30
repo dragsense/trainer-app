@@ -46,11 +46,10 @@ export default function UserList({
 }: IUserListProps) {
 
 
-  const listStoreKey = storeKey + "-list";
   const singelStoreKey = storeKey + "-single";
 
   if (!store) {
-    return (`List store "${listStoreKey}" not found. Did you forget to register it?`);
+    return (`List store "${storeKey}" not found. Did you forget to register it?`);
   }
 
   const singleStore = useRegisteredStore<TSingleHandlerStore<IUser, any>>(singelStoreKey);
@@ -60,6 +59,7 @@ export default function UserList({
   }
 
   const setAction = singleStore(state => state.setAction);
+  const extra = singleStore(state => state.extra);
   
   const setListFilters = store(state => state.setFilters);
   const navigate = useNavigate();
@@ -127,7 +127,8 @@ export default function UserList({
     handleDelete,
     handleView,
     handleViewClients,
-    handleAssign
+    handleAssign,
+    level: extra.level
   }
   );
 
@@ -173,7 +174,9 @@ export default function UserList({
 
 
 
-      <TabsContent value="table">  <AppCard><TTable<IUser>
+      <TabsContent value="table">  
+        <AppCard>
+          <TTable<IUser>
         listStore={store}
         columns={columns}
         emptyMessage="No trainers found."

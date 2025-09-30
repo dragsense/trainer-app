@@ -13,7 +13,7 @@ import { ReminderForm } from "@/page-components";
 import { deleteReminder, fetchReminder, fetchReminders } from "@/services/reminder.api";
 
 // Types
-import { IReminder } from "@/@types/reminder.type";
+import { IReminder } from "@shared/interfaces/reminder.interface";
 
 
 // Layouts
@@ -29,7 +29,7 @@ export default function RemindersPage() {
 
   return (
     <PageInnerLayout Header={<Header />}>
-      <SingleHandler<IReminder>
+      <SingleHandler<IReminder, any>
         queryFn={fetchReminder}
         deleteFn={deleteReminder}
         storeKey={STORE_KEY}
@@ -43,7 +43,7 @@ export default function RemindersPage() {
         ]}
       />
 
-      <ListHandler<IReminder>
+      <ListHandler<IReminder, any>
         queryFn={fetchReminders}
         ListComponent={ReminderList}
         storeKey={STORE_KEY}

@@ -1,6 +1,6 @@
 // External Libraries
 import { JSX } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { MoreHorizontal, Mail, Phone, Star, User, Shield } from "lucide-react";
 
 // UI Components
@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Types
-import { IUser } from "@/@types/user.type";
+import { IUser } from "@shared/interfaces/user.interface";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { EUserLevels } from "@shared/enums/user.enum";
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000";
 
@@ -28,7 +29,7 @@ const TrainerActions = ({
   handleDelete,
   handleView,
   handleViewClients,
-  handleAssign
+  handleAssign,
 }: {
   trainer: IUser;
   handleEdit?: (id: number) => void;
@@ -88,12 +89,14 @@ export const itemViews = ({
   handleView,
   handleViewClients,
   handleAssign,
+  level
 }: {
   handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   handleView?: (trainerId: number) => void;
   handleViewClients?: (trainerId: number) => void;
   handleAssign?: (trainerId: number) => void;
+  level: number;
 }): {
   columns: ColumnDef<IUser>[];
   listItem: (item: IUser) => JSX.Element;
@@ -142,15 +145,15 @@ export const itemViews = ({
         return profile?.phoneNumber || '-';
       },
     },
-    {
+    ...(level === EUserLevels.TRAINER ? [{
       accessorKey: "profile.specialties",
       header: "Specialties",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<IUser> }) => {
         const profile = row.original.profile;
         const specialties = profile?.specialties || [];
         return (
           <div className="flex flex-wrap gap-1">
-            {specialties.map((specialty, index) => (
+            {specialties.map((specialty: string, index: number) => (
               <Badge key={index} variant="secondary">
                 {specialty}
               </Badge>
@@ -158,7 +161,7 @@ export const itemViews = ({
           </div>
         );
       },
-    },
+    }] : []),
     {
       accessorKey: "isActive",
       header: "Status",
@@ -184,6 +187,7 @@ export const itemViews = ({
             handleView={handleView}
             handleViewClients={handleViewClients}
             handleAssign={handleAssign}
+
           />
         );
       },
@@ -199,10 +203,9 @@ export const itemViews = ({
 
     const getUserRole = (level: number) => {
       switch (level) {
-        case 1: return { label: 'Client', color: 'bg-blue-100 text-blue-800 border-blue-200' };
-        case 2: return { label: 'Trainer', color: 'bg-green-100 text-green-800 border-green-200' };
-        case 3: return { label: 'Admin', color: 'bg-purple-100 text-purple-800 border-purple-200' };
-        case 4: return { label: 'Super Admin', color: 'bg-red-100 text-red-800 border-red-200' };
+        case 0: return { label: 'Super Admin', color: 'bg-red-100 text-red-800 border-red-200' };
+        case 1: return { label: 'Trainer', color: 'bg-green-100 text-green-800 border-green-200' };
+        case 2: return { label: 'Client', color: 'bg-blue-100 text-blue-800 border-blue-200' };
         default: return { label: 'User', color: 'bg-gray-100 text-gray-800 border-gray-200' };
       }
     };
@@ -210,6 +213,7 @@ export const itemViews = ({
     const roleConfig = getUserRole(item.level);
 
     return (
+     
       <Card className="group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 bg-gradient-to-br from-background to-muted/20">
         <CardContent className="p-3">
           <div className="flex flex-col sm:flex-row items-start gap-3">
@@ -269,7 +273,7 @@ export const itemViews = ({
               </div>
 
               {/* Specialties */}
-              {specialties.length > 0 && (
+              {specialties.length > 0 && level === EUserLevels.TRAINER && (
                 <div className="p-2 rounded bg-secondary/5 border border-secondary/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Star className="h-3 w-3 text-secondary" />
@@ -290,25 +294,7 @@ export const itemViews = ({
                 </div>
               )}
 
-              {/* Additional Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-center gap-2 p-2 rounded bg-blue-50 border border-blue-200">
-                  <User className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">User ID</p>
-                    <p className="text-sm font-semibold text-blue-800">#{item.id}</p>
-                    <p className="text-xs text-blue-600">Unique identifier</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
-                  <Shield className="h-4 w-4 text-green-600 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Access Level</p>
-                    <p className="text-sm font-semibold text-green-800">Level {item.level}</p>
-                    <p className="text-xs text-green-600">{roleConfig.label}</p>
-                  </div>
-                </div>
-              </div>
+        
             </div>
 
             {/* Actions */}

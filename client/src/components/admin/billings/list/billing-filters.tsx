@@ -99,65 +99,7 @@ export function BillingFilters({
         </SelectContent>
       </Select>
 
-      {/* Currency Filter */}
-      <Select
-        value={filters.currency || "all"}
-        onValueChange={(value) => onFilterChange("currency", value === "all" ? undefined : value)}
-      >
-        <SelectTrigger className="w-[100px]">
-          <SelectValue placeholder="Currency" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All</SelectItem>
-          <SelectItem value="USD">USD</SelectItem>
-          <SelectItem value="EUR">EUR</SelectItem>
-          <SelectItem value="GBP">GBP</SelectItem>
-        </SelectContent>
-      </Select>
 
-      {/* Amount Range */}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Min Amount"
-          type="number"
-          value={filters.minAmount || ""}
-          onChange={(e) => onFilterChange("minAmount", e.target.value ? Number(e.target.value) : undefined)}
-          className="w-[120px]"
-        />
-        <span className="text-muted-foreground">-</span>
-        <Input
-          placeholder="Max Amount"
-          type="number"
-          value={filters.maxAmount || ""}
-          onChange={(e) => onFilterChange("maxAmount", e.target.value ? Number(e.target.value) : undefined)}
-          className="w-[120px]"
-        />
-      </div>
-
-      {/* User ID Filter */}
-      <Input
-        placeholder="User ID"
-        type="number"
-        value={filters.userId || ""}
-        onChange={(e) => onFilterChange("userId", e.target.value ? Number(e.target.value) : undefined)}
-        className="w-[100px]"
-      />
-
-      {/* Invoice Number Filter */}
-      <Input
-        placeholder="Invoice #"
-        value={filters.localInvoiceNumber || ""}
-        onChange={(e) => onFilterChange("localInvoiceNumber", e.target.value || undefined)}
-        className="w-[140px]"
-      />
-
-      {/* Stripe Invoice ID Filter */}
-      <Input
-        placeholder="Stripe ID"
-        value={filters.stripeInvoiceId || ""}
-        onChange={(e) => onFilterChange("stripeInvoiceId", e.target.value || undefined)}
-        className="w-[140px]"
-      />
 
       {/* Date Range Filters */}
       <DatePicker
@@ -178,16 +120,6 @@ export function BillingFilters({
           to: filters.dueDate.dueDateTo 
         } : undefined}
         onSelect={(date) => handleDateSelect(date, 'due')}
-      />
-
-      <DatePicker
-        placeholder="Paid Date"
-        mode="range"
-        value={filters.paidDate ? { 
-          from: filters.paidDate.paidDateFrom, 
-          to: filters.paidDate.paidDateTo 
-        } : undefined}
-        onSelect={(date) => handleDateSelect(date, 'paid')}
       />
     </>
   );

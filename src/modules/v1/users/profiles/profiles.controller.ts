@@ -30,7 +30,7 @@ export class ProfilesController {
   }
 
 
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image.path'))
   @ApiConsumes('multipart/form-data')
   @MinRoleLevel(EUserLevels[EUserRole.USER])
   @Patch('profile/me')

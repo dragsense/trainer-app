@@ -76,7 +76,8 @@ export class SessionsService {
       page = 1,
       limit = 10,
       search,
-      startDate,
+      startDateAfter,
+      startDateBefore,
       endDate,
       type,
       status,
@@ -113,8 +114,12 @@ export class SessionsService {
         { search: `%${search}%` });
     }
 
-    if (startDate) {
-      query.andWhere('session.dateTime >= :startDate', { startDate });
+    if (startDateAfter) {
+      query.andWhere('session.dateTime >= :startDateAfter', { startDateAfter });
+    }
+
+    if (startDateBefore) {
+      query.andWhere('session.dateTime <= :startDateBefore', { startDateBefore });
     }
 
     if (endDate) {

@@ -187,7 +187,15 @@ export class SessionListDto extends ListQueryDto {
   })
   @IsOptional()
   @IsDateString()
-  startDate?: string;
+  startDateAfter?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'Filter by sessions from this date',
+    example: '2025-07-01' 
+  })
+  @IsOptional()
+  @IsDateString()
+  startDateBefore?: string;
 
   @ApiPropertyOptional({ 
     description: 'Filter by sessions until this date',

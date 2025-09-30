@@ -23,8 +23,6 @@ import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 import { PageInnerLayout } from "@/layouts";
 
 
-
-
 export default function TrainersPage() {
 
   const queryClient = useQueryClient();
@@ -58,6 +56,9 @@ export default function TrainersPage() {
         queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.TRAINER])}
         ListComponent={UserList}
         storeKey={STORE_KEY}
+        listProps={{
+          level: EUserLevels[EUserRole.TRAINER],
+        }}
       />
     </PageInnerLayout>
   );

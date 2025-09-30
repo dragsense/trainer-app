@@ -268,9 +268,7 @@ export const listItem = ({
                 </p>
               </div>
               <div className="flex items-center gap-1 flex-wrap">
-                <Badge className={`${config.color} border text-xs`} onClick={updateStatus && (() => updateStatus(billing.id))}>
-                  {config.label}
-                </Badge>
+             
                 <Badge variant="outline" className="text-xs">
                   {billing.type?.replace("_", " ")}
                 </Badge>
@@ -283,7 +281,7 @@ export const listItem = ({
             </div>
 
             {/* Main Billing Info - Responsive Layout */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-3">
               {/* Amount & Currency */}
               <div className="flex items-center gap-2 p-2 rounded bg-green-50 border border-green-200">
                 <DollarSign className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -330,34 +328,6 @@ export const listItem = ({
                 </div>
               </div>
             </div>
-
-            {/* Tax and Discount Info */}
-            {(billing.totalTax || billing.discount) && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {billing.totalTax && (
-                  <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border">
-                    <div className="h-6 w-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-purple-600">T</span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Tax</p>
-                      <p className="text-sm font-medium">{billing.currency.toUpperCase()} {(billing.totalTax / 100).toFixed(2)}</p>
-                    </div>
-                  </div>
-                )}
-                {billing.discount && (
-                  <div className="flex items-center gap-2 p-2 rounded bg-muted/30 border">
-                    <div className="h-6 w-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-orange-600">D</span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Discount</p>
-                      <p className="text-sm font-medium">{billing.currency.toUpperCase()} {(billing.discount / 100).toFixed(2)}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Stripe Invoice ID */}
             {billing.stripeInvoiceId && (

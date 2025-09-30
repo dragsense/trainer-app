@@ -93,7 +93,7 @@ export class BillingsService {
         throw new ConflictException('Stripe invoice ID must be unique');
       }
       throw error;
-    }
+    } 
   }
 
   async findAll(queryDto: BillingListDto, user: User): Promise<IPaginatedResponse<Billing>> {

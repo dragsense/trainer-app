@@ -8,7 +8,7 @@ import { Calendar, Download } from "lucide-react";
 import { format } from "date-fns";
 
 // Types
-import { IBilling } from "@/@types/billing.type";
+import { IBilling } from "@shared/interfaces/billing.interface";
 
 // UI Components
 import {
@@ -37,7 +37,7 @@ export default function InvoiceViewModal({ storeKey }: IInvoiceViewModalProps) {
 
 
     const singleStoreKey = storeKey + "-single";
-    const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling>>(singleStoreKey);
+    const singleStore = useRegisteredStore<TSingleHandlerStore<IBilling, any>>(singleStoreKey);
 
     if (!singleStore) return <div>Single store "{singleStoreKey}" not found.</div>;
 
@@ -100,7 +100,8 @@ export default function InvoiceViewModal({ storeKey }: IInvoiceViewModalProps) {
                     {/* BILL TO */}
                     <div className="mb-6">
                         <p className="font-semibold">Bill To:</p>
-                        <p className="text-muted-foreground">{billing.user?.fullName || "Customer Name"}</p>
+                        <p className="text-muted-foreground">{billing.user?.firstName || "Customer Name"}</p>
+                        <p className="text-muted-foreground">{billing.user?.lastName || "Customer Name"}</p>
                         <p className="text-muted-foreground">{billing.user?.email}</p>
                     </div>
 

@@ -80,18 +80,20 @@ export function List<TData, TExtra extends Record<string, unknown> = any>({
         </div>
       )}
 
-      {children}
+
 
       <div className={cn("space-y-3", colClassName)}>
+      <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayData.length > 0 ? (
           displayData.map((item, index) => (
-            <div key={index}>
-              {renderItem(item, index)}
+              <div key={index}>
+                {renderItem(item, index)}
             </div>
           ))
         ) : (<div className="text-sm text-muted-foreground text-center py-8">
-              {emptyMessage}
-            </div>)}
+          {emptyMessage}
+        </div>)}
+        </div>
       </div>
 
       {error && (
