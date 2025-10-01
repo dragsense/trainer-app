@@ -26,7 +26,7 @@ export const getMailerConfig = async (
   const transport: any = {
     host: configService.get<string>('mailer.host'),
     port: configService.get<number>('mailer.port'),
-    secure: !isDev,
+    secure: !isDev && configService.get<number>('mailer.port') === 465,
     auth: !isDev
       ? {
           user: configService.get<string>('mailer.user'),
@@ -38,6 +38,8 @@ export const getMailerConfig = async (
 
   if (isDev) {
     transport.ignoreTLS = true; // disable TLS in dev
+  }else{
+    transport.requireTLS = true;
   }
 
   // ✅ Only add DKIM if not in development
