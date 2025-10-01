@@ -48,11 +48,6 @@ export class CreateProfileDto {
   @IsString()
   address?: string;
 
-  @ApiProperty({ example: 'https://example.com/avatar.jpg' })
-  @IsOptional()
-  @IsString()
-  avatar?: string;
-
   // ──────── Trainer-Specific Fields ────────
 
   @ApiProperty({ example: '10+ years certified strength coach' })
@@ -82,11 +77,6 @@ export class CreateProfileDto {
   @IsArray()
   @IsString({ each: true })
   fitnessGoals?: string[];
-
-  @ApiProperty({ example: EUserGender.FEMALE, description: 'Preferred trainer gender', required: false })
-  @IsOptional()
-  @IsEnum(EUserGender)
-  preferredTrainerGender?: EUserGender;
 
 
   @ApiPropertyOptional({

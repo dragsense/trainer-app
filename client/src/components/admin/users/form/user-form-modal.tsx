@@ -7,13 +7,15 @@ import { useInput } from "@/hooks/use-input";
 // Types
 import { TFieldConfig } from "@/@types/form/field.type";
 import { TFormHandlerStore } from "@/stores";
-import { TUserData, TUserResponse } from "@/@types/user.type";
+import { TUserData } from "@shared/types/user.type";
+import { TUserResponse } from "@shared/interfaces/user.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { EUserLevels } from "@shared/enums/user.enum";
+import { FormErrors } from "@/components/shared-ui/form-errors";
 
 
 export interface IUserFormModalExtraProps {
@@ -154,7 +156,7 @@ export default function UserFormModal({
           min: 0,
           required: false,
         },
-      ] : []),
+      ] : []) as any[],
     
       ]
     }
@@ -227,7 +229,7 @@ export default function UserFormModal({
           </div>
         </div>
 
-    
+      <FormErrors />
       </div>
     </ModalForm>
 
