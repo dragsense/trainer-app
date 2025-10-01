@@ -15,6 +15,7 @@ export default registerAs('mailer', () => ({
   dkimPrivateKeyPath: process.env.MAIL_DKIM_PRIVATE_KEY_PATH || '/root/private.key',
 }));
 
+
 export const getMailerConfig = async (
   configService: ConfigService,
 ): Promise<MailerOptions> => {
@@ -25,7 +26,7 @@ export const getMailerConfig = async (
   const transport: any = {
     host: configService.get<string>('mailer.host'),
     port: configService.get<number>('mailer.port'),
-    secure: !isDev && configService.get<number>('mailer.port') === 465,
+    secure: !isDev,
     auth: !isDev
       ? {
           user: configService.get<string>('mailer.user'),
