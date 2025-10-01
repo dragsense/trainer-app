@@ -21,10 +21,6 @@ export const getMailerConfig = async (
 ): Promise<MailerOptions> => {
 
     const isDev = process.env.NODE_ENV === 'development';
-
-
-    console.log(isDev)
-    console.log(configService.get<string>('mailer'))
     
   const transport: any = {
     host: configService.get<string>('mailer.host'),
