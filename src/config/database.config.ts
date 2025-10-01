@@ -11,7 +11,7 @@ export default registerAs('database', () => ({
     password: process.env.DB_PASS || 'postgres',
     database: process.env.DB_NAME || 'trainer_app',
     synchronize: process.env.TYPEORM_SYNCHRONIZE === 'true',
-    logging: process.env.TYPEORM_LOGGING === 'true',
+    logging: false,
     poolSize: parseInt(process.env.DB_POOL_SIZE || '10', 10),
     pool: {
       max: parseInt(process.env.DB_POOL_MAX || '20', 10),

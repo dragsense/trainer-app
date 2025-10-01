@@ -155,17 +155,23 @@ export class BillingsController {
     @Req() req: any,
     @Query() query: StripeInvoiceListDto,
   ) {
-    let customerId = '';
+    let customerId = query.customerId || '';
     const user = req.user;
     if (user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       const loggedInUser = await this.userService.findOne({ id: user.id });
-      customerId = loggedInUser.stripeCustomerId;
+      customerId = loggedInUser.stripeCustomerId || '';
+
+      if(!customerId) {
+        throw new BadRequestException('User does not have a Stripe customer ID');
+      }
     }
+
+  
 
     // Use the new filtering method
     return await this.stripeInvoiceService.listInvoicesWithFilters({
       ...query,
-      customerId: customerId || query.customerId,
+      customerId: customerId ,
     });
   }
 
@@ -179,7 +185,7 @@ export class BillingsController {
     return await this.stripeInvoiceService.getInvoice(invoiceId);
   }
 
-  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
+  @MinRoleLevel(EUserLevels[EUserRole.USER])
   @Get('stripe/invoices/:invoiceId/pdf')
   @ApiOperation({ summary: 'Get Stripe invoice PDF URL' })
   @ApiResponse({ status: 200, description: 'Stripe invoice PDF URL fetched successfully' })
@@ -189,7 +195,7 @@ export class BillingsController {
     return { pdfUrl };
   }
 
-  @MinRoleLevel(EUserLevels[EUserRole.USER])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Get('stripe/transactions')
   @ApiOperation({ summary: 'Get Stripe transactions' })
   @ApiResponse({ status: 200, description: 'Stripe transactions fetched successfully' })
@@ -201,18 +207,22 @@ export class BillingsController {
     const user = req.user;
     if (user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       const loggedInUser = await this.userService.findOne({ id: user.id });
-      customerId = loggedInUser.stripeCustomerId;
+      customerId = loggedInUser.stripeCustomerId || query.customerId || '';
+
+      if(!customerId) {
+        throw new BadRequestException('User does not have a Stripe customer ID');
+      }
     }
 
     // Use the new filtering method
     return await this.stripeTransactionService.listPaymentIntentsWithFilters({
       ...query,
-      customerId: customerId || query.customerId,
+      customerId: customerId,
     });
   }
 
 
-  @MinRoleLevel(EUserLevels[EUserRole.USER])
+  @MinRoleLevel(EUserLevels[EUserRole.SUPER_ADMIN])
   @Get('stripe/transactions/charges')
   @ApiOperation({ summary: 'Get Stripe charges' })
   @ApiResponse({ status: 200, description: 'Stripe charges fetched successfully' })
@@ -225,8 +235,13 @@ export class BillingsController {
     const user = req.user;
     if (user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       const loggedInUser = await this.userService.findOne({ id: user.id });
-      customerId = loggedInUser.stripeCustomerId;
+      customerId = loggedInUser.stripeCustomerId || '';
+
+      if(!customerId) {
+        throw new BadRequestException('User does not have a Stripe customer ID');
+      }
     }
+
     return await this.stripeTransactionService.listCharges(customerId, paymentIntentId, limit || 100);
   }
 

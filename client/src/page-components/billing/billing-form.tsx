@@ -82,11 +82,12 @@ export default function BillingForm({
 
 
 
-    const { action, response, isLoading, setAction } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, extra } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
-        setAction: state.setAction
+        setAction: state.setAction,
+        extra: state.extra
     })));
 
 

@@ -100,8 +100,7 @@ export class SessionsService {
     if (userLevel === EUserLevels[EUserRole.TRAINER]) {
       query.where('session.trainer.id = :userId', { userId: user.id });
     } else if (userLevel === EUserLevels[EUserRole.USER]) {
-      query.leftJoin('session.clients', 'clients').
-        where('clients.id = :userId', { userId: user.id });
+      query.where('clients.id = :userId', { userId: user.id });
     } else if (userLevel === EUserLevels[EUserRole.SUPER_ADMIN]) {
       // Admins can see all sessions
     } else {

@@ -124,7 +124,7 @@ export class ReminderSchedulerService {
   async processReminder(id: number): Promise<void> {
     const reminder = await this.reminderRepository.findOne({
       where: { id },
-      relations: ['creator', 'recipient', 'session'],
+      relations: ['creator', 'billing', 'recipient', 'session'],
     });
 
     if (!reminder) {

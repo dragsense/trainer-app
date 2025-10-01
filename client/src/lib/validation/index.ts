@@ -11,8 +11,6 @@ export function classValidatorResolver<T extends object>(
 
     const dto = plainToInstance(dtoClass, processedValues);
 
-
-
     // Validate the DTO
     const errors = await validate(dto, { 
       skipMissingProperties: true,
@@ -20,8 +18,6 @@ export function classValidatorResolver<T extends object>(
       forbidNonWhitelisted: false,
       skipUndefinedProperties: true
     });
-
-    console.log('Errors:', errors);
 
     if (errors.length === 0) {
       return { values, errors: {} };

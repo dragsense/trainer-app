@@ -14,7 +14,7 @@ import { EBillingStatus, EBillingType, EPaymentMethodType } from 'shared/enums';
 import { Profile } from 'shared/entities';
 import { StripeInvoiceService } from '@/modules/v1/stripe/services/stripe-invoice.service';
 import Stripe from 'stripe';
-import { StripeBillingService } from '../../stripe/services/stripe-billing.service';
+import { StripeBillingService } from '@/modules/v1/stripe/services/stripe-billing.service';
 
 @EventSubscriber()
 @Injectable()
@@ -25,10 +25,8 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
     private readonly mailerService: MailerService,
     private readonly usersService: UsersService,
     private readonly dataSource: DataSource,
-    private readonly stripInvoiceServices: StripeInvoiceService,
-    private readonly stripeBillingService: StripeBillingService,
     private readonly stripeInvoiceService: StripeInvoiceService,
-
+    private readonly stripeBillingService: StripeBillingService,
   ) {
     this.dataSource.subscribers.push(this);
   }
@@ -48,18 +46,21 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
         });
 
       if (!billingWithRelations || !billingWithRelations.user.email) {
-        console.log('No email found for user, skipping email');
+        this.logger.warn('No email found for user, skipping email');
         return;
       }
 
-      setTimeout(async () => {
-
-       // await this.createStripeInvoice(billingWithRelations)
-        await this.sendBillingEmail(billingWithRelations);
-
-      }, 100)
+      // Use setImmediate for better async handling
+      setImmediate(async () => {
+        try {
+          await this.createStripeInvoice(billingWithRelations);
+          await this.sendBillingEmail(billingWithRelations);
+        } catch (error) {
+          this.logger.error('Failed to process billing after insert:', error);
+        }
+      });
     } catch (error) {
-      console.error('Failed to send billing email:', error);
+      this.logger.error('Failed to send billing email:', error);
       // Don't throw error to avoid affecting the transaction
     }
   }
@@ -90,7 +91,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
         }
 
 
-        await this.stripInvoiceServices.payInvoice(billing.stripeInvoiceId, {
+        await this.stripeInvoiceService.payInvoice(billing.stripeInvoiceId, {
           paid_out_of_band: true
         });
 
@@ -108,7 +109,7 @@ export class BillingSubscriber implements EntitySubscriberInterface<Billing> {
         });
 
       if (!billingWithRelations || !billingWithRelations.user.email) {
-        console.log('No email found for user, skipping email');
+        this.logger.warn('No email found for user, skipping email');
         return;
       }
 

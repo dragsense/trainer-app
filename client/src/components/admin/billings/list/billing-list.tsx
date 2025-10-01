@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Filter, Plus, Table, List } from "lucide-react";
 
 // Types
-import { IBilling } from "@/@types/billing.type";
+import { IBilling } from "@shared/interfaces/billing.interface";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -22,10 +22,11 @@ import { columns, listItem } from "./billing-item-views";
 
 // Stores
 import { TListHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
+import { THandlerComponentProps } from "@/@types/handler-types";
+import { EUserLevels, EUserRole } from "@shared/enums";
 
-interface IBillingListProps {
-  storeKey: string;
-  store: TListHandlerStore<IBilling, any>;
+interface IBillingListProps extends THandlerComponentProps<TListHandlerStore<IBilling, any>> {
+  
 }
 
 export default function BillingList({
@@ -46,6 +47,8 @@ export default function BillingList({
   }
 
   const setListFilters = store(state => state.setFilters);
+  const extra = store(state => state.extra);
+
   const setAction = singleStore(state => state.setAction);
 
 
@@ -175,6 +178,7 @@ export default function BillingList({
           {renderViewToggle()}
           <Button
             onClick={handleCreate}
+            disabled={extra.level === EUserLevels[EUserRole.USER]}
           >
             <Plus /> <span className="hidden sm:inline capitalize">Add Billing</span>
           </Button>
