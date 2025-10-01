@@ -42,7 +42,7 @@ export const getMailerConfig = async (
   // ✅ Only add DKIM if not in development
   if (!isDev) {
     transport.dkim = {
-      domainName: 'paybackbilling.com',
+      domainName: 'trainer.digital.st',
       keySelector: configService.get<string>('mailer.dkimSelector') || 'default',
       privateKey: fs.readFileSync(
         path.resolve(configService.get<string>('mailer.dkimPrivateKeyPath') || '/root/private.key'),
