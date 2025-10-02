@@ -207,6 +207,8 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
         )
     }
 
+    const isAdmin = user?.level === EUserLevels[EUserRole.SUPER_ADMIN];
+
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-64">
@@ -264,7 +266,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             </div>
                         }
                     >
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${isAdmin ? '4': '3'} gap-2`}>
 
                             <AppCard
                                 className="flex-1 gap-2 bg-primary/30 shadow-2xl"
@@ -280,7 +282,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             <AppCard
                                 className="flex-1 gap-2 bg-[#FFE2E5] shadow-2xl"
                                 header={<span className="text-sm font-medium">Pending BIllings</span>}
-                                footer={<p className="text-sm text-muted-foreground">{`${billing.summary.pending_billings} awaiting`}</p>}
+                                footer={<p className="text-sm text-muted-foreground">{`${billing.summary.pending_billings || 0} awaiting`}</p>}
                             >
                                 <div className="space-y-2">
                                     <img src={PendingPymentsIcon} />
@@ -289,7 +291,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                             </AppCard>
 
 
-                            <AppCard
+                            {isAdmin && <AppCard
                                 className="flex-1 gap-2 bg-secondary/30 shadow-2xl"
                                 header={<span className="text-sm font-medium">Total Trainers</span>}
                                 footer={<p className="text-sm text-muted-foreground">{`Active ${activeClientRate}%`}</p>}
@@ -298,7 +300,7 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
                                     <img src={TrainersIcon} />
                                     <div className="text-2xl font-bold">{overview.totalTrainers}</div>
                                 </div>
-                            </AppCard>
+                            </AppCard>}
 
 
                             <AppCard
@@ -409,8 +411,6 @@ export default function CompactDashboard({ store }: CompactDashboardProps) {
             </div>
 
             <BillingOverview dynamicDateLabel={dynamicDateLabel} isAdmin={user?.level === EUserLevels[EUserRole.SUPER_ADMIN]} data={billing} loading={isLoading} />
-
-
 
 
         </div>

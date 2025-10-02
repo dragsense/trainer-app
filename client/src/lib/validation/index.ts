@@ -9,7 +9,10 @@ export function classValidatorResolver<T extends object>(
     
     const processedValues = processFormData(values);
 
-    const dto = plainToInstance(dtoClass, processedValues);
+    const dto = plainToInstance(dtoClass, processedValues, {
+      enableImplicitConversion: true,
+      excludeExtraneousValues: false
+    });
 
     // Validate the DTO
     const errors = await validate(dto, { 
@@ -18,6 +21,7 @@ export function classValidatorResolver<T extends object>(
       forbidNonWhitelisted: false,
       skipUndefinedProperties: true
     });
+
 
     if (errors.length === 0) {
       return { values, errors: {} };

@@ -70,14 +70,14 @@ export const BillingOverview = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5  gap-4 mb-6">
               <AppCard
                 header={<span className="text-sm font-medium text-secondary">Total Billings</span>}
-                footer={`${analyticsData.summary.total_billings} invoices`}
+                footer={`${analyticsData.summary.total_billings || 0} invoices`}
               >
                 <div className="text-2xl font-bold text-secondary">{formatCurrency(analyticsData.revenue.total / 100)}</div>
               </AppCard>
 
               <AppCard
                 header={<span className="text-sm font-medium text-green-600">Paid</span>}
-                footer={`${analyticsData.summary.paid_billings} completed`}
+                footer={`${analyticsData.summary.paid_billings || 0} completed`}
               >
                 <div className="text-2xl font-bold text-green-700">
                   {formatCurrency(analyticsData.summary.total_paid / 100)}
@@ -86,7 +86,7 @@ export const BillingOverview = ({
 
               <AppCard
                 header={<span className="text-sm font-medium text-yellow-600">Pending</span>}
-                footer={`${analyticsData.summary.pending_billings} awaiting`}
+                footer={`${analyticsData.summary.pending_billings || 0} awaiting`}
               >
                 <div className="text-2xl font-bold text-yellow-700">
                   {formatCurrency(analyticsData.summary.total_pending / 100)}
@@ -95,7 +95,7 @@ export const BillingOverview = ({
 
               <AppCard
                 header={<span className="text-sm font-medium text-red-600">Failed</span>}
-                footer={`${analyticsData.summary.failed_billings} rejected`}
+                footer={`${analyticsData.summary.failed_billings || 0} rejected`}
               >
                 <div className="text-2xl font-bold text-red-700">
                   {formatCurrency(analyticsData.summary.total_failed / 100)}
@@ -104,7 +104,7 @@ export const BillingOverview = ({
 
               <AppCard
                 header={<span className="text-sm font-medium text-red-800">Overdue</span>}
-                footer={`${analyticsData.summary.overdue_billings} late`}
+                footer={`${analyticsData.summary.overdue_billings || 0} late`}
               >
                 <div className="text-2xl font-bold text-red-900">
                   {formatCurrency(analyticsData.summary.total_overdue / 100)}

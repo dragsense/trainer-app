@@ -54,9 +54,9 @@ export class CreateSessionDto {
     minimum: 15
   })
   @IsNotEmpty()
-  @IsNumber()
+  @IsNumber({}, { message: 'Duration must be a valid number' })
   @Type(() => Number)
-  @Min(15)
+  @Min(15, { message: 'Duration must be at least 15 minutes' })
   duration: number;
 
   @ApiProperty({

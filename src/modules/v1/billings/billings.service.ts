@@ -130,6 +130,7 @@ export class BillingsService {
 
     if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.where('creator.id = :userId', { userId: user.id });
+      query.orWhere('user.id = :userId', { userId: user.id });
     }
 
     // Search functionality

@@ -73,14 +73,30 @@ export class ReminderSubscriber {
 
   private removeReminderJob(reminderId: number) {
     const jobName = `reminder_${reminderId}`;
+    const starterJobName = `${jobName}_starter`;
+    
+    // Remove main job
     try {
       const job = this.schedulerRegistry.getCronJob(jobName);
       if (job) {
+        job.stop();
         this.schedulerRegistry.deleteCronJob(jobName);
         this.logger.log(`Removed cron job ${jobName}`);
       }
     } catch (error) {
       // Job doesn't exist, ignore
+    }
+    
+    // Remove starter job if it exists
+    try {
+      const starterJob = this.schedulerRegistry.getCronJob(starterJobName);
+      if (starterJob) {
+        starterJob.stop();
+        this.schedulerRegistry.deleteCronJob(starterJobName);
+        this.logger.log(`Removed starter job ${starterJobName}`);
+      }
+    } catch (error) {
+      // Starter job doesn't exist, ignore
     }
   }
 
@@ -177,8 +193,16 @@ export class ReminderSubscriber {
         const starterJob = new CronJob(reminder.scheduledAt, () => {
           job.start();
           this.logger.log(`Started recurring job ${jobName} at ${new Date().toISOString()}`);
-          this.schedulerRegistry.deleteCronJob(starterJobName);
+          // Clean up the starter job
+          try {
+            this.schedulerRegistry.deleteCronJob(starterJobName);
+          } catch (error) {
+            this.logger.warn(`Failed to delete starter job ${starterJobName}:`, error);
+          }
         });
+        
+        // Register the starter job before starting it
+        this.schedulerRegistry.addCronJob(starterJobName, starterJob as any);
         starterJob.start();
 
         this.logger.log(`Scheduled recurring job ${jobName} to start at ${reminder.scheduledAt.toISOString()} with cron: ${cronExpression}`);

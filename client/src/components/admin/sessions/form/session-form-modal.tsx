@@ -99,6 +99,7 @@ export default function SessionFormModal({
       placeholder: "60",
       min: 15,
       required: true,
+      valueType: "number",
     },
     {
       id: "pricePerClient",
