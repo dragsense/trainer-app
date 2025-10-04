@@ -65,9 +65,17 @@ export type RemoveButtonComponent = React.ComponentType<any>;
 export type TFieldConfigObject<T = any> = {
   [K in keyof T]: T[K] extends object
   ? T[K] extends Array<any>
-  ? TFieldConfig<T>
+  ? TFieldConfig<T[K]>
   : TFieldConfigObject<T[K]>
-  : TFieldConfig<T>;
+  : TFieldConfig<T[K]>;
+};
+
+export type TFieldConfigObjectPartial<T> = {
+  [K in keyof T]?: T[K] extends Array<infer U>
+    ? Partial<NestedArrayField<U>>  // array override
+    : T[K] extends object
+    ? TFieldConfigObjectPartial<T[K]>        // nested object override
+    : Partial<BaseField<T[K]>>;   // primitive override
 };
 
 // Nested field must have subFields

@@ -1,6 +1,6 @@
 import { FIELD_UI_TYPE, FIELD_OPTIONS, FIELD_DTO_TYPE, FIELD_REQUIRED } from "@shared/decorators/field.decorator";
 import { TFieldType } from "@shared/types/form/field.type";
-import { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
+import { TFieldConfig, TFieldConfigObject, TFieldConfigObjectPartial } from "@/@types/form/field-config.type";
 
 // --------------------
 // Build a single field
@@ -8,7 +8,7 @@ import { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.typ
 function buildField<T>(
   prototype: any,
   key: keyof T & string,
-  overrides?: Partial<TFieldConfigObject<T>>
+  overrides?: TFieldConfigObjectPartial<T>
 ): TFieldConfig<T> | null {
   // Get decorator metadata
   const decoratorType: TFieldType | undefined = Reflect.getMetadata(FIELD_UI_TYPE, prototype, key);
@@ -64,7 +64,7 @@ function buildField<T>(
 // --------------------
 export function dtoToFields<T>(
   dto: new () => T,
-  overrides: Partial<TFieldConfigObject<T>>
+  overrides: TFieldConfigObjectPartial<T>
 ): TFieldConfigObject<T> {
   const instance = new dto();
   const prototype = Object.getPrototypeOf(instance);
