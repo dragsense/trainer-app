@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TAppSettingData } from "@shared/types/settings.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { TSignupData } from "@shared/types/auth.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 
 // Handlers
 import { FormHandler } from "@/handlers";

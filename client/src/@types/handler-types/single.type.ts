@@ -1,6 +1,6 @@
 // Types
 import type { StoreApi } from "zustand";
-import { TQueryParams } from "../api/param.type";
+import { TQueryParams } from "@shared/types/api/param.type";
 
 export interface ISingleHandlerBaseState<TResponse> {
   response?: TResponse | null;

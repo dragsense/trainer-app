@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TFormHandlerStore, TSingleHandlerStore, useRegisteredStore } from "@/stores";
 import { IUser, TUserData } from "@/@types/user.type";
 

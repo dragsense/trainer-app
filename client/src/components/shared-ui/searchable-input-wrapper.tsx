@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 // Types
-import { TCustomInputWrapper } from "@/@types/form/field.type";
+import { TCustomInputWrapper } from "@/@types/form/field-config.type";
 
 // Components
 import { AppComboBox } from "@/components/layout-ui/app-combo-box";

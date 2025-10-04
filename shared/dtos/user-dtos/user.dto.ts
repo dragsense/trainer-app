@@ -19,12 +19,14 @@ import { Profile } from '../../entities/users/profile.entity';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto } from '../common/list-query.dto';
 import { IUser } from '../../interfaces/user.interface';
+import { FieldType } from '../../decorators/field.decorator';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'email@example.com', description: 'User email' })
   @IsString()
   @IsNotEmpty()
   @IsEmail()
+  @FieldType("email", true)
   email: string;
 
   @ApiPropertyOptional({
@@ -47,11 +49,13 @@ export class CreateUserDto {
   @ApiProperty({ example: true, required: false })
   @IsOptional()
   @IsBoolean()
+  @FieldType("switch")
   isActive?: boolean;
 
   @ApiProperty({ type: CreateProfileDto })
   @ValidateNested()
   @Type(() => CreateProfileDto)
+  @FieldType("nested", true, CreateProfileDto)
   profile: CreateProfileDto;
 }
 

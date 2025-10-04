@@ -1,311 +1,96 @@
-import React, { JSX, useState } from "react";
-import { ChevronDownIcon, Star } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Calendar } from "@/components/ui/calendar";
-import { Label } from "@/components/ui/label";
-import { AppSelect } from "@/components/layout-ui/app-select";
-import { useWatch } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import type { TFieldConfig, TCustomInputWrapper } from "@/@types/form/field.type";
-import { EORDER_CLASSES } from "@/enums/general.enum";
-import { flatten } from "@nestjs/common";
+import React from "react";
+import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField } from "@/components/form-ui/field-components";
+import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 interface UseInputProps<T> {
-  fields: TFieldConfig<T>[];
+  fields: TFieldConfigObject<T>;
   showRequiredAsterisk?: boolean;
   layout?: "vertical" | "horizontal";
 }
+
+
+
+
+export type FormInputs<T> = {
+  [K in keyof T]: T[K] extends object
+  ? T[K] extends Array<any>
+  ? React.ReactNode
+  : FormInputs<T[K]>
+  : React.ReactNode;
+};
+
+
+
+
+
+// Helper function to render form inputs
+const renderFormInputs = (fields: any, renderField: any, parentName?: string) => {
+  return Object.keys(fields).reduce((acc, key) => {
+    const field = fields[key as keyof typeof fields];
+    if (field) {
+      acc[key as keyof typeof fields] = renderField(field as any, parentName) as any;
+    }
+    return acc;
+  }, {} as any);
+};
 
 export function useInput<T>({
   fields,
   showRequiredAsterisk,
   layout = "vertical",
-}: UseInputProps<T>) {
-  const convertValue = (input: unknown, type?: string): any => {
-    const getValue = (val: any) => {
-      if (val === "") return val;
-      if (type === "number") return Number(val ?? 0);
-      if (type === "boolean") return !!val;
-      if (type === "date") return new Date(val ?? "");
-      return val;
-    };
-
-    const rawValue: any =
-      input && typeof input === "object" && "target" in input ? (input as any).target.value : input;
-
-    return Array.isArray(rawValue) ? rawValue.map(getValue) : getValue(rawValue);
-  };
-
-  const renderField = (field: TFieldConfig<any>, parentName?: string): JSX.Element | JSX.Element[] => {
+}: UseInputProps<T>): FormInputs<T> {
+  const renderField = (field: TFieldConfig<T>, parentName?: string):
+    React.ReactNode |
+    Record<string, React.ReactNode> |
+    React.ReactNode => {
+    if (!field) return null;
+    if (!field.type) return null;
     const fieldName = parentName ? `${parentName}.${field.name}` : field.name;
-    const values = useWatch();
-    const [open, setOpen] = useState<boolean>(false);
-
-    const isVisible = field.visible ? field.visible({ values }) : true;
-    const isDisabled = typeof field.disabled === "function" ? field.disabled({ values }) : field.disabled;
-
-    const onChangeHandler = (value: any) => {
-      const parsed = convertValue(value, field.valueType);
-      field?.onChange?.(parsed);
-      return parsed;
-    };
-
-
-    const commonClass = cn(
-      field.startAdornment && "pl-10",
-      field.endAdornment && "pr-10",
-      field.className
-    );
 
     if (field.type === "nested") {
-      return field.subFields.map((subField) => renderField(subField, fieldName)) as JSX.Element[];
-
+      return renderFormInputs(field.subFields, renderField, fieldName);
+    } else if (field.type === "nestedArray") {
+      return useArrayField({
+        field,
+        layout,
+        fieldName,
+        showRequiredAsterisk,
+        renderField: (subField, parentName) => renderFormInputs(subField, renderField, parentName),
+      });
     }
 
-    return (
-      <FormField
-        key={fieldName}
-        name={fieldName}
-        render={({ field: controllerField }) => {
-          const renderInput = () => {
+    // Use individual field components
+    const commonProps = {
+      field,
+      fieldName,
+      showRequiredAsterisk,
+      layout
+    };
 
-            switch (field.type) {
-              case "textarea":
-                return (
-                  <Textarea
-                    {...controllerField}
-                    onChange={(e) => controllerField.onChange(onChangeHandler(e.target.value))}
-                    placeholder={field.placeholder}
-                    disabled={isDisabled}
-                    className={commonClass}
-                  />
-                );
-              case "select":
-                return <AppSelect value={controllerField.value} onChange={(value) => controllerField.onChange(onChangeHandler(value))} options={field.options || []} />;
-              case "multiSelect":
-                return <AppSelect value={controllerField.value || []} onChange={(value) => controllerField.onChange(onChangeHandler(value))} options={field.options || []} multiple />;
-              case "switch":
-                return <Switch checked={controllerField.value} onCheckedChange={controllerField.onChange} disabled={isDisabled} />;
-              case "rating":
-                return (
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Button
-                        key={star}
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => controllerField.onChange(star)}
-                        className="text-yellow-500 hover:scale-110 transition-transform"
-                      >
-                        {star <= controllerField.value ? <Star fill="yellow" /> : <Star />}
-                      </Button>
-                    ))}
-                  </div>
-                );
-              case "file":
-                return (
-                  <div
-                    className={cn(
-                      "border border-dashed border-muted rounded-lg p-4 text-center cursor-pointer hover:bg-muted transition-colors",
-                      field.className
-                    )}
-                  >
-                    <Input
-                      type="file"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) controllerField.onChange(file);
-                      }}
-                      disabled={isDisabled}
-                      className="hidden"
-                      id={`file-input-${field.id}`}
-                    />
-                    <Label htmlFor={`file-input-${field.id}`} className="block cursor-pointer">
-                      {controllerField.value ? (
-                        <div className="text-sm">{controllerField.value.name}</div>
-                      ) : (
-                        <div className="text-muted-foreground">
-                          📂 Drop or click to upload
-                        </div>
-                      )}
-                    </Label>
-                  </div>
-                );
-              case "slider":
-                return (
-                  <div className="space-y-1">
-                    <Slider
-                      defaultValue={[controllerField.value ?? field.defaultValue ?? 0]}
-                      value={[controllerField.value]}
-                      onValueChange={(val) => controllerField.onChange(val[0])}
-                      min={field.min ?? 0}
-                      max={field.max ?? 100}
-                      step={field.step ?? 1}
-                      disabled={isDisabled}
-                    />
-                    <div className="text-sm text-muted-foreground text-right">
-                      {controllerField.value ?? 0}
-                    </div>
-                  </div>
-                );
-              case "date":
-                return (
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        id="date-picker"
-                        className="w-32 justify-between font-normal"
-                      >
-                       
-                        {controllerField.value
-                          ? new Date(controllerField.value).toLocaleDateString()
-                          : "Select date"}
-                          
-                        <ChevronDownIcon />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={controllerField.value}
-                        captionLayout="dropdown"
-                        onSelect={(date) => {
-                          controllerField.onChange(date);
-                          setOpen(false)
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                );
-              case "datetime":
-                return (
-                  <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-auto justify-between font-normal"
-                      >
-                        {controllerField.value
-                          ? new Date(controllerField.value).toLocaleString()
-                          : "Select date & time"}
-                        <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-
-                    <PopoverContent className="w-auto p-4 space-y-2" align="start">
-                      <Calendar
-                        mode="single"
-                        captionLayout="dropdown"
-                        selected={
-                          controllerField.value ? new Date(controllerField.value) : undefined
-                        }
-                        onSelect={(date) => {
-                          if (date) {
-                            const current = new Date(controllerField.value || new Date());
-                            date.setHours(current.getHours());
-                            date.setMinutes(current.getMinutes());
-                            controllerField.onChange(date);
-                          }
-                        }}
-                      />
-
-                      <div className="flex items-center gap-2">
-                        <Label className="text-sm">Time:</Label>
-                        <Input
-                          type="time"
-                          className="border rounded px-2 py-1 text-sm"
-                          value={
-                            controllerField.value
-                              ? new Date(controllerField.value)
-                                .toTimeString()
-                                .slice(0, 5)
-                              : ""
-                          }
-                          onChange={(e) => {
-                            const [hours, minutes] = e.target.value.split(":").map(Number);
-                            const date = controllerField.value
-                              ? new Date(controllerField.value)
-                              : new Date();
-                            date.setHours(hours);
-                            date.setMinutes(minutes);
-                            controllerField.onChange(date);
-                          }}
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                );
-
-              case "custom":
-                return field.Component ? <field.Component value={controllerField.value} onChange={(value) => controllerField.onChange(onChangeHandler(value))} disabled={isDisabled} /> : null;
-              default:
-                return (
-                  <Input
-                    {...controllerField}
-                    value={controllerField.value}
-                    type={field.type}
-                    onChange={(e) => controllerField.onChange(onChangeHandler(e.target.value))}
-                    placeholder={field.placeholder}
-                    disabled={isDisabled}
-                    className={commonClass}
-                  />
-                );
-            }
-          };
-
-          const labelOrderClass = field.lableOrder || EORDER_CLASSES.First;
-          const fieldLayout = field.layout || layout;
-          const inputFlex = labelOrderClass === EORDER_CLASSES.First ? "flex-1" : "";
-
-          return (
-            <FormItem>
-              <div
-                className={cn(
-                  "gap-2 flex",
-                  fieldLayout === "vertical" ? "flex-col justify-center" : "items-center",
-                  isVisible ? "" : "hidden"
-                )}
-              >
-                {field.label && (
-                  <FormLabel className={`text-muted-foreground ${labelOrderClass}`}>
-                    {field.label}
-                    {showRequiredAsterisk && field.required && <span className="text-red-500">*</span>}
-                  </FormLabel>
-                )}
-
-                <FormControl className={inputFlex}>
-                  <div className="relative">
-                    {field.startAdornment && <div className="absolute left-3 top-2.5 flex items-center pointer-events-none">{field.startAdornment}</div>}
-                    {renderInput()}
-                    {field.endAdornment && field.type !== "select" && <div className="absolute right-3 top-2.5 flex items-center">{field.endAdornment}</div>}
-                  </div>
-                </FormControl>
-              </div>
-              <FormMessage />
-              {field.bottomAdornment && <FormDescription>{field.bottomAdornment}</FormDescription>}
-            </FormItem>
-          );
-        }}
-      />
-    );
+    switch (field.type) {
+      case "textarea":
+        return <TextareaField {...commonProps} />;
+      case "select":
+      case "multiSelect":
+        return <SelectField {...commonProps} />;
+      case "switch":
+        return <SwitchField {...commonProps} />;
+      case "date":
+      case "datetime":
+        return <DateField {...commonProps} />;
+      case "text":
+      case "email":
+      case "tel":
+      case "password":
+      case "url":
+      case "number":
+      case "time":
+      case "checkbox":
+        return <TextField {...commonProps} />;
+      default:
+        return null;
+    }
   };
 
-  const inputs = flatten(fields.map((field) => renderField(field))) as JSX.Element[];
-
-  return { inputs };
+  return renderFormInputs(fields, renderField) as FormInputs<T>;
 }

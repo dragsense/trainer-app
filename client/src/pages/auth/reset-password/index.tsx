@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TAuthResetPasswordData } from "@shared/types/auth.type";
 

@@ -71,7 +71,7 @@ export function AppSelect({
     const isSelected = React.useCallback(
         (val: OptionValue) =>
             multiple
-                ? (value as OptionValue[]).some((v) => toKey(v) === toKey(val))
+                ? (value as OptionValue[])?.some((v) => toKey(v) === toKey(val)) ?? false
                 : toKey(value as OptionValue | undefined ?? "") === toKey(val),
         [multiple, value]
     );
@@ -80,7 +80,7 @@ export function AppSelect({
 
         let next: any;
         if (multiple) {
-            const list = value as OptionValue[];
+            const list = (value as OptionValue[]) ?? [];
             const exists = list.some((v) => toKey(v) === toKey(val));
             next = exists ? list.filter((v) => toKey(v) !== toKey(val)) : [...list, val];
         } else {
@@ -104,7 +104,7 @@ export function AppSelect({
     };
 
     const hasSelection = multiple
-        ? (value as OptionValue[]).length > 0
+        ? (value as OptionValue[])?.length > 0
         : value !== undefined && value !== null && value !== "";
 
     return (
@@ -129,7 +129,7 @@ export function AppSelect({
                         )}
 
                         {multiple ? (
-                            (value as OptionValue[]).map((v) => {
+                            (value as OptionValue[])?.map((v) => {
                                 const key = toKey(v);
                                 return (
                                     <Badge
@@ -141,7 +141,7 @@ export function AppSelect({
 
                                     </Badge>
                                 );
-                            })
+                            }) ?? []
                         ) : (
                             hasSelection && (
                                 <span>{labelMap[toKey(value as OptionValue)] ?? toKey(value as OptionValue)}</span>

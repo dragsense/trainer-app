@@ -11,7 +11,7 @@ import { SecurityCardForm } from "@/components/admin";
 import { changePassword } from "@/services/user.api";
 
 // Types
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TUserResetPasswordData } from "@shared/types/user.type";
 import { ResetPasswordDto } from "@shared/dtos/user-dtos/reset-password.dto";    

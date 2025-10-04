@@ -8,7 +8,7 @@ import { DefaultValues, FieldValues, useForm } from "react-hook-form";
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 
 // UI Components
 import { Form } from "@/components/ui/form";
@@ -24,14 +24,13 @@ import { deregisterStore, registerStore, useFormHandlerStore, useRegisteredStore
 import { toast } from "sonner";
 import { TQueryParams } from "@shared/types/api/param.type";
 import { useShallow } from "zustand/shallow";
-import { pickKeys, unwrapValues } from "@/utils";
+import { pickKeys } from "@/utils";
 import { ClassConstructor } from "class-transformer";
 import { classValidatorResolver } from "@/lib/validation";
 
 
 export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Record<string, any> = {}> {
   initialParams?: TQueryParams;
-
   mutationFn: (data: TFormData, params?: TQueryParams) => Promise<TResponse | IMessageResponse | void>;
   FormComponent: React.ComponentType<{
     storeKey: string,
@@ -40,7 +39,7 @@ export interface IFormHandlerProps<TFormData, TResponse, TExtraProps extends Rec
   formProps?: TExtraProps;
   onSuccess?: (response: TResponse | IMessageResponse | void) => void;
   onError?: (error: Error) => void;
-  initialValues: Readonly<TDefaultValue<TFormData>>;
+  initialValues: Readonly<TFormData>;
   validationMode?: EVALIDATION_MODES;
   dto: ClassConstructor<any>;
   storeKey: string;
@@ -62,14 +61,10 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
   const formStoreKey = storeKey + "-form";
 
-  const values = useMemo(() => {
-    return unwrapValues(initialValues) as TFormData;
-  }, [initialValues]);
-
 
   let store = useRegisteredStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey);
   if (!store) {
-    store = useFormHandlerStore<TFormData, TResponse, TExtraProps>(values, formProps || {} as TExtraProps);
+    store = useFormHandlerStore<TFormData, TResponse, TExtraProps>(initialValues, formProps || {} as TExtraProps);
     registerStore<TFormHandlerStore<TFormData, TResponse, TExtraProps>>(formStoreKey, store);
   }
 
@@ -78,12 +73,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
 
   const handleSubmit = async (formData: TFormData) => {
-    // Use the formData directly since it already contains the properly structured data from react-hook-form
     const submissionData = formData as TFormData;
-    
-    console.log('Form submission data:', submissionData);
-    console.log('Form data type:', typeof submissionData);
-    console.log('Form data keys:', Object.keys(submissionData));
 
 
     try {
@@ -129,7 +119,7 @@ export function FormHandler<TFormData extends FieldValues, TResponse = any, TExt
 
   const form = useForm<TFormData>({
     resolver: classValidatorResolver(dto),
-    defaultValues: (values || {}) as DefaultValues<TFormData>,
+    defaultValues: async () => initialValues,
     mode: validationMode,
   });
 

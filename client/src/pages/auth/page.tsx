@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Types
 import { TLoginData } from "@/@types/auth.type";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers

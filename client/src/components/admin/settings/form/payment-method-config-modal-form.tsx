@@ -11,7 +11,7 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TUpdatePaymentMethodData } from "@shared/types/settings.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 

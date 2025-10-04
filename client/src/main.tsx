@@ -1,3 +1,6 @@
+// Import reflect-metadata first
+import "reflect-metadata";
+
 // React Core
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

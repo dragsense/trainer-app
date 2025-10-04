@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 
-import { TQueryParams } from '@/@types/api/param.type';
+import { TQueryParams } from '@shared/types/api/param.type';
 
 export function useApiQuery<T = any>(
   queryKey: string | any[],

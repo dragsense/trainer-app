@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Types
 import { EUserGender } from "@shared/enums/user.enum";
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 
 
 export const UserFormSchema = z.object({

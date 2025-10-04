@@ -21,7 +21,7 @@ import { useInput } from '@/hooks/use-input';
 // Stores
 import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import { TFieldConfig } from '@/@types/form/field.type';
+import { TFieldConfig } from '@/@types/form/field-config.type';
 import { FormErrors } from '../shared-ui/form-errors';
 
 interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TAuthResetPasswordData, IMessageResponse, any>> {

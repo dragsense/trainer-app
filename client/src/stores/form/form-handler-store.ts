@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Types 
-import { IFormHandlerState, MutationFn } from '@/@types/handler-types/form.type';
+import { IFormHandlerState } from '@/@types/handler-types/form.type';
 
 // Config
 import { config } from '@/config';
@@ -14,12 +14,16 @@ export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<
   return create<IFormHandlerState<TFormData, TResponse, TExtra>>()(
     devtools(
       (set) => ({
+      
         isSubmitting: false,
         error: null,
         response: null,
         isSuccess: false,
+
         values: initalValues,
         extra: initialExtra,
+    
+
         setError: (error) => set({ error }),
         setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
         setValues: (values) => set({ values }),

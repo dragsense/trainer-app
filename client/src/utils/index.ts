@@ -10,6 +10,35 @@ export function pickKeys<T extends object, K extends keyof T>(
   }, {} as Partial<T>);
 }
 
+
+export function strictDeepMerge<T extends Record<string, any>>(target: T, source?: Partial<T>): T {
+  if (!source) return { ...target };
+
+  const result: any = Array.isArray(target) ? [...target] : { ...target };
+
+  (Object.keys(target) as (keyof T)[]).forEach((key) => {
+    const targetValue = target[key];
+    const sourceValue = source[key];
+
+    if (
+      sourceValue &&
+      typeof targetValue === "object" &&
+      targetValue !== null &&
+      !Array.isArray(targetValue)
+    ) {
+      // Recursively merge nested objects
+      result[key] = strictDeepMerge(targetValue as any, sourceValue as any);
+    } else if (sourceValue !== undefined) {
+      result[key] = sourceValue as T[typeof key];
+    } else {
+      result[key] = targetValue; // keep default if missing
+    }
+  });
+
+  return result;
+}
+
+
 export function extractValues<T extends object>(
   response: any,
   initialValues: T
@@ -21,7 +50,7 @@ export function extractValues<T extends object>(
 
     if (initField && typeof initField === "object" && "value" in initField) {
       const field = initField.value;
-      
+
       // Handle nested objects
       if (field && typeof field === "object" && "isNested" in initField) {
         if (Array.isArray(field)) {
@@ -62,7 +91,7 @@ export function unwrapValues<T extends object>(formValues: T): any {
 
     if (field && typeof field === "object" && "value" in field) {
       const value = field.value;
-      
+
       // Handle arrays
       if (Array.isArray(value)) {
         result[key] = value.map((item: any) => {
@@ -78,7 +107,7 @@ export function unwrapValues<T extends object>(formValues: T): any {
       // Handle nested objects
       else if (value && typeof value === "object" && !(value instanceof Date)) {
         result[key] = unwrapValues(value);
-      } 
+      }
       // Handle primitive values
       else {
         result[key] = value;

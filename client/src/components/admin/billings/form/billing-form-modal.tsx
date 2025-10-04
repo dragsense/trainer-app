@@ -7,7 +7,7 @@ import { useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import {  TBillingData } from "@shared/types/billing.type";
 import { EBillingCurrency, EBillingStatus } from "@shared/enums/billing.enum";

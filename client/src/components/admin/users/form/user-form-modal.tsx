@@ -1,11 +1,12 @@
 
 // External Libraries
-import { Loader2 } from "lucide-react";
+import React from "react";
+import { Loader2, Plus, X } from "lucide-react";
 // Custom Hooks
-import { useInput } from "@/hooks/use-input";
+import { FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfigObject } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { TUserData } from "@shared/types/user.type";
 import { TUserResponse } from "@shared/interfaces/user.interface";
@@ -14,8 +15,8 @@ import { TUserResponse } from "@shared/interfaces/user.interface";
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { EUserLevels } from "@shared/enums/user.enum";
-import { FormErrors } from "@/components/shared-ui/form-errors";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { CreateUserDto } from "@shared/dtos";
 
 
 export interface IUserFormModalExtraProps {
@@ -28,7 +29,7 @@ export interface IUserFormModalExtraProps {
 interface IUserFormModalProps extends THandlerComponentProps<TFormHandlerStore<TUserData, TUserResponse, IUserFormModalExtraProps>> {
 }
 
-export default function UserFormModal({
+const UserFormModal = React.memo(function UserFormModal({
   storeKey,
   store,
 }: IUserFormModalProps) {
@@ -41,137 +42,40 @@ export default function UserFormModal({
   const open = store((state) => state.extra.open)
   const isEditing = store((state) => state.extra.isEditing)
   const onClose = store((state) => state.extra.onClose)
-  const level = store((state) => state.extra.level)
 
-  const fields: TFieldConfig<TUserData>[] = [
-    // ─── Basic Info ──────────────
-
-    {
-      id: "email",
-      name: "email",
-      label: "Email",
-      placeholder: "john@example.com",
-      type: "email",
-      required: true,
-    },
-    {
-      id: "isActive",
-      name: "isActive",
-      label: "Active Status",
-      type: "switch",
-      required: false,
-    },
-    {
-      id: "profile",
-      name: "profile",
-      label: "Profile",
-      type: "nested",
-      required: false,
-      subFields: [
-        {
-          id: "firstName",
-          name: "firstName",
-          label: "First Name",
-          placeholder: "John",
-          type: "text",
-          required: true,
-        },
-        {
-          id: "lastName",
-          name: "lastName",
-          label: "Last Name",
-          placeholder: "Doe",
-          type: "text",
-          required: true,
-        },
-
-        {
-          id: "phoneNumber",
-          name: "phoneNumber",
-          label: "Phone Number",
-          placeholder: "+1234567890",
-          type: "tel",
-          required: true,
-        },
-
-        // ─── Optional Personal Info ─────
-        {
-          id: "dateOfBirth",
-          name: "dateOfBirth",
-          label: "Date of Birth",
-          type: "date",
-          placeholder: "YYYY-MM-DD",
-          required: false,
-        },
-        {
-          id: "gender",
-          name: "gender",
-          label: "Gender",
-          type: "select",
-          options: [
-            { value: "male", label: "Male" },
-            { value: "female", label: "Female" },
-            { value: "other", label: "Other" },
-          ],
-          required: false,
-        },
-        {
-          id: "address",
-          name: "address",
-          label: "Address",
-          type: "textarea",
-          placeholder: "123 Main St, City, Country",
-          required: false,
-        },
-
-
-        // ─── User-Specific Fields ─────
-        {
-          id: "bio",
-          name: "bio",
-          label: "Bio",
-          type: "textarea",
-          placeholder: "Short description about yourself...",
-          required: false,
-        },
-        ...(level === EUserLevels.TRAINER ? [{
-          id: "specialties",
-          name: "specialties",
-          label: "Specialties",
-          type: "multiSelect",
-          options: [
-            { value: "yoga", label: "Yoga" },
-            { value: "weightTraining", label: "Weight Training" },
-            { value: "cardio", label: "Cardio" },
-            { value: "pilates", label: "Pilates" },
-          ],
-          required: false,
-        },
-        {
-          id: "experience",
-          name: "experience",
-          label: "Experience (years)",
-          type: "number",
-          valueType: "number",
-          min: 0,
-          required: false,
-        },
-      ] : []) as any[],
-    
-      ]
+  const fields: TFieldConfigObject<TUserData> = dtoToFields(CreateUserDto, {
+    profile: {
+      addresses: {
+        minItems: 1,
+        maxItems: 10,
+        AddButton: (props: any) => <Button {...props}><Plus /></Button>,
+        RemoveButton: (props: any) => <Button {...props}><X /></Button>,
+        renderItem: (items: any, 
+          AddButton: React.ReactNode, 
+          removeButton: (index: number) => React.ReactNode) => (
+          items.map((item: TUserData['profile']['addresses'][number], index: number) => {
+            return (
+              <div className="flex items-end gap-2" key={index}>
+                {item.address}
+                {index === items.length - 1 ?
+                  AddButton : removeButton(index)
+                }
+              </div>
+            );
+          })
+        )
+      }
     }
-  ];
+  })
 
-  const { inputs } = useInput<TUserData>({
+  const inputs: FormInputs<TUserData> = useInput<TUserData>({
     fields,
     showRequiredAsterisk: true,
   });
 
   const onOpenChange = (state: boolean) => {
-    if (state === false) 
+    if (state === false)
       onClose();
-    
-      
   };
 
   const formButtons = (
@@ -194,6 +98,8 @@ export default function UserFormModal({
   );
 
 
+  const profileInputs = inputs.profile || {};
+
   return <>
     <ModalForm<TUserData, TUserResponse, IUserFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} User`}
@@ -209,7 +115,10 @@ export default function UserFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.slice(0, 4) /* firstName → phoneNumber */}
+            {inputs.email}
+            {inputs.isActive}
+            {profileInputs.firstName}
+            {profileInputs.lastName}
           </div>
         </div>
 
@@ -217,7 +126,11 @@ export default function UserFormModal({
         <div>
           <h3 className="text-sm font-semibold  mb-3">Personal Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.slice(4, 7) /* dateOfBirth → address */}
+            {profileInputs.phoneNumber}
+
+            {profileInputs.gender}
+            {profileInputs.dateOfBirth}
+            {profileInputs.address}
           </div>
         </div>
 
@@ -225,13 +138,22 @@ export default function UserFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">User Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.slice(7, 12) /* bio → rating */}
+            {profileInputs.bio}
+            {profileInputs.experience}
+
+            {profileInputs.specialties}
+            {profileInputs.fitnessGoals}
+            {profileInputs.image as React.ReactNode}
+            {profileInputs.addresses}
+
+
           </div>
         </div>
 
-      <FormErrors />
       </div>
     </ModalForm>
 
   </>
-}
+});
+
+export default UserFormModal;

@@ -6,7 +6,7 @@ import { useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { ISession } from "@shared/interfaces/session.interface";
 import { TSessionData } from "@shared/types/session.type";

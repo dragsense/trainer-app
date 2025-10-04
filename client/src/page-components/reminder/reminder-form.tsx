@@ -10,7 +10,7 @@ import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import {  THandlerComponentProps } from "@/@types/handler-types";
 import { TReminderData } from "@shared/types/reminder.type";

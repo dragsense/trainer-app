@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TForgotPasswordData } from "@shared/types/auth.type";
 

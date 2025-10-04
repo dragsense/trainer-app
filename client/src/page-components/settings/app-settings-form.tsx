@@ -9,7 +9,7 @@ import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { IAppSetting } from "@shared/interfaces/settings.interface";
 import { TAppSettingData } from "@shared/types/settings.type";

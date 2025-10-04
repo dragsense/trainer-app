@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { IStripeConnectCreateResponse, IStripeConnectStatus, TCreateStripeConnectData } from "@/@types/setting.type";

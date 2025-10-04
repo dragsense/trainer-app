@@ -9,7 +9,7 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import { useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { IStripeConnectCreateResponse, TCreateStripeConnectData } from "@/@types/setting.type";
 
 // Stores

@@ -7,7 +7,7 @@ import { useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { TTrainerClientData } from "@shared/types/trainer-clients.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";

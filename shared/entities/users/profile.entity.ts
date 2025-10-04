@@ -28,7 +28,7 @@ export class Profile extends GeneralBaseEntity {
 
   @ApiPropertyOptional({ example: '1990-01-01', description: 'Date of birth' })
   @Column({ type: 'date', nullable: true })
-  dateOfBirth?: Date;
+  dateOfBirth?: string;
 
   @ApiPropertyOptional({
     enum: EUserGender,

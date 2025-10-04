@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormHandler } from "@/handlers";
 
 // Types
-import { TDefaultValue } from "@/@types/form/field.type";
+import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { TUserData } from "@shared/types/user.type";
@@ -26,7 +26,7 @@ import { CredentialModal } from "@/components/shared-ui/credential-modal";
 
 // Services
 import { createUser, updateUser } from "@/services/user.api";
-import { extractValues } from "@/utils";
+import { deepMerge, extractValues, strictDeepMerge } from "@/utils";
 import { EUserGender } from "@shared/enums";
 import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
 
@@ -43,7 +43,6 @@ export default function UserForm({
     store,
 }: IUserFormProps) {
 
-
     const queryClient = useQueryClient();
     const [credentialModalContent, setCredentialModalContent] = useState({
         open: false,
@@ -52,11 +51,10 @@ export default function UserForm({
     });
 
 
-
-
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
+
 
     const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
         action: state.action,
@@ -68,36 +66,6 @@ export default function UserForm({
     })));
 
 
-
-    const INITIAL_VALUES: TDefaultValue<TUserData> = {
-
-        email: { value: "" },
-        level: { value: extra.level },
-        isActive: { value: true },
-
-        profile: {
-            isNested: true,
-            value: {
-                firstName: { value: "" },
-                lastName: { value: "" },
-                phoneNumber: { value: "" },
-                bio: { value: "" },
-                dateOfBirth: { value: new Date(new Date().setFullYear(new Date().getFullYear() - 12)) },
-                address: { value: "" },
-                gender: { value: EUserGender.MALE },
-                specialties: { value: [] },
-                experience: { value: 0 }
-            }
-
-        }
-    };
-
-    const initialValues = useMemo(() => {
-
-        return extractValues(response, INITIAL_VALUES);
-    }, [response]);
-
-
     if (isLoading) {
         return (
             <div className="absolute inset-0 z-30 flex items-center justify-center">
@@ -107,6 +75,31 @@ export default function UserForm({
     }
 
 
+  
+
+    const INITIAL_VALUES: TUserData = {
+
+        email: "",
+        level: extra.level,
+        isActive: true,
+
+        profile: {
+            firstName: "",
+            lastName: "",
+            phoneNumber: "",
+            bio: "",
+            dateOfBirth: new Date(
+                new Date().setFullYear(new Date().getFullYear() - 12)
+              ).toISOString(), 
+            address: "",
+            gender: EUserGender.MALE,
+            specialties: [],
+            experience: 0
+        }
+    };
+
+    const initialValues =  strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
+    
     const handleClose = () => {
         reset();
         setAction('none');

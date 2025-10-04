@@ -1,6 +1,6 @@
 // Types
 import type { StoreApi } from "zustand";
-import { IMessageResponse } from "../api/response.type";
+import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 export type MutationFn<TFormData, TResponse> = (data: TFormData) => Promise<TResponse | IMessageResponse | void>;
 
@@ -13,10 +13,8 @@ export interface IFormHandlerBaseState<TResponse> {
 }
 
 
-
 export interface IFormHandlerState<TFormData, TResponse, TExtra extends Record<string, any> = {}> extends IFormHandlerBaseState<TResponse> {
   values: TFormData;
-
   extra: TExtra;
 
   setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
@@ -29,7 +27,6 @@ export interface IFormHandlerState<TFormData, TResponse, TExtra extends Record<s
   setValues: (values: TFormData) => void;
   syncWithMutation: (state: IFormHandlerBaseState<TResponse>) => void;
   reset: () => void;
-
 }
 
 export type IFormStoreApi<TFormData, TResponse, TExtra extends Record<string, any>> = StoreApi<IFormHandlerState<TFormData, TResponse, TExtra>>;

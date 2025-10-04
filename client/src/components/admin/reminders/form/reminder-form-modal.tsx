@@ -7,7 +7,7 @@ import { useInput } from "@/hooks/use-input";
 import { useSearchableBillings, useSearchableSessions, useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field.type";
+import { TFieldConfig } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { TReminderData } from "@shared/types/reminder.type";
 import { EReminderType, EReminderFrequency, EReminderActions } from "@shared/enums/reminder.enum";
