@@ -17,11 +17,11 @@ export class TrainerClientsService {
   ) {}
 
   async assignTrainerToClient(createTrainerClientDto: CreateTrainerClientDto): Promise<IMessageResponse> {
-    const { trainerId, clientId } = createTrainerClientDto;
+    const { trainer, client } = createTrainerClientDto;
 
     // Check if assignment already exists
     const existing = await this.trainerClientRepository.findOne({
-      where: { trainer: { id: trainerId }, client: { id: clientId } }
+      where: { trainer: { id: trainer.id }, client: { id: client.id } }
     });
 
     if (existing) {
@@ -29,8 +29,8 @@ export class TrainerClientsService {
     }
 
     const assignment = this.trainerClientRepository.create({
-      trainer: { id: trainerId },
-      client: { id: clientId }
+      trainer: { id: trainer.id },
+      client: { id: client.id }
     });
 
     await this.trainerClientRepository.save(assignment);

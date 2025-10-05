@@ -1,12 +1,10 @@
 // External Libraries
-import { z } from "zod";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Types
 import { TLoginData } from "@shared/types/auth.type";
 import { ILoginResponse } from "@shared/interfaces/auth.interface";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 
 // Handlers
@@ -17,15 +15,15 @@ import { LoginForm } from "@/components/auth";
 
 // Services
 import { login } from "@/services/auth.api";
-import { LoginDto } from "@shared/dtos/auth-dtos/login.dto";
+import { LoginDto } from "@shared/dtos";
 
 
 export default function LoginPage() {
   const queryClient = useQueryClient();
 
-  const LOGIN_INITIAL_VALUES: TDefaultValue<TLoginData> = {
-    email: { value: "" },
-    password: { value: "" },
+  const LOGIN_INITIAL_VALUES: TLoginData = {
+    email: "",
+    password: "",
   };
 
   return (
@@ -36,7 +34,7 @@ export default function LoginPage() {
       validationMode={EVALIDATION_MODES.OnChange}
       dto={LoginDto}
       onSuccess={() => {
-        toast.success('Login successful')
+        toast.success('Login successful');
         queryClient.invalidateQueries({ queryKey: ["me"] });
       }}
       onError={(error) => toast.error('Login failed: ' + error?.message)}

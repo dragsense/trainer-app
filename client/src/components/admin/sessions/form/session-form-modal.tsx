@@ -1,27 +1,26 @@
 // External Libraries
+import React, { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 
 // Custom Hooks
-import { useInput } from "@/hooks/use-input";
+import { FormInputs, useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field-config.type";
+import { TFieldConfigObject, TFieldConfigObjectPartial } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
-import { ISession } from "@shared/interfaces/session.interface";
 import { TSessionData } from "@shared/types/session.type";
-import { EBillingCurrency } from "@shared/enums/billing.enum";
 import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
 import { IUser } from "@shared/interfaces/user.interface";
-import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
 import { THandlerComponentProps } from "@/@types/handler-types";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
-import { FormErrors } from "@/components/shared-ui/form-errors";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { CreateSessionDto, UpdateSessionDto } from "@shared/dtos";
 
 export interface ISessionFormModalExtraProps {
   open: boolean;
@@ -33,7 +32,7 @@ export interface ISessionFormModalExtraProps {
 interface ISessionFormModalProps extends THandlerComponentProps<TFormHandlerStore<TSessionData, IMessageResponse, ISessionFormModalExtraProps>> {
 }
 
-export default function SessionFormModal({
+const SessionFormModal = React.memo(function SessionFormModal({
   storeKey,
   store,
 }: ISessionFormModalProps) {
@@ -42,161 +41,55 @@ export default function SessionFormModal({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
+  const isEditing = store((state) => state.isEditing)
   const open = store((state) => state.extra.open)
-  const isEditing = store((state) => state.extra.isEditing)
   const onClose = store((state) => state.extra.onClose)
   const trainerId = store((state) => state.extra.trainerId)
 
-  const users = useSearchableUsers({ level: EUserLevels[EUserRole.USER] })
+  const UserSelect = React.memo(
+    ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
+        multiple={multiple}
+        useSearchable={() => useSearchableUsers({ level })}
+        getLabel={(item) => {
 
-  const UserSelect = ({ props, level, multiple = false }: { props: any; level: number; multiple?: boolean; }) => (
-    <SearchableInputWrapper<IUser>
-      {...props}
-      modal={true}
-      multiple={multiple}
-      useSearchable={() => useSearchableUsers({ level })}
-      getLabel={(item) => `${item.profile?.firstName} ${item.profile?.lastName} (${item.email})`}
-      getKey={(item) => item.id.toString()}
-      shouldFilter={false}
-    />
+          if (typeof item === 'object' && 'email' in item && item.email) {
+            return item.email
+          }
+          return 'Select User'
+        }}
+        getValue={(item) => { return { id: item.id, email: item.email } }}
+        getKey={(item) => item.id.toString()}
+        shouldFilter={false}
+      />
+    )
   );
 
-  const fields: TFieldConfig<TSessionData>[] = [
-    // ─── Session Basic Info ──────────────
-    {
-      id: "title",
-      name: "title",
-      label: "Session Title",
-      placeholder: "Personal Training Session",
-      type: "text",
-      required: true,
-    },
-    {
-      id: "type",
-      name: "type",
-      label: "Session Type",
-      type: "select",
-      options: [
-        { value: "ONE_ON_ONE", label: "One-on-One" },
-        { value: "GROUP", label: "Group" },
-        { value: "WORKSHOP", label: "Workshop" },
-        { value: "ASSESSMENT", label: "Assessment" },
-      ],
-      required: true,
-    },
-    {
-      id: "dateTime",
-      name: "dateTime",
-      label: "Start Date & Time",
-      type: "datetime",
-      required: true,
-    },
-    {
-      id: "duration",
-      name: "duration",
-      label: "Duration (minutes)",
-      type: "number",
-      placeholder: "60",
-      min: 15,
-      required: true,
-      valueType: "number",
-    },
-    {
-      id: "pricePerClient",
-      name: "pricePerClient",
-      label: "Price per client (cents)",
-      type: "number",
-      placeholder: "50.00",
-      valueType: "number",
-      min: 0,
-      required: true,
-    },
-    {
-      id: "currency",
-      name: "currency",
-      label: "Currency",
-      type: "select",
-      options: Object.values(EBillingCurrency).map((value) => ({ label: value, value })),
-      required: false,
-    },
-    {
-      id: "paymentMethodType",
-      name: "paymentMethodType",
-      label: "Payment Method",
-      type: "select",
-      required: false,
-      options: Object.values(EPaymentMethodType).map((value) => ({ label: value, value })),
-    },
-    {
-      id: "trainer",
-      name: "trainer",
-      label: "Trainer",
-      type: "nested",
-      required: true,
-      subFields: [
-        {
-          id: "id",
-          name: "id",
-          label: "Select Trainer",
-          type: "custom",
-          required: true,
-          valueType: "number",
-          disabled: !!trainerId,
-          Component: (props) => (
-            <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
-          ),
-        }
-      ]
-    },
-    {
-      id: "clients",
-      name: "clients",
-      label: "Clients",
-      type: "multiSelect",
-      options: users?.response?.data?.map((user) => ({ label: user.email, value: user.id })) || [],
-      required: true,
- 
+  const fields = useMemo(() => {
+    const dto = isEditing ? UpdateSessionDto : CreateSessionDto;
+    const overrides: TFieldConfigObjectPartial<TSessionData> = {
+      trainer: {
+        disabled: !!trainerId,
+        Component: (props) => (
+          <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
+        ),
+      },
+      clients: {
+        Component: (props: any) => (
+          <UserSelect props={props} level={EUserLevels[EUserRole.USER]} multiple={true} />
+        ),
+      } as any
+    };
 
-    },
-    {
-      id: "description",
-      name: "description",
-      label: "Description",
-      type: "textarea",
-      placeholder: "Session description and notes...",
-      required: false,
-    },
-    {
-      id: "location",
-      name: "location",
-      label: "Location",
-      type: "text",
-      placeholder: "Gym Room 1 or https://zoom.us/...",
-      required: false,
-    },
-    {
-      id: "requirePrepayment",
-      name: "requirePrepayment",
-      label: "Require Prepayment",
-      type: "switch",
-      required: false,
-    },
-    {
-      id: "cancellationDeadline",
-      name: "cancellationDeadline",
-      label: "Cancellation Deadline (hours)",
-      type: "number",
-      valueType: "number",
-      placeholder: "24",
-      min: 1,
-      required: false,
-    },
-  ];
+    return dtoToFields(dto, overrides as any) as TFieldConfigObject<TSessionData>;
+  }, [isEditing, trainerId]);
 
-  const { inputs } = useInput<TSessionData>({
+  const inputs = useInput<TSessionData>({
     fields,
     showRequiredAsterisk: true,
-  });
+  }) as FormInputs<TSessionData>;
 
   const onOpenChange = (state: boolean) => {
     if (state === false) onClose();
@@ -222,7 +115,7 @@ export default function SessionFormModal({
   );
 
   return <>
-    <ModalForm<TSessionData, ISession, ISessionFormModalExtraProps>
+    <ModalForm<TSessionData, IMessageResponse, ISessionFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Session`}
       description={`${isEditing ? "Edit" : "Add a new"} session`}
       open={open}
@@ -234,37 +127,48 @@ export default function SessionFormModal({
       <div className="space-y-8">
         {/* Session Info */}
         <div>
-          <h3 className="text-sm font-semibold mb-4">Session Info</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(0, 4) /* title → duration */}
+          <h3 className="text-sm font-semibold mb-3">Session Info</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.title}
+            {inputs.type}
+            {inputs.dateTime as any}
+            {inputs.duration}
           </div>
         </div>
 
         {/* Pricing */}
         <div>
-          <h3 className="text-sm font-semibold mb-4">Pricing</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(4, 7) /* pricePerClient → paymentMethodType */}
+          <h3 className="text-sm font-semibold mb-3">Pricing</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.pricePerClient}
+            {inputs.currency}
+            {inputs.paymentMethodType}
           </div>
         </div>
 
         {/* Participants */}
         <div>
-          <h3 className="text-sm font-semibold mb-4">Trainer & Client</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(7, 9) /* trainer → clients */}
+          <h3 className="text-sm font-semibold mb-3">Trainer & Clients</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.trainer as React.ReactNode}
+            {inputs.clients}
           </div>
         </div>
 
         {/* Additional Settings */}
         <div>
-          <h3 className="text-sm font-semibold mb-4">Additional Settings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {inputs.slice(9) /* description → cancellationDeadline */}
+          <h3 className="text-sm font-semibold mb-3">Additional Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.description}
+            {inputs.location}
+            {inputs.requirePrepayment}
+            {inputs.cancellationDeadline}
           </div>
         </div>
       </div>
 
     </ModalForm>
   </>
-}
+});
+
+export default SessionFormModal;

@@ -3,7 +3,6 @@ import { toast } from "sonner";
 
 // Types
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 import { TForgotPasswordData } from "@shared/types/auth.type";
 
@@ -15,12 +14,12 @@ import { ForgotPasswordForm } from "@/components/auth";
 
 // Services
 import { forgotPassword } from "@/services/auth.api";
-import { ForgotPasswordDto } from "@shared/dtos/auth-dtos/forgot-password.dto";
+import { ForgotPasswordDto } from "@shared/dtos";
 
 
 export default function ForgotPasswordPage() {
-  const FORGOT_PASSWORD_INITIAL_VALUES: TDefaultValue<TForgotPasswordData> = {
-    email: { value: "" }
+  const FORGOT_PASSWORD_INITIAL_VALUES: TForgotPasswordData = {
+    email: ""
   };
 
   return (

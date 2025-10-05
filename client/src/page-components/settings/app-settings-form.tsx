@@ -9,7 +9,6 @@ import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { IAppSetting } from "@shared/interfaces/settings.interface";
 import { TAppSettingData } from "@shared/types/settings.type";
@@ -22,9 +21,9 @@ import AppSettingCardForm from "@/components/admin/settings/form/app-setting-car
 
 // Services
 import { updateAppSettings } from "@/services/setting.api";
-import { extractValues } from "@/utils";
+import { strictDeepMerge } from "@/utils";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
-import { UpdateAppSettingDto } from "@shared/dtos/settings-dtos/app-setting.dto";
+import { UpdateAppSettingDto } from "@shared/dtos";
 
 
 interface IAppSettingsFormProps extends THandlerComponentProps<TSingleHandlerStore<IAppSetting, any>> {}
@@ -33,8 +32,8 @@ export default function AppSettingsForm({ storeKey, store }: IAppSettingsFormPro
    
     const queryClient = useQueryClient();
 
-    const INITIAL_VALUES: TDefaultValue<TAppSettingData> = {
-        allowNotification: { value: true },
+    const INITIAL_VALUES: TAppSettingData = {
+        allowNotification: true,
     };
 
     if (!store) {
@@ -47,7 +46,7 @@ export default function AppSettingsForm({ storeKey, store }: IAppSettingsFormPro
     })));
 
     const initialValues = useMemo(() => {
-        return extractValues(response, INITIAL_VALUES);
+        return strictDeepMerge<TAppSettingData>(INITIAL_VALUES, response ?? {});
     }, [response]);
 
     if (isLoading) {
@@ -60,8 +59,6 @@ export default function AppSettingsForm({ storeKey, store }: IAppSettingsFormPro
             </div>
         );
     }
-
-
 
     if (!response) {
         return (
@@ -78,7 +75,6 @@ export default function AppSettingsForm({ storeKey, store }: IAppSettingsFormPro
             dto={UpdateAppSettingDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
             onSuccess={() => {
-                // Refresh the app settings data
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}
         />

@@ -38,6 +38,90 @@ export function strictDeepMerge<T extends Record<string, any>>(target: T, source
   return result;
 }
 
+export function getDirtyData<T>(
+  formData: T & Record<string, any>,
+  initialValues: T,
+  seen = new WeakMap<object, object>()
+): Partial<T> {
+  const result: Partial<T> = {};
+
+  for (const key in initialValues) {
+    if (!formData.hasOwnProperty(key)) continue;
+    
+    const value = formData[key];
+    const initialValue = initialValues[key];
+
+    // Deep equality check with circular reference protection
+    if (isDeepEqual(value, initialValue, seen)) continue;
+
+    if (typeof value === "object" && value !== null) {
+      if (Array.isArray(value)) {
+        // Handle arrays - include if not deeply equal
+        result[key] = value;
+      } else {
+        // Nested object → recurse
+        const nestedDirty = getDirtyData(
+          value as any,
+          initialValue as any,
+          seen
+        );
+        
+        // Only include if nested object has dirty fields
+        if (Object.keys(nestedDirty).length > 0) {
+          result[key] = nestedDirty as any;
+        }
+      }
+    } else {
+      // Primitive value → assign directly
+      result[key] = value;
+    }
+  }
+
+  return result;
+}
+
+// Deep equality with circular reference protection
+function isDeepEqual(a: any, b: any, seen = new WeakMap<object, object>()): boolean {
+  // Same reference or both null/undefined
+  if (a === b) return true;
+  
+  // One is null/undefined but not both
+  if (a == null || b == null) return a == b;
+  
+  // Type mismatch
+  if (typeof a !== typeof b) return false;
+  
+  // Array comparison
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    
+    for (let i = 0; i < a.length; i++) {
+      if (!isDeepEqual(a[i], b[i], seen)) return false;
+    }
+    return true;
+  }
+  
+  // Object comparison with circular reference check
+  if (typeof a === 'object' && typeof b === 'object') {
+    // Check for circular references
+    if (seen.has(a) && seen.get(a) === b) return true;
+    seen.set(a, b);
+    
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    
+    if (keysA.length !== keysB.length) return false;
+    
+    for (const key of keysA) {
+      if (!(key in b)) return false;
+      if (!isDeepEqual(a[key], b[key], seen)) return false;
+    }
+    return true;
+  }
+  
+  // Primitive comparison
+  return a === b;
+}
 
 export function extractValues<T extends object>(
   response: any,

@@ -19,14 +19,15 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface AppComboBoxProps<T> {
-  value: T;
-  onChange: (value: any) => void;
+  value: T | T[];
+  onChange: (value: T | T[]) => void;
   items: T[];
   loading?: boolean;
   error?: string | null;
   placeholder?: string;
   getLabel: (item: T) => string;
   getKey: (item: T) => string;
+  getValue: (item: T) => T;
   onSearchChange: (search: string) => void;
   search: string;
   multiple?: boolean;
@@ -50,6 +51,7 @@ export function AppComboBox<T>({
   multiple = false,
   disabled,
   modal = false,
+  getValue,
   shouldFilter = true
 }: AppComboBoxProps<T>) {
   const [open, setOpen] = useState(false);
@@ -63,19 +65,15 @@ export function AppComboBox<T>({
     }
   };
 
-  // Multi-select logic
-  const selectedKeys = multiple
-    ? (Array.isArray(value) ? value.map(String) : [])
+  // Multi-select logic - work with values, not keys
+  const selectedValues: T[] = multiple
+    ? (Array.isArray(value) ? value : [])
     : [];
-
-  const selectedItems = multiple
-    ? items.filter((item) => selectedKeys.includes(getKey(item)))
-    : [];
-
 
 
   const maxTags = 5;
-  const extraCount = multiple ? selectedItems.length - maxTags : 0;
+  const extraCount = multiple ? selectedValues.length - maxTags : 0;
+
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
@@ -90,10 +88,10 @@ export function AppComboBox<T>({
           <span className="flex flex-wrap gap-1 items-center w-full">
             {multiple ? (
               <>
-                {selectedItems.length === 0 && (
+                {selectedValues.length === 0 && (
                   <span className="text-muted-foreground">{placeholder}</span>
                 )}
-                {selectedItems.slice(0, maxTags).map((item) => (
+                {selectedValues.slice(0, maxTags).map((item) => (
                   <Badge
                     key={getKey(item)}
                     variant="secondary"
@@ -102,23 +100,20 @@ export function AppComboBox<T>({
                   >
                     {getLabel(item)}
                   </Badge>
-                ))}
+                )
+                )}
                 {extraCount > 0 && (
                   <Badge
                     variant="secondary"
                     className="truncate"
-                    title={selectedItems.slice(maxTags).map(getLabel).join(", ")}
+                    title={selectedValues.slice(maxTags).map(getLabel).join(", ")}
                   >
                     +{extraCount} more
                   </Badge>
                 )}
               </>
             ) : (
-              <span>
-                {items.find((item) => getKey(item) === value)
-                  ? getLabel(items.find((item) => getKey(item) === value)!)
-                  : placeholder}
-              </span>
+              <span>{getLabel(value as T)}</span>
             )}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
@@ -157,14 +152,27 @@ export function AppComboBox<T>({
                       key={getKey(item)}
                       onSelect={() => {
                         if (multiple) {
-                          const key = getKey(item);
-                          if (selectedKeys.includes(key)) {
-                            onChange(selectedKeys.filter((k) => k !== key));
+                          const itemValue = getValue(item);
+                          const isSelected = selectedValues.some((val) => {
+                            if (typeof val === 'object' && typeof itemValue === 'object') {
+                              return JSON.stringify(val) === JSON.stringify(itemValue);
+                            }
+                            return val === itemValue;
+                          });
+
+                          if (isSelected) {
+                            const filtered = selectedValues.filter((val) => {
+                              if (typeof val === 'object' && typeof itemValue === 'object') {
+                                return JSON.stringify(val) !== JSON.stringify(itemValue);
+                              }
+                              return val !== itemValue;
+                            });
+                            onChange(filtered as T[]);
                           } else {
-                            onChange([...selectedKeys, key]);
+                            onChange([...selectedValues, itemValue] as T[]);
                           }
                         } else {
-                          onChange(getKey(item));
+                          onChange(getValue(item));
                           setOpen(false);
                         }
                       }}
@@ -172,7 +180,13 @@ export function AppComboBox<T>({
                     >
                       {multiple && (
                         <Checkbox
-                          checked={selectedKeys.includes(getKey(item))}
+                          checked={selectedValues.some((val) => {
+                            const itemValue = getValue(item);
+                            if (typeof val === 'object' && typeof itemValue === 'object') {
+                              return JSON.stringify(val) === JSON.stringify(itemValue);
+                            }
+                            return val === itemValue;
+                          })}
                           className="pointer-events-none"
                         />
                       )}
@@ -181,7 +195,13 @@ export function AppComboBox<T>({
                         <Check
                           className={cn(
                             "ml-auto h-4 w-4",
-                            value === getKey(item) ? "opacity-100" : "opacity-0"
+                            (() => {
+                              const itemValue = getValue(item);
+                              if (typeof value === 'object' && typeof itemValue === 'object') {
+                                return JSON.stringify(value) === JSON.stringify(itemValue);
+                              }
+                              return value === itemValue;
+                            })() ? "opacity-100" : "opacity-0"
                           )}
                         />
                       )}

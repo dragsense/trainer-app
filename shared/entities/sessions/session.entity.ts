@@ -39,7 +39,7 @@ export class Session extends GeneralBaseEntity {
 
   @ApiProperty({ description: 'Date and time of the session' })
   @Column({ type: 'timestamp' })
-  dateTime: Date;
+  dateTime: string;
 
   @ApiProperty({ description: 'Duration of the session in minutes' })
   @Column({ type: 'int' })

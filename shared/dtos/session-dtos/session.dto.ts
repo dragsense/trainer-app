@@ -11,7 +11,7 @@ import {
   IsArray
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType } from '../../lib/dto-type-adapter';
 import { Type } from 'class-transformer';
 import { ESessionType, ESessionStatus } from '../../enums/session.enum';
 import { EBillingCurrency } from '../../enums/billing.enum';
@@ -20,6 +20,7 @@ import { UserDto } from '../user-dtos';
 import { ListQueryDto } from '../common/list-query.dto';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { Session } from '../../entities/sessions/session.entity';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 
 
 export class CreateSessionDto {
@@ -29,6 +30,7 @@ export class CreateSessionDto {
   })
   @IsNotEmpty()
   @IsString()
+  @FieldType("text", true)
   title: string;
 
   @ApiProperty({
@@ -38,6 +40,8 @@ export class CreateSessionDto {
   })
   @IsNotEmpty()
   @IsEnum(ESessionType)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(ESessionType).map(v => ({ value: v, label: v })))
   type: ESessionType;
 
   @ApiProperty({
@@ -46,7 +50,8 @@ export class CreateSessionDto {
   })
   @IsNotEmpty()
   @IsDateString()
-  dateTime: Date;
+  @FieldType("datetime", true)
+  dateTime: string;
 
   @ApiProperty({
     description: 'Duration of the session in minutes',
@@ -57,6 +62,7 @@ export class CreateSessionDto {
   @IsNumber({}, { message: 'Duration must be a valid number' })
   @Type(() => Number)
   @Min(15, { message: 'Duration must be at least 15 minutes' })
+  @FieldType("number", true)
   duration: number;
 
   @ApiProperty({
@@ -67,11 +73,13 @@ export class CreateSessionDto {
   @IsNumber()
   @Type(() => Number)
   @Min(0)
+  @FieldType("number", true)
   pricePerClient: number;
 
   @ApiProperty({ enum: EBillingCurrency, example: EBillingCurrency.USD })
   @IsOptional()
   @IsEnum(EBillingCurrency)
+  @FieldType("select", true)
   currency?: EBillingCurrency;
 
   @ApiPropertyOptional({
@@ -80,6 +88,7 @@ export class CreateSessionDto {
   })
   @IsOptional()
   @IsString()
+  @FieldType("textarea", true)
   description?: string;
 
   @ApiPropertyOptional({
@@ -88,6 +97,7 @@ export class CreateSessionDto {
   })
   @IsOptional()
   @IsString()
+  @FieldType("text", true)
   location?: string;
 
   @ApiProperty({
@@ -97,6 +107,7 @@ export class CreateSessionDto {
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
+  @FieldType("switch", true)
   requirePrepayment?: boolean = true;
 
   @ApiProperty({
@@ -105,6 +116,8 @@ export class CreateSessionDto {
     description: 'Payment method type'
   })
   @IsEnum(EPaymentMethodType)
+  @FieldOptions(Object.values(EPaymentMethodType).map(v => ({ value: v, label: v })))
+  @FieldType("select", true)
   paymentMethodType: EPaymentMethodType;
 
   @ApiProperty({
@@ -117,6 +130,7 @@ export class CreateSessionDto {
   @IsNumber()
   @Type(() => Number)
   @Min(1)
+  @FieldType("number", true)
   cancellationDeadline?: number = 24;
 
   @ApiProperty({ 
@@ -125,6 +139,7 @@ export class CreateSessionDto {
   })
   @ValidateNested()
   @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
   trainer: UserDto;
 
   @ApiProperty({ 
@@ -133,11 +148,12 @@ export class CreateSessionDto {
     isArray: true
   })
   @IsArray()
-  @Type(() => Number)
-  clients: number[];
+  @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
+  clients: UserDto[];
 }
 
-export class UpdateSessionDto extends createPartialType(CreateSessionDto) {}
+export class UpdateSessionDto extends PartialType(CreateSessionDto) {}
 
 export class BookSessionDto {
   @IsNumber()
@@ -218,3 +234,21 @@ export class SessionPaginatedDto extends PaginationMetaDto {
   @Type(() => Session)
   data: Session[]
 }
+
+
+export class SessionDto {
+  @ApiProperty({ example: 1, description: 'Session ID' })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
+  id: number;
+
+  @ApiProperty({ example: 'Session title', description: 'Session title' })
+  @IsOptional()
+  @IsString()
+  @FieldType("text", false)
+  title: string;
+}
+

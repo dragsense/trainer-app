@@ -42,13 +42,13 @@ export class SessionsService {
       throw new BadRequestException('At least one client is required');
     }
 
-    const clients = await this.usersService.findByIds(clientsData);
+    const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
 
     if (clients.length === 0) throw new NotFoundException("No valid members found");
 
 
     // Check both scheduling conflicts and availability
-    const hasConflict = await this.checkSchedulingConflict(trainerUser.id, dateTime, data.duration);
+    const hasConflict = await this.checkSchedulingConflict(trainerUser.id, new Date(dateTime), data.duration);
   /*   if (hasConflict) {
       throw new BadRequestException('Trainer has a scheduling conflict');
     }
@@ -87,10 +87,14 @@ export class SessionsService {
 
     const skip = (page - 1) * limit;
     const query = this.sessionsRepository.createQueryBuilder('session')
-      .leftJoinAndSelect('session.trainer', 'trainer')
-      .leftJoinAndSelect('trainer.profile', 'trainerProfile')
-      .leftJoinAndSelect('session.clients', 'clients')
-      .leftJoinAndSelect('clients.profile', 'clientProfiles')
+      .leftJoin('session.trainer', 'trainer')
+      .leftJoin('trainer.profile', 'trainerProfile')
+      .leftJoin('session.clients', 'clients')
+      .leftJoin('clients.profile', 'clientProfiles')
+      .addSelect(['trainerProfile.firstName', 'trainerProfile.lastName'])
+      .addSelect(['trainer.id', 'trainer.email'])
+      .addSelect(['clients.id', 'clients.email'])
+      .addSelect(['clientProfiles.firstName', 'clientProfiles.lastName'])
       .loadRelationCountAndMap('session.clientCount', 'session.clients');
 
 
@@ -179,9 +183,11 @@ export class SessionsService {
       .where('session.id = :id', { id })
       .leftJoinAndSelect('session.creator', 'createdBy')
       .leftJoinAndSelect('session.reminders', 'reminders')
-      .leftJoinAndSelect('session.trainer', 'trainer')
+      .leftJoin('session.trainer', 'trainer')
+      .addSelect(['trainer.id', 'trainer.email'])
+      .leftJoin('session.clients', 'clients')
+      .addSelect(['clients.id', 'clients.email'])
       .loadRelationCountAndMap('session.clientCount', 'session.clients')
-      .loadAllRelationIds({ relations: ['clients'] })
 
     // Role-based access control
     const userLevel = user.level;
@@ -227,7 +233,7 @@ export class SessionsService {
 
         const hasConflict = await this.checkSchedulingConflict(
           trainer.id,
-          newDateTime,
+          new Date(newDateTime),
           newDuration,
           id // exclude current session
         );
@@ -235,7 +241,7 @@ export class SessionsService {
           throw new BadRequestException('Trainer has a scheduling conflict');
         }
 
-        const isAvailable = await this.checkTrainerAvailability(trainer.id, newDateTime, newDuration);
+        const isAvailable = await this.checkTrainerAvailability(trainer.id, new Date(newDateTime), newDuration);
         if (!isAvailable) {
           throw new BadRequestException('Trainer is not available during the requested time');
         }
@@ -249,7 +255,7 @@ export class SessionsService {
         throw new BadRequestException('At least one client is required');
       }
 
-      const clients = await this.usersService.findByIds(clientsData);
+      const clients = await this.usersService.findByIds(clientsData.map(client => client.id));
       if (clients.length === 0) {
         throw new NotFoundException('No valid clients found');
       }

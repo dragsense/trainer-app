@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, MinLength, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { OmitType } from '../../lib/omit-type';
+import { OmitType } from '../../lib/type-utils';
 
 @ValidatorConstraint({ name: 'passwordMatch', async: false })
 class PasswordMatchConstraint implements ValidatorConstraintInterface {

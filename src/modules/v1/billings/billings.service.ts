@@ -29,7 +29,7 @@ export class BillingsService {
 
   async create(createDto: CreateBillingDto, authUser: User): Promise<Billing> {
     const {
-      userId,
+      user,
       sessionId,
       stripeInvoiceId,
       status,
@@ -45,7 +45,12 @@ export class BillingsService {
 
 
     // Fetch required relations
-    const user = await this.userService.findOne({ id: userId });
+    const validUser = await this.userService.findOne({ id: user.id });
+
+    if (!validUser) {
+      throw new NotFoundException(`User with ID ${user.id} not found`);
+    }
+
     let session: Session | undefined = undefined;
 
     if (sessionId) {
@@ -73,7 +78,7 @@ export class BillingsService {
       invoiceAmount: calculatedTotal,
       dueAmount: calculatedTotal,
       localInvoiceNumber,
-      user,
+      user: validUser,
       session,
       stripeInvoiceId,
       status: status || EBillingStatus.PENDING,
@@ -93,7 +98,7 @@ export class BillingsService {
         throw new ConflictException('Stripe invoice ID must be unique');
       }
       throw error;
-    } 
+    }
   }
 
   async findAll(queryDto: BillingListDto, user: User): Promise<IPaginatedResponse<Billing>> {
@@ -124,8 +129,10 @@ export class BillingsService {
 
     const query = this.billingRepo
       .createQueryBuilder('billing')
-      .leftJoinAndSelect('billing.user', 'user')
-      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoin('billing.user', 'user')
+      .leftJoin('user.profile', 'profile')
+      .addSelect(['user.id', 'user.email'])
+      .addSelect(['profile.firstName', 'profile.lastName'])
       .leftJoin('billing.creator', 'creator');
 
     if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
@@ -195,14 +202,14 @@ export class BillingsService {
     }
 
     if (stripeInvoiceId) {
-      query.andWhere('billing.stripeInvoiceId ILIKE :stripeInvoiceId', { 
-        stripeInvoiceId: `%${stripeInvoiceId}%` 
+      query.andWhere('billing.stripeInvoiceId ILIKE :stripeInvoiceId', {
+        stripeInvoiceId: `%${stripeInvoiceId}%`
       });
     }
 
     if (localInvoiceNumber) {
-      query.andWhere('billing.localInvoiceNumber ILIKE :localInvoiceNumber', { 
-        localInvoiceNumber: `%${localInvoiceNumber}%` 
+      query.andWhere('billing.localInvoiceNumber ILIKE :localInvoiceNumber', {
+        localInvoiceNumber: `%${localInvoiceNumber}%`
       });
     }
 
@@ -242,10 +249,15 @@ export class BillingsService {
   }
 
   async findOne(id: number): Promise<Billing> {
-    const billing = await this.billingRepo.findOne({
-      where: { id },
-      relations: ['user', 'documents'],
-    });
+    const billing = await this.billingRepo
+      .createQueryBuilder('billing')
+      .leftJoin('billing.user', 'user')
+      .addSelect(['user.id', 'user.email'])
+      .leftJoinAndSelect('billing.documents', 'documents')
+    
+      .where('billing.id = :id', { id })
+      .getOne();
+
 
     if (!billing) {
       throw new NotFoundException(`Billing with ID ${id} not found`);
@@ -309,7 +321,7 @@ export class BillingsService {
       for (const file of documents) {
 
         const uploaded = await this.fileUploadService.uploadFile(file, 'billings');
-        uploadedDocs.push(uploaded as IFileUpload) ;
+        uploadedDocs.push(uploaded as IFileUpload);
       }
       billing.documents = [...billing.documents, ...uploadedDocs];
     }

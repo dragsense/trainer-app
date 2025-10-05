@@ -1,4 +1,3 @@
-import { CreateProfileDto } from "@shared/dtos";
 import { ClassConstructor, plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import { Resolver } from "react-hook-form";
@@ -10,21 +9,18 @@ export function classValidatorResolver<T extends object>(
 
     const dto = plainToInstance(dtoClass, values, {
       enableImplicitConversion: true,
-      
+      excludeExtraneousValues: false,
     });
 
 
-  
     const errors = await validate(dto, {
+      skipMissingProperties: true,
       whitelist: true,
       forbidNonWhitelisted: false,
-      skipMissingProperties: false,  
-      skipUndefinedProperties: false,
-      skipNullProperties: false,
-
+      skipUndefinedProperties: true,
+      skipNullProperties: true,
+      validationError: { target: false },
     });
-
-    console.log(errors);
 
     if (errors.length === 0) {
       return { values, errors: {} };
@@ -43,12 +39,18 @@ function flattenValidationErrors(
 ): Record<string, any> {
   return errors.reduce((acc, err) => {
     const fieldPath = parentPath ? `${parentPath}.${err.property}` : err.property;
-
     if (err.constraints) {
       acc[fieldPath] = {
         type: "validation",
         message: Object.values(err.constraints)[0],
       };
+
+      if(parentPath) {
+      acc[parentPath] = {
+          type: "validation",
+          message: Object.values(err.constraints)[0],
+        };
+      }
     }
 
     if (err.children && err.children.length > 0) {

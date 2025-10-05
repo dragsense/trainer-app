@@ -28,9 +28,9 @@ export class RemindersService {
     const reminder = this.reminderRepository.create({
       ...createReminderDto,
       creator: { id: user.id },
-      recipient: createReminderDto.recipientId ? { id: createReminderDto.recipientId } : undefined,
-      session: createReminderDto.sessionId ? { id: createReminderDto.sessionId } : undefined,
-      billing: createReminderDto.billingId ? { id: createReminderDto.billingId } : undefined,
+      recipient: createReminderDto.recipient ? { id: createReminderDto.recipient.id } : undefined,
+      session: createReminderDto.session ? { id: createReminderDto.session.id } : undefined,
+      billing: createReminderDto.billing ? { id: createReminderDto.billing.id } : undefined,
       status: EReminderStatus.SCHEDULED,
       sentCount: 0,
       maxAttempts: createReminderDto.maxAttempts || 3,
@@ -89,10 +89,13 @@ export class RemindersService {
     const query = this.reminderRepository.createQueryBuilder('reminder')
       .leftJoinAndSelect('reminder.creator', 'creator')
       .leftJoinAndSelect('creator.profile', 'creatorProfile')
-      .leftJoinAndSelect('reminder.recipient', 'recipient')
+      .leftJoin('reminder.recipient', 'recipient')
+      .addSelect(['recipient.id', 'recipient.email'])
       .leftJoinAndSelect('recipient.profile', 'recipientProfile')
-      .leftJoinAndSelect('reminder.session', 'session')
-      .leftJoinAndSelect('reminder.billing', 'billing')
+      .leftJoin('reminder.session', 'session')
+      .addSelect(['session.id', 'session.title'])
+      .leftJoin('reminder.billing', 'billing')
+      .addSelect(['billing.id', 'billing.localInvoiceNumber'])
 
     if (user && user.level !== EUserLevels[EUserRole.SUPER_ADMIN]) {
       query.andWhere('reminder.creator.id = :userId', { userId: user.id });
@@ -262,10 +265,18 @@ export class RemindersService {
   }
 
   async findOne(user: Pick<User, 'id'>, id: number): Promise<Reminder> {
-    const reminder = await this.reminderRepository.findOne({
-      where: { id },
-      relations: ['creator', 'recipient', 'session'],
-    });
+    const reminder = await this.reminderRepository
+      .createQueryBuilder('reminder')
+      .leftJoin('reminder.creator', 'creator')
+      .addSelect(['creator.id', 'creator.email'])
+      .leftJoin('reminder.recipient', 'recipient')
+      .addSelect(['recipient.id', 'recipient.email'])
+      .leftJoin('reminder.session', 'session')
+      .addSelect(['session.id', 'session.title'])
+      .leftJoin('reminder.billing', 'billing')
+      .addSelect(['billing.id', 'billing.localInvoiceNumber'])
+      .where('reminder.id = :id', { id })
+      .getOne();
 
     if (!reminder) {
       throw new NotFoundException(`Reminder with ID ${id} not found`);

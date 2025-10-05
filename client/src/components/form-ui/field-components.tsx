@@ -270,7 +270,39 @@ export const DateField = React.memo(function DateField({
     );
 });
 
+export const CustomField = React.memo(function CustomField({
+    field,
+    fieldName,
+    showRequiredAsterisk,
+    layout = "vertical"
+}: BaseFieldProps) {
+    const onChangeHandler = (value: any) => {
+        field?.onChange?.(value);
+        return value;
+    };
 
+    const commonClass = cn(
+        field.startAdornment && "pl-10",
+        field.endAdornment && "pr-10",
+        field.className
+    );
+
+    return (
+        <FormFieldWrapper
+            field={field}
+            fieldName={fieldName}
+            showRequiredAsterisk={showRequiredAsterisk}
+            layout={layout}
+        >
+            {({ field: controllerField, isDisabled }) => {
+                return field.Component ? <field.Component
+                    value={controllerField.value}
+                    onChange={(value) => controllerField.onChange(onChangeHandler(value))}
+                    disabled={isDisabled} /> : null;
+            }}
+        </FormFieldWrapper>
+    );
+});
 
 interface UseArrayFieldProps<T> extends BaseFieldProps<T> {
     renderField: (field: any, parentName?: string) => any;

@@ -1,15 +1,15 @@
 // External Libraries
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 
 // Components
 import { Form } from "@/components/form-ui/form";
 import { Button } from "@/components/ui/button";
 
 // Hooks
-import { useInput } from "@/hooks/use-input";
+import { FormInputs, useInput } from "@/hooks/use-input";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field-config.type";
+import { TFieldConfigObject } from "@/@types/form/field-config.type";
 import { TNotificationSettingData } from "@shared/types/settings.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
@@ -18,65 +18,25 @@ import { TFormHandlerStore } from "@/stores";
 import { FormErrors } from "@/components/shared-ui/form-errors";
 import { AppCard } from "@/components/layout-ui/app-card";
 import { THandlerComponentProps } from "@/@types/handler-types";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { UpdateNotificationSettingDto } from "@shared/dtos";
 
 interface INotificationSettingCardFormProps extends THandlerComponentProps<TFormHandlerStore<TNotificationSettingData, IMessageResponse>> {
 }
 
-export default function NotificationSettingCardForm({ storeKey, store }: INotificationSettingCardFormProps) {
+const NotificationSettingCardForm = React.memo(function NotificationSettingCardForm({ storeKey, store }: INotificationSettingCardFormProps) {
     if (!store) {
         return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-
     const isSubmitting = store(state => state.isSubmitting);
 
-    const fields: TFieldConfig<TNotificationSettingData>[] = [
-        // ─── General Notifications ──────────────
-        {
-            id: "emailNotifications",
-            name: "emailNotifications",
-            label: "Email Notifications",
-            type: "switch",
-            required: false,
-        },
-        
-        // ─── User Management Notifications ─────
-        {
-            id: "newUserNotifications",
-            name: "newUserNotifications",
-            label: "New User Notifications",
-            type: "switch",
-            required: false,
-        },
-        {
-            id: "userUpdateNotifications",
-            name: "userUpdateNotifications",
-            label: "User Update Notifications",
-            type: "switch",
-            required: false,
-        },
-        
-        // ─── Business Notifications ─────
-        {
-            id: "billingNotifications",
-            name: "billingNotifications",
-            label: "Billing Notifications",
-            type: "switch",
-            required: false,
-        },
-        {
-            id: "sessionNotifications",
-            name: "sessionNotifications",
-            label: "Session Notifications",
-            type: "switch",
-            required: false,
-        },
-    ];
+    const fields = dtoToFields(UpdateNotificationSettingDto, {}) as TFieldConfigObject<TNotificationSettingData>;
 
-    const { inputs } = useInput({
+    const inputs = useInput<TNotificationSettingData>({
         fields,
         showRequiredAsterisk: false,
-    });
+    }) as FormInputs<TNotificationSettingData>;
 
     const footerContent: ReactNode = (
         <div className="flex justify-end">
@@ -104,7 +64,7 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
                         <h3 className="text-sm font-medium text-muted-foreground mb-3">General Notifications</h3>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                {inputs.slice(0, 1)}
+                                {inputs.emailNotifications}
                                 <p className="text-sm text-muted-foreground ml-6">
                                     Receive notifications via email for important updates and alerts
                                 </p>
@@ -116,11 +76,12 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
                     <div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-3">User Management</h3>
                         <div className="space-y-4">
-                            {inputs.slice(1, 3).map((input, index) => (
-                                <div key={index} className="space-y-2">
-                                    {input}
-                                </div>
-                            ))}
+                            <div className="space-y-2">
+                                {inputs.newUserNotifications}
+                            </div>
+                            <div className="space-y-2">
+                                {inputs.userUpdateNotifications}
+                            </div>
                         </div>
                     </div>
 
@@ -128,17 +89,18 @@ export default function NotificationSettingCardForm({ storeKey, store }: INotifi
                     <div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-3">Business Notifications</h3>
                         <div className="space-y-4">
-                            {inputs.slice(3).map((input, index) => (
-                                <div key={index} className="space-y-2">
-                                    {input}
-                                </div>
-                            ))}
+                            <div className="space-y-2">
+                                {inputs.billingNotifications}
+                            </div>
+                            <div className="space-y-2">
+                                {inputs.sessionNotifications}
+                            </div>
                         </div>
                     </div>
                 </div>
-
-           
-        </AppCard>
+            </AppCard>
         </Form>
     );
-}
+});
+
+export default NotificationSettingCardForm;

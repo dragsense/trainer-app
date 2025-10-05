@@ -1,16 +1,14 @@
 
 // External Libraries
-import { date, z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {  useState } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Types
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { TUserData } from "@shared/types/user.type";
@@ -26,7 +24,7 @@ import { CredentialModal } from "@/components/shared-ui/credential-modal";
 
 // Services
 import { createUser, updateUser } from "@/services/user.api";
-import { deepMerge, extractValues, strictDeepMerge } from "@/utils";
+import { strictDeepMerge } from "@/utils";
 import { EUserGender } from "@shared/enums";
 import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
 
@@ -75,8 +73,6 @@ export default function UserForm({
     }
 
 
-  
-
     const INITIAL_VALUES: TUserData = {
 
         email: "",
@@ -90,7 +86,7 @@ export default function UserForm({
             bio: "",
             dateOfBirth: new Date(
                 new Date().setFullYear(new Date().getFullYear() - 12)
-              ).toISOString(), 
+            ).toISOString(),
             address: "",
             gender: EUserGender.MALE,
             specialties: [],
@@ -98,8 +94,8 @@ export default function UserForm({
         }
     };
 
-    const initialValues =  strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
-    
+    const initialValues = strictDeepMerge<TUserData>(INITIAL_VALUES, response ?? {});
+
     const handleClose = () => {
         reset();
         setAction('none');
@@ -107,14 +103,20 @@ export default function UserForm({
     };
 
 
+
+    const isEditing = !!response?.id;
+    const mutationFn = isEditing ? updateUser(response.id) : createUser;
+    const dto = isEditing ? UpdateUserDto : CreateUserDto;
+
     return <>
         <FormHandler<TUserData, TUserResponse, IUserFormModalExtraProps>
-            mutationFn={response?.id ? updateUser(response.id) : createUser}
+            mutationFn={mutationFn}
             FormComponent={UserFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            dto={response?.id ? UpdateUserDto : CreateUserDto}
+            dto={dto}
             validationMode={EVALIDATION_MODES.OnSubmit}
+            isEditing={isEditing}
             onSuccess={(response) => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
 
@@ -130,7 +132,6 @@ export default function UserForm({
             formProps={{
                 open: action === 'createOrUpdate',
                 onClose: handleClose,
-                isEditing: response?.id ? true : false,
                 level: extra.level,
             }}
         />

@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsBoolean, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType, createPartialType } from '../../lib/type-utils';
 import { ENotificationType, ENotificationStatus } from '../../enums/notification.enum';
 import { Type } from 'class-transformer';
 import { PaginationMetaDto } from '../common/pagination.dto';

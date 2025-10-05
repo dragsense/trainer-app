@@ -74,8 +74,8 @@ export type TFieldConfigObjectPartial<T> = {
   [K in keyof T]?: T[K] extends Array<infer U>
     ? Partial<NestedArrayField<U>>  // array override
     : T[K] extends object
-    ? TFieldConfigObjectPartial<T[K]>        // nested object override
-    : Partial<BaseField<T[K]>>;   // primitive override
+    ? TFieldConfigObjectPartial<T[K]> | Partial<TFieldConfig<T[K]>>        // allow nested object OR direct field override
+    : Partial<TFieldConfig<T[K]>>;   // primitive override
 };
 
 // Nested field must have subFields

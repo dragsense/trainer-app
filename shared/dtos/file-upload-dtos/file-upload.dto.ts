@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsNumber, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType, createPartialType } from '../../lib/type-utils';
 import { Type } from 'class-transformer';
 import { EFileType } from '../../enums/file-upload.enum';
 import { ListQueryDto } from '../common/list-query.dto';

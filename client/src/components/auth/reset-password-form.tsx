@@ -1,5 +1,5 @@
 // React
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 // Types
 import { TAuthResetPasswordData } from '@shared/types/auth.type';
@@ -16,18 +16,20 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/form-ui/form';
 
 // Hooks
-import { useInput } from '@/hooks/use-input';
+import { FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import { TFieldConfig } from '@/@types/form/field-config.type';
+import { TFieldConfigObject } from '@/@types/form/field-config.type';
 import { FormErrors } from '../shared-ui/form-errors';
+import { ResetPasswordWithTokenDto } from '@shared/dtos';
+import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface IResetPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TAuthResetPasswordData, IMessageResponse, any>> {
 }
 
-export default function ResetPasswordForm({
+const ResetPasswordForm = React.memo(function ResetPasswordForm({
   storeKey,
   store,
 }: IResetPasswordFormProps) {
@@ -36,18 +38,12 @@ export default function ResetPasswordForm({
   }
 
   const isSubmitting = useStore(store, state => state.isSubmitting);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const fields: TFieldConfig<TAuthResetPasswordData>[] = [
-    {
-      id: 'password',
-      name: 'password',
-      label: 'New Password',
+  const fields = dtoToFields(ResetPasswordWithTokenDto, {
+    password: {
       type: showPassword ? 'text' : 'password',
-      placeholder: 'Enter your new password',
-      required: true,
       endAdornment: (
         <button
           type="button"
@@ -58,13 +54,8 @@ export default function ResetPasswordForm({
         </button>
       )
     },
-    {
-      id: 'confirmPassword',
-      name: 'confirmPassword',
-      label: 'Confirm New Password',
+    confirmPassword: {
       type: showConfirmPassword ? 'text' : 'password',
-      placeholder: 'Confirm your new password',
-      required: true,
       endAdornment: (
         <button
           type="button"
@@ -75,12 +66,12 @@ export default function ResetPasswordForm({
         </button>
       )
     }
-  ]
+  }) as TFieldConfigObject<TAuthResetPasswordData>;
 
-  const { inputs } = useInput({
+  const inputs = useInput<TAuthResetPasswordData>({
     fields,
     showRequiredAsterisk: true
-  });
+  }) as FormInputs<TAuthResetPasswordData>;
  
   return (
     <Form<TAuthResetPasswordData, IMessageResponse>
@@ -110,12 +101,14 @@ export default function ResetPasswordForm({
           </div>
         }
       >
-
         <div className="flex flex-col gap-4 w-full">
-          {inputs}
+          {inputs.password}
+          {inputs.confirmPassword}
         </div>
         <FormErrors />
       </AppCard>
     </Form>
   );
-}
+});
+
+export default ResetPasswordForm;

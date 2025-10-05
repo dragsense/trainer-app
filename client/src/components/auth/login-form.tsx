@@ -1,13 +1,14 @@
 // React
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 // Types
-import { TLoginData, ILoginResponse } from '@/@types/auth.type';
+import { TLoginData } from '@shared/types/auth.type';
+import { ILoginResponse } from '@shared/interfaces/auth.interface';
 import { TFormHandlerStore } from '@/stores';
 import { THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
-import { Eye, EyeOff, Mail, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Components
@@ -15,17 +16,19 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/form-ui/form';
 
 // Hooks
-import { useInput } from '@/hooks/use-input';
+import { FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import { TFieldConfig } from '@/@types/form/field-config.type';
+import { TFieldConfigObject } from '@/@types/form/field-config.type';
+import { LoginDto } from '@shared/dtos';
+import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface ILoginFormProps extends THandlerComponentProps<TFormHandlerStore<TLoginData, ILoginResponse, any>> {
 }
 
-export default function LoginForm({
+const LoginForm = React.memo(function LoginForm({
   storeKey,
   store,
 }: ILoginFormProps) {
@@ -34,55 +37,35 @@ export default function LoginForm({
   }
 
   const isSubmitting = useStore(store, state => state.isSubmitting);
-
-
   const [showPassword, setShowPassword] = useState(false);
 
-  const fields: TFieldConfig<TLoginData>[] = [
-    {
-      id: 'email',
-      name: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'username@example.com',
-      startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
-      required: true
-    },
-    {
-      id: 'password',
-      name: 'password',
-      label: 'Password',
+  const fields = dtoToFields(LoginDto, {
+    password: {
       type: showPassword ? 'text' : 'password',
-      required: true,
       endAdornment: (
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="text-muted-foreground hover:text-foreground"
-        >
+        <div className='inline-block cursor-pointer' onClick={() => setShowPassword(!showPassword)}>
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
+        </div>
       ),
       bottomAdornment: (
-        <span className="text-right">
+        <span className="text-right inline-block cursor-pointer">
           <Link to="/forgot-password" className="text-sm hover:underline">
             Forgot password?
           </Link>
         </span>
       )
     }
-  ];
+  }) as TFieldConfigObject<TLoginData>;
 
-  const { inputs } = useInput({
+  const inputs = useInput<TLoginData>({
     fields,
-    showRequiredAsterisk: true
-  });
+    showRequiredAsterisk: true,
+  }) as FormInputs<TLoginData>;
 
   return (
     <Form<TLoginData, ILoginResponse>
       formStore={store}
     >
-
       <AppCard
         header={
           <>
@@ -92,7 +75,7 @@ export default function LoginForm({
         }
         footer={
           <div className="flex flex-col gap-4 w-full">
-            <Button type="submit" className="w-full" disabled={isSubmitting} >
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
@@ -107,13 +90,13 @@ export default function LoginForm({
           </div>
         }
       >
-
         <div className="flex flex-col gap-4 w-full">
-          {inputs}
+          {inputs.email}
+          {inputs.password}
         </div>
-
       </AppCard>
     </Form>
-
   );
-}
+});
+
+export default LoginForm;

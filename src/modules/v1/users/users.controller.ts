@@ -42,6 +42,8 @@ import { ResetPasswordDto } from 'shared/dtos';
 import { UserListDto } from 'shared/dtos';
 import { UserAvailabilityDto } from 'shared/dtos';
 
+
+
 @UseGuards(JwtAuthGuard, RoleLevelGuard)
 @ApiBearerAuth('access-token')
 @ApiTags('Users')
@@ -123,7 +125,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @MinRoleLevel(EUserLevels[EUserRole.TRAINER])
-  @Put(':id')
+  @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,

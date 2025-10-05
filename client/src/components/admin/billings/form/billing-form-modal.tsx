@@ -1,27 +1,26 @@
 // External Libraries
-import { Loader2 } from "lucide-react";
 import React, { useMemo } from "react";
+import { Loader2 } from "lucide-react";
 
 // Custom Hooks
-import { useInput } from "@/hooks/use-input";
+import { FormInputs, useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field-config.type";
+import { TFieldConfigObject, TFieldConfigObjectPartial } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
-import {  TBillingData } from "@shared/types/billing.type";
-import { EBillingCurrency, EBillingStatus } from "@shared/enums/billing.enum";
+import { TBillingData } from "@shared/types/billing.type";
 import { IUser } from "@shared/interfaces/user.interface";
-import { EPaymentMethodType }   from "@shared/enums/payment-method.enum";
-import { IBilling } from "@shared/interfaces/billing.interface";
+import { THandlerComponentProps } from "@/@types/handler-types";
+
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { LineItemInput } from "./line-item-input";
-import { THandlerComponentProps } from "@/@types/handler-types";
-import { useShallow } from "zustand/shallow";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { CreateBillingDto, UpdateBillingDto } from "@shared/dtos";
 
 
 
@@ -34,132 +33,58 @@ export interface IBillingFormExtraProps {
 interface IBillingFormModalProps extends THandlerComponentProps<TFormHandlerStore<TBillingData, IMessageResponse, IBillingFormExtraProps>> {
 }
 
-export default function BillingFormModal({
+const BillingFormModal = React.memo(function BillingFormModal({
   storeKey,
   store
 }: IBillingFormModalProps) {
-
-
 
   if (!store) {
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
+  const isEditing = store((state) => state.extra.isEditing)
+  const open = store((state) => state.extra.open)
+  const onClose = store((state) => state.extra.onClose)
 
-  const {isSubmitting, extra} = store(useShallow(state => ({
-    isSubmitting: state.isSubmitting,
-    extra: state.extra,
-  })));
+  const UserSelect = React.memo(
+    ({ props }: { props: any }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableUsers({})}
+        getLabel={(item) => {
+          if (typeof item === 'object' && 'email' in item && item.email) {
+            return item.email
+          }
+          return 'Select User'
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, email: item.email } }}
+        shouldFilter={false}
+      />
+    )
+  );
 
-  const {open, onClose, isEditing} = extra;
-
-  const fields = useMemo<TFieldConfig<TBillingData>[]>(() => [
-    {
-      id: "userId",
-      name: "userId",
-      label: "User",
-      placeholder: "Select User",
-      type: "custom",
-      required: true,
-      valueType: "number",
-      Component: (props) => (
-        <SearchableInputWrapper<IUser>
-          {...props}
-          modal={true}
-
-          useSearchable={() => useSearchableUsers({})}
-          getLabel={(item) => item.email}
-          getKey={(item) => item.id.toString()}
-          shouldFilter={false}
-        />
-
-      ),
-    },
-    {
-      id: "issueDate",
-      name: "issueDate",
-      label: "Issue Date",
-      type: "date",
-      required: false,
-    },
-    {
-      id: "dueDate",
-      name: "dueDate",
-      label: "Due Date",
-      type: "date",
-      required: false,
-    },
-    {
-      id: "lineItems",
-      name: "lineItems",
-      label: "Line Items",
-      type: "custom",
-      required: false,
-      Component: LineItemInput,
-    },
-    {
-      id: "status",
-      name: "status",
-      label: "Status",
-      type: "select",
-      required: false,
-      options: Object.values(EBillingStatus).map((value) => ({ label: value, value })),
-    },
-    {
-      id: "currency",
-      name: "currency",
-      label: "Currency",
-      type: "select",
-      required: false,
-      options: Object.values(EBillingCurrency).map((value) => ({ label: value, value })),
-    },
-     {
-      id: "paymentMethodType",
-      name: "paymentMethodType",
-      label: "Payment Method",
-      type: "select",
-      required: false,
-      options: Object.values(EPaymentMethodType).map((value) => ({ label: value, value })),
-    },
-    {
-      id: "totalTax",
-      name: "totalTax",
-      label: "Total Tax (cents)",
-      type: "number",
-      valueType: "number",
-      required: false,
-    },
-    {
-      id: "discount",
-      name: "discount",
-      label: "Discount (cents)",
-      type: "number",
-      valueType: "number",
-      required: false,
-    },
-
-    {
-      id: "notes",
-      name: "notes",
-      label: "Notes",
-      type: "textarea",
-      required: false,
-    },
-    {
-      id: "terms",
-      name: "terms",
-      label: "Payment Terms",
-      type: "textarea",
-      placeholder: "e.g. Net 30",
-      required: false,
-    },
-  ], []);
+  const fields = useMemo(() => {
+    const dto = isEditing ? UpdateBillingDto : CreateBillingDto;
 
 
-  const { inputs } = useInput({
+    return dtoToFields(dto, {
+      user: {
+        type: "custom",
+        Component: (props) => <UserSelect props={props} />,
+      },
+      lineItems: {
+        type: "custom",
+        Component: LineItemInput,
+      }
+    }) as TFieldConfigObject<TBillingData>;
+  }, [isEditing]);
+
+  const inputs = useInput<TBillingData>({
     fields,
     showRequiredAsterisk: true,
-  });
+  }) as FormInputs<TBillingData>;
 
   const onOpenChange = (state: boolean) => {
     if (state === false) onClose();
@@ -177,16 +102,15 @@ export default function BillingFormModal({
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <Button type="submit" disabled={false}>
+        {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isEditing ? "Update" : "Add"}
       </Button>
     </div>
   );
 
   return <>
-
-    <ModalForm<TBillingData, IBilling, IBillingFormExtraProps>
+    <ModalForm<TBillingData, IMessageResponse, IBillingFormExtraProps>
       title={`${isEditing ? "Edit" : "Add"} Billing`}
       description={`${isEditing ? "Edit" : "Add a new"} billing`}
       open={open}
@@ -195,10 +119,56 @@ export default function BillingFormModal({
       footerContent={formButtons}
       width="3xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {inputs}
+      <div className="space-y-8">
+        {/* Basic Info */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Basic Info</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.user as React.ReactNode}
+            {inputs.type}
+            {inputs.status}
+            {inputs.currency}
+          </div>
+        </div>
+
+        {/* Dates */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Dates</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.issueDate}
+            {inputs.dueDate}
+          </div>
+        </div>
+
+        {/* Line Items */}
+        <div>
+          <div className="grid grid-cols-1 gap-6 items-start">
+            {inputs.lineItems}
+          </div>
+        </div>
+
+        {/* Financial Details */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Financial Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.totalTax}
+            {inputs.discount}
+            {inputs.totalAmount}
+            {inputs.paymentMethodType}
+          </div>
+        </div>
+
+        {/* Additional Info */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Additional Info</h3>
+          <div className="grid grid-cols-1 gap-6 items-start">
+            {inputs.notes}
+            {inputs.terms}
+          </div>
+        </div>
       </div>
     </ModalForm>
-
   </>
-}
+});
+
+export default BillingFormModal;

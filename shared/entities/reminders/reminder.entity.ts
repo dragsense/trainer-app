@@ -161,7 +161,7 @@ export class Reminder extends GeneralBaseEntity {
 
   @ApiProperty({
     description: 'Frequency configuration details',
-    type: FrequencyConfigDto,
+ 
     example: {
       intervalMinutes: 30,
       weekdays: [1, 3, 5],
@@ -170,5 +170,5 @@ export class Reminder extends GeneralBaseEntity {
     }
   })
   @Column({ type: 'json', nullable: true })
-  frequencyConfig?: FrequencyConfigDto;
+  frequencyConfig?: any;
 }

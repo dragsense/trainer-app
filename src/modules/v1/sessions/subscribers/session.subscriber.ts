@@ -100,13 +100,13 @@ export class SessionSubscriber implements EntitySubscriberInterface<Session> {
   private async createBillingRecord(session: Session, dueDate: Date, user: User): Promise<Billing> {
 
     const createBillingDto: CreateBillingDto = {
-      userId: user.id,
+      user: { id: user.id, email: user.email },
       sessionId: session.id,
       type: EBillingType.SESSION,
       status: EBillingStatus.PENDING,
       currency: session.currency as EBillingCurrency || EBillingCurrency.USD,
-      issueDate: new Date(),
-      dueDate,
+      issueDate: new Date().toISOString(),
+      dueDate: dueDate.toISOString(),
       paymentMethodType: session.paymentMethodType,
       
           discount: 0,

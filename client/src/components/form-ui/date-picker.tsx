@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 
 interface DatePickerProps {
   value?: Date;
-  onChange: (date: Date | undefined) => void;
+  onChange: (date: string) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -41,7 +41,8 @@ export const DatePicker: React.FC<DatePickerProps> = React.memo(({
           selected={value}
           captionLayout="dropdown"
           onSelect={(date) => {
-            onChange(date);
+            const dateString = date ? new Date(date).toISOString() : "";
+            onChange(dateString);
             setOpen(false);
           }}
         />

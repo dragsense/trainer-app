@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsEnum, IsNumber, IsString, IsArray, ArrayNotEmpty, IsPositive, Matches, Min, Max, ValidateIf } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EReminderFrequency } from '../../enums/reminder.enum';
+import { EReminderFrequency, EWeekdays } from '../../enums/reminder.enum';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 
 
 
@@ -13,6 +14,7 @@ export class FrequencyConfigDto {
     @ValidateIf((o) => o.frequency === EReminderFrequency.DAILY && !o.timeOfDay)
     @IsNumber()
     @IsPositive()
+    @FieldType("number", true)
     intervalMinutes?: number;
 
     @ApiPropertyOptional({
@@ -25,6 +27,8 @@ export class FrequencyConfigDto {
     @IsNumber({}, { each: true })
     @Min(0, { each: true })
     @Max(6, { each: true })
+    @FieldType("multiSelect", true)
+    @FieldOptions(Object.values(EWeekdays).map(v => ({ value: v, label: v })))
     weekdays?: number[];
 
     @ApiPropertyOptional({
@@ -37,6 +41,8 @@ export class FrequencyConfigDto {
     @IsNumber({}, { each: true })
     @Min(1, { each: true })
     @Max(31, { each: true })
+    @FieldType("multiSelect", true)
+    @FieldOptions(Array.from({ length: 31 }, (_, i) => ({ value: (i + 1).toString(), label: (i + 1).toString() })) as { label: string; value: string }[])
     monthDays?: number[];
 
     @ApiPropertyOptional({
@@ -50,6 +56,7 @@ export class FrequencyConfigDto {
     @Matches(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
         message: 'Time of day must be in HH:mm format',
     })
+    @FieldType("time", true)
     timeOfDay?: string;
 
     @ApiProperty({
@@ -59,5 +66,7 @@ export class FrequencyConfigDto {
     })
     @IsNotEmpty()
     @IsEnum(EReminderFrequency)
+    @FieldType("select", true)
+    @FieldOptions(Object.values(EReminderFrequency).map(v => ({ value: v, label: v })))
     frequency: EReminderFrequency;
 }

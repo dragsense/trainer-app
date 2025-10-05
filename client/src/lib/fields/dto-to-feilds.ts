@@ -16,6 +16,7 @@ function buildField<T>(
   const isRequired = Reflect.getMetadata(FIELD_REQUIRED, prototype, key);
   const isOptional = isRequired === false;
 
+
   // Skip fields with no decorator type
   if (!decoratorType) return null;
 

@@ -1,29 +1,27 @@
 // External Libraries
-import React, { JSX, useState } from "react";
+import React, { useMemo } from "react";
 import { Loader2 } from "lucide-react";
 
 // Custom Hooks
-import { useInput } from "@/hooks/use-input";
+import { FormInputs, useInput } from "@/hooks/use-input";
 import { useSearchableBillings, useSearchableSessions, useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field-config.type";
+import { TFieldConfigObject, TFieldConfigObjectPartial } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { TReminderData } from "@shared/types/reminder.type";
-import { EReminderType, EReminderFrequency, EReminderActions } from "@shared/enums/reminder.enum";
 import { IBilling } from "@shared/interfaces/billing.interface";
 import { IUser } from "@shared/interfaces/user.interface";
 import { ISession } from "@shared/interfaces/session.interface";
+import { THandlerComponentProps } from "@/@types/handler-types";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
-
-// Stores
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
-import { THandlerComponentProps } from "@/@types/handler-types";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { useShallow } from "zustand/shallow";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { CreateReminderDto, UpdateReminderDto } from "@shared/dtos";
 
 
 export interface IReminderFormExtraProps {
@@ -32,314 +30,104 @@ export interface IReminderFormExtraProps {
   isEditing?: boolean
 }
 
-
-
-export interface IReminderFormModalProps extends THandlerComponentProps<TFormHandlerStore<TReminderData, IMessageResponse, IReminderFormExtraProps>> {
+interface IReminderFormModalProps extends THandlerComponentProps<TFormHandlerStore<TReminderData, IMessageResponse, IReminderFormExtraProps>> {
 }
 
-
-export default function ReminderFormModal({
+const ReminderFormModal = React.memo(function ReminderFormModal({
   storeKey,
   store
 }: IReminderFormModalProps) {
 
-  // Handle missing stores after hooks are called
   if (!store) {
-    return <div>Form store "{storeKey}" not found. Did you forget to register it?</div>;
+    return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
+  const isEditing = store((state) => state.extra.isEditing)
+  const open = store((state) => state.extra.open)
+  const onClose = store((state) => state.extra.onClose)
 
-  const {isSubmitting, extra} = store(useShallow(state => ({
-    isSubmitting: state.isSubmitting,
-    extra: state.extra,
-  })));
+  const UserSelect = React.memo(
+    ({ props }: { props: any }) => (
+      <SearchableInputWrapper<IUser>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableUsers({})}
+        getLabel={(item) => {
+          if (typeof item === 'object' && 'email' in item && item.email) {
+            return item.email
+          }
+          return 'Select User'
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, email: item.email } }}
+        shouldFilter={false}
+      />
+    )
+  );
 
-  const {open, onClose, isEditing} = extra;
+  const SessionSelect = React.memo(
+    ({ props }: { props: any }) => (
+      <SearchableInputWrapper<ISession>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableSessions({})}
+        getLabel={(item) => {
+          if (typeof item === 'object' && 'title' in item && item.title) {
+            return item.title
+          }
+          return 'Select Session'
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, title: item.title } }}
+        shouldFilter={false}
+      />
+    )
+  );
 
-  // Base fields
-  const categorizedFields: { category: string; fields: TFieldConfig[] }[] = [
-    {
-      category: "",
-      fields: [{
-        id: "type",
-        name: "type",
-        label: "Reminder Type",
-        type: "select",
-        options: [
-          { value: EReminderType.BILLING, label: "Payment Reminder" },
-          { value: EReminderType.SESSION, label: "Session Reminder" },
-          { value: EReminderType.CUSTOM, label: "Custom Reminder" },
-        ],
-        required: true,
-      }]
+  const BillingSelect = React.memo(
+    ({ props }: { props: any }) => (
+      <SearchableInputWrapper<IBilling>
+        {...props}
+        modal={true}
+        useSearchable={() => useSearchableBillings({})}
+        getLabel={(item) => {
 
-    },
+          if (typeof item === 'object' && 'localInvoiceNumber' in item && item.localInvoiceNumber) {
+            return item.localInvoiceNumber
+          }
+          return 'Select Billing'
+        }}
+        getKey={(item) => item.id.toString()}
+        getValue={(item) => { return { id: item.id, localInvoiceNumber: item.localInvoiceNumber } }}
+        shouldFilter={false}
+      />
+    )
+  );
 
-    {
+  const fields = useMemo(() => {
+    const dto = isEditing ? UpdateReminderDto : CreateReminderDto;
+    const overrides: TFieldConfigObjectPartial<TReminderData> = {
+      recipient: {
+        type: "custom",
+        Component: (props) => <UserSelect props={props} />,
+      },
+      session: {
+        type: "custom",
+        Component: (props) => <SessionSelect props={props} />,
+      },
+      billing: {
+        type: "custom",
+        Component: (props) => <BillingSelect props={props} />,
+      }
+    };
 
-      category: "Basic Information",
-      fields: [
-        {
-          id: "title",
-          name: "title",
-          label: "Title",
-          type: "text",
-          placeholder: "Enter reminder title...",
-          required: true,
-        },
-        {
-          id: "message",
-          name: "message",
-          label: "Message",
-          type: "textarea",
-          placeholder: "Enter reminder message...",
-          required: true,
-        },
-        {
-          id: "scheduledAt",
-          name: "scheduledAt",
-          label: "Scheduled Date & Time",
-          type: "datetime",
-          required: true,
-        },
-        {
-          id: "endDate",
-          name: "endDate",
-          label: "End Date (Optional)",
-          type: "date",
-          required: false,
-        },
-      ],
-    },
-    {
-      category: "Recipient & Session",
-      fields: [
-        {
-          id: "recipientId",
-          name: "recipientId",
-          label: "Recipient",
-          placeholder: "Select Recipient",
-          type: "custom",
-          valueType: "number",
-          visible: ({ values }) => values.type === EReminderType.CUSTOM,
-          required: ({ values }) => values.type === EReminderType.CUSTOM,
-          Component: (props) => (
-            <SearchableInputWrapper<IUser>
-              {...props}
-              modal={true}
+    return dtoToFields(dto, overrides as any) as TFieldConfigObject<TReminderData>;
+  }, [isEditing]);
 
-              useSearchable={() => useSearchableUsers({})}
-              getLabel={(item) => item.email}
-              getKey={(item) => item.id.toString()}
-              shouldFilter={false}
-            />
-
-          ),
-        },
-        {
-          id: "sessionId",
-          name: "sessionId",
-          label: "Session",
-          placeholder: "Select Session",
-          type: "custom",
-          valueType: "number",
-          visible: ({ values }) => values.type === EReminderType.SESSION,
-          required: ({ values }) => values.type === EReminderType.SESSION,
-          Component: (props) => (
-            <SearchableInputWrapper<ISession>
-              {...props}
-              modal={true}
-              useSearchable={() => useSearchableSessions({})}
-              getLabel={(item) => item.title}
-              getKey={(item) => item.id.toString()}
-              shouldFilter={false}
-            />
-
-          ),
-        },
-        {
-          id: "billingId",
-          name: "billingId",
-          label: "Billing",
-          placeholder: "Select Billing",
-          type: "custom",
-          visible: ({ values }) => values.type === EReminderType.BILLING,
-          required: ({ values }) => values.type === EReminderType.BILLING,
-          valueType: "number",
-          Component: (props) => (
-            <SearchableInputWrapper<IBilling>
-              {...props}
-              modal={true}
-              useSearchable={() => useSearchableBillings({})}
-              getLabel={(item) => item.localInvoiceNumber}
-              getKey={(item) => item.id.toString()}
-              shouldFilter={false}
-            />
-
-          ),
-        },
-
-      ],
-    },
-    {
-      category: "Frequency Settings",
-      fields: [
-        {
-          id: "frequencyConfig.frequency",
-          name: "frequencyConfig.frequency",
-          label: "Frequency",
-          type: "select",
-          options: [
-            { value: EReminderFrequency.ONCE, label: "Once" },
-            { value: EReminderFrequency.DAILY, label: "Daily" },
-            { value: EReminderFrequency.WEEKLY, label: "Weekly" },
-            { value: EReminderFrequency.MONTHLY, label: "Monthly" },
-          ],
-          required: true,
-        },
-        {
-          id: "frequencyConfig.timeOfDay",
-          name: "frequencyConfig.timeOfDay",
-          label: "Time of Day",
-          type: "time",
-          visible: ({ values }) =>
-            values.frequencyConfig.frequency !== EReminderFrequency.ONCE,
-          required: ({ values }) =>
-            values.frequencyConfig.frequency !== EReminderFrequency.ONCE
-        },
-        {
-          id: "frequencyConfig.intervalMinutes",
-          name: "frequencyConfig.intervalMinutes",
-          label: "Repeat Every",
-          type: "select",
-          valueType: "number",
-          options: [
-            5, 10, 20, 30, 45,
-            ...Array.from({ length: (5 - 1) * 2 + 1 }, (_, i) => 60 + i * 30),
-            ...Array.from({ length: 12 - 5 }, (_, i) => (i + 6) * 60)
-          ].map(v => ({
-            value: v.toString(),
-            label:
-              v < 60
-                ? `${v} min`
-                : v % 60 === 0
-                  ? `${v / 60} hour${v / 60 > 1 ? "s" : ""}`
-                  : `${Math.floor(v / 60)}.5 hours`
-          })),
-          visible: ({ values }) =>
-            values.frequencyConfig.frequency !== EReminderFrequency.ONCE,
-          required: ({ values }) =>
-            values.frequencyConfig.frequency !== EReminderFrequency.ONCE
-        },
-        {
-          id: "frequencyConfig.weekdays",
-          name: "frequencyConfig.weekdays",
-          label: "Select Days of Week",
-          type: "multiSelect",
-          valueType: "number",
-          options: [
-            { value: "0", label: "Sunday" },
-            { value: "1", label: "Monday" },
-            { value: "2", label: "Tuesday" },
-            { value: "3", label: "Wednesday" },
-            { value: "4", label: "Thursday" },
-            { value: "5", label: "Friday" },
-            { value: "6", label: "Saturday" },
-          ],
-          placeholder: "Select days of the week...",
-          visible: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.WEEKLY,
-          required: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.WEEKLY,
-        },
-        {
-          id: "frequencyConfig.monthDays",
-          name: "frequencyConfig.monthDays",
-          label: "Select Dates of Month",
-          type: "multiSelect",
-          valueType: "number",
-          options: Array.from({ length: 31 }, (_, i) => ({
-            value: (i + 1).toString(),
-            label: `${i + 1}${getOrdinalSuffix(i + 1)}`,
-          })),
-          visible: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.MONTHLY,
-          required: ({ values }) => values.frequencyConfig.frequency === EReminderFrequency.MONTHLY,
-        },
-        {
-          id: "isRecurring",
-          name: "isRecurring",
-          label: "Recurring Reminder",
-          type: "switch",
-          required: false,
-          visible: ({ values }) =>
-            values.frequencyConfig.frequency === EReminderFrequency.ONCE,
-        },
-      ],
-    }
-    ,
-    {
-      category: "Delivery & Priority",
-      fields: [
-        {
-          id: "actions",
-          name: "actions",
-          label: "Actions",
-          type: "multiSelect",
-          options: [
-            { value: EReminderActions.EMAIL, label: "Email" },
-            { value: EReminderActions.BILLING, label: "BILLING" },
-          ],
-          required: true,
-        },
-        {
-          id: "priority",
-          name: "priority",
-          label: "Priority Level",
-          type: "select",
-          valueType: "number",
-          options: [
-            { value: "1", label: "Low (1)" },
-            { value: "2", label: "Normal (2)" },
-            { value: "3", label: "High (3)" },
-            { value: "4", label: "Urgent (4)" },
-            { value: "5", label: "Critical (5)" },
-          ],
-          required: false,
-        },
-      ],
-    },
-    {
-      category: "Retry Settings",
-      fields: [
-        {
-          id: "maxAttempts",
-          name: "maxAttempts",
-          label: "Max Retry Attempts",
-          type: "number",
-          placeholder: "3",
-          min: 1,
-          max: 10,
-          valueType: "number",
-          required: false,
-        },
-        {
-          id: "retryInterval",
-          name: "retryInterval",
-          label: "Retry Interval (minutes)",
-          type: "number",
-          placeholder: "1440",
-          min: 1,
-          required: false,
-        },
-      ],
-    },
-  ];
-
-
-  const fields = categorizedFields.flatMap((section) => section.fields);
-
-  const { inputs } = useInput({
+  const inputs = useInput<TReminderData>({
     fields,
     showRequiredAsterisk: true,
-  });
+  }) as FormInputs<TReminderData>;
 
   const onOpenChange = (state: boolean) => {
     if (state === false) onClose();
@@ -357,57 +145,80 @@ export default function ReminderFormModal({
       >
         Cancel
       </Button>
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isEditing ? "Update Reminder" : "Create Reminder"}
+      <Button type="submit" disabled={false}>
+        {false && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isEditing ? "Update" : "Add"}
       </Button>
     </div>
   );
 
-
-  const categorizedContent = categorizedFields.reduce(
-    (acc, { category, fields }) => {
-      const fieldInputs = inputs.slice(acc.inputIndex, acc.inputIndex + fields.length);
-      acc.inputIndex += fields.length;
-
-      acc.sections.push(
-        <div key={category}>
-          <h3 className="text-sm font-normal mb-2">{category}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {fieldInputs}
-          </div>
-        </div>
-      );
-
-      return acc;
-    },
-    { inputIndex: 0, sections: [] as JSX.Element[] }
-  ).sections;
-
-  return (
+  return <>
     <ModalForm<TReminderData, IMessageResponse, IReminderFormExtraProps>
-      title={`${isEditing ? "Edit" : "Create"} Reminder`}
-      description={`${isEditing ? "Edit existing" : "Create a new"} reminder with custom frequency settings`}
+      title={`${isEditing ? "Edit" : "Add"} Reminder`}
+      description={`${isEditing ? "Edit" : "Add a new"} reminder`}
       open={open}
       onOpenChange={onOpenChange}
       formStore={store}
       footerContent={formButtons}
       width="3xl"
     >
-      <div className="space-y-6">
-        {categorizedContent}
+      <div className="space-y-8">
+        {/* Basic Information */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Basic Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.type}
+            {inputs.title}
+            {inputs.message}
+            {inputs.scheduledAt}
+            {inputs.endDate}
+          </div>
+        </div>
+
+        {/* Recipient & Related */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Recipient & Related</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.recipient as React.ReactNode}
+            {inputs.session as React.ReactNode}
+            {inputs.billing as React.ReactNode}
+          </div>
+        </div>
+
+        {/* Frequency Settings */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Frequency Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.frequencyConfig?.frequency as React.ReactNode}
+            {inputs.frequencyConfig?.intervalMinutes as React.ReactNode}
+            {inputs.frequencyConfig?.weekdays as React.ReactNode}
+            {inputs.frequencyConfig?.monthDays as React.ReactNode}
+            {inputs.frequencyConfig?.timeOfDay as React.ReactNode}
+          </div>
+        </div>
+
+        {/* Delivery & Priority */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Delivery & Priority</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.actions}
+            {inputs.priority}
+          </div>
+        </div>
+
+        {/* Retry Settings */}
+        <div>
+          <h3 className="text-sm font-semibold mb-3">Retry Settings</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {inputs.maxAttempts}
+            {inputs.retryInterval}
+            {inputs.isRecurring}
+            {inputs.recurringInterval}
+          </div>
+        </div>
       </div>
-
     </ModalForm>
-  );
-}
+  </>
+});
 
-// Helper function for ordinal suffixes
-function getOrdinalSuffix(num: number): string {
-  const j = num % 10;
-  const k = num % 100;
-  if (j === 1 && k !== 11) return "st";
-  if (j === 2 && k !== 12) return "nd";
-  if (j === 3 && k !== 13) return "rd";
-  return "th";
-}
+export default ReminderFormModal;

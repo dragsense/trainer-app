@@ -1,28 +1,33 @@
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType } from '../../lib/dto-type-adapter';
 import { ListQueryDto } from "../common/list-query.dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, IsDateString, IsString } from "class-validator";
+import { IsInt, IsOptional, IsDateString, IsString, ValidateNested } from "class-validator";
 import { PaginationMetaDto } from "../common/pagination.dto";
 import { ApiProperty } from "@nestjs/swagger";
 import { TrainerClient } from "../../entities/trainer-clients/trainer-client.entity";
 import { ITrainerClient } from '../../interfaces/trainer-clients.interface';
+import { UserDto } from "../user-dtos";
+import { FieldType } from '../../decorators/field.decorator';
+
+
+
 
 export class CreateTrainerClientDto {
-  @Type(() => Number)
-  @IsInt()
-  trainerId: number;
+  @ApiProperty({ type: UserDto })
+  @ValidateNested()
+  @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
+  trainer: UserDto;
 
-  @Type(() => Number)
-  @IsInt()
-  clientId: number;
+  @ApiProperty({ type: UserDto })
+  @ValidateNested()
+  @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
+  client: UserDto;
 }
 
-
-
-export class UpdateTrainerClientDto extends createPartialType(CreateTrainerClientDto) { }
-
-
+export class UpdateTrainerClientDto extends PartialType(CreateTrainerClientDto) { }
 
 
 export class TrainerClientListDto extends ListQueryDto<ITrainerClient> {

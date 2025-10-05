@@ -1,4 +1,5 @@
 // React
+import React from 'react';
 
 // Types
 import { TForgotPasswordData } from '@shared/types/auth.type';
@@ -7,7 +8,7 @@ import { TFormHandlerStore } from '@/stores';
 import { THandlerComponentProps } from '@/@types/handler-types';
 
 // External Libraries
-import { Mail, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Components
@@ -15,17 +16,19 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/form-ui/form';
 
 // Hooks
-import { useInput } from '@/hooks/use-input';
+import { FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
 import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import { TFieldConfig } from '@/@types/form/field-config.type';
+import { TFieldConfigObject } from '@/@types/form/field-config.type';
+import { ForgotPasswordDto } from '@shared/dtos/auth-dtos/forgot-password.dto';
+import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface IForgotPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TForgotPasswordData, IMessageResponse, any>> {
 }
 
-export default function ForgotPasswordForm({
+const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
   storeKey,
   store,
 }: IForgotPasswordFormProps) {
@@ -35,23 +38,12 @@ export default function ForgotPasswordForm({
 
   const isSubmitting = useStore(store, state => state.isSubmitting);
 
-  const fields: TFieldConfig<TForgotPasswordData>[] = [
-    {
-      id: 'email',
-      name: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'username@example.com',
-      startAdornment: <Mail className="h-4 w-4 text-muted-foreground" />,
-      required: true
-    }
+  const fields = dtoToFields(ForgotPasswordDto, {}) as TFieldConfigObject<TForgotPasswordData>;
 
-  ];
-
-  const { inputs } = useInput({
+  const inputs = useInput<TForgotPasswordData>({
     fields,
-    showRequiredAsterisk: true
-  });
+    showRequiredAsterisk: true,
+  }) as FormInputs<TForgotPasswordData>;
 
   return (
     <Form<TForgotPasswordData, IMessageResponse>
@@ -81,13 +73,12 @@ export default function ForgotPasswordForm({
           </div>
         }
       >
-
-
         <div className="flex flex-col gap-4 w-full">
-          {inputs}
+          {inputs.email}
         </div>
-
       </AppCard>
     </Form>
   );
-}
+});
+
+export default ForgotPasswordForm;

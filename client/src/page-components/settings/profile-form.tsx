@@ -1,5 +1,4 @@
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 
@@ -8,7 +7,6 @@ import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { IProfile } from "@shared/interfaces/user.interface";
@@ -22,45 +20,40 @@ import { ProfileCardForm } from "@/components/admin";
 
 // Services
 import { updateProfile } from "@/services/user.api";
-import { extractValues } from "@/utils";
+import { strictDeepMerge } from "@/utils";
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { UpdateProfileDto } from "@shared/dtos/user-dtos/profile.dto";
+import { UpdateProfileDto } from "@shared/dtos";
 
 
 interface IProfileFormProps extends THandlerComponentProps<TSingleHandlerStore<IProfile, any>> { }
 
 export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
 
-
     const queryClient = useQueryClient();
 
-    const INITIAL_VALUES: TDefaultValue<TUpdateProfileData> = {
-        firstName: { value: "" },
-        lastName: { value: "" },
-        phoneNumber: { value: "" },
-        address: { value: "" },
-        bio: { value: "" },
-        fitnessGoals: { value: [] },
-        image: { isNested: true, value: { value: null } },
+    const INITIAL_VALUES: TUpdateProfileData = {
+        firstName: "",
+        lastName: "",
+        phoneNumber: "",
+        address: "",
+        bio: "",
+        fitnessGoals: [],
+        image: { path: null }
     };
 
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-
     const { response, isLoading } = store(useShallow(state => ({
         response: state.response,
         isLoading: state.isLoading,
     })));
 
-
     const initialValues = useMemo(() => {
-        return extractValues(response, INITIAL_VALUES);
+        return strictDeepMerge<TUpdateProfileData>(INITIAL_VALUES, response ?? {});
     }, [response]);
-
-
 
     if (isLoading) {
         return (
@@ -77,7 +70,6 @@ export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
         return <div>Profile not found</div>;
     }
 
-
     return (
         <FormHandler<TUpdateProfileData, IMessageResponse>
             mutationFn={updateProfile}
@@ -86,7 +78,7 @@ export default function ProfileForm({ storeKey, store }: IProfileFormProps) {
             initialValues={initialValues}
             dto={UpdateProfileDto}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            onSuccess={(response) => {
+            onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-single"] });
             }}
         />

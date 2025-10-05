@@ -30,6 +30,9 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
   };
 
   const removeItem = (index: number) => {
+    if (lineItems.length === 1) {
+      return;
+    }
     const updated = [...lineItems];
     updated.splice(index, 1);
     onChange(updated);
@@ -54,7 +57,7 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
           className="relative"
           footer={
             <div className="flex justify-end">
-              <Button
+              {index > 0 && <Button
                 type="button"
                 variant="ghost"
                 size="icon"
@@ -63,7 +66,7 @@ export const LineItemInput: React.FC<TCustomInputWrapper> = ({
                 disabled={disabled}
               >
                 <Trash2 className="w-5 h-5" />
-              </Button>
+              </Button>}
             </div>
           }
         >

@@ -1,5 +1,5 @@
 import React from "react";
-import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField } from "@/components/form-ui/field-components";
+import { TextField, TextareaField, SelectField, SwitchField, DateField, useArrayField, CustomField } from "@/components/form-ui/field-components";
 import type { TFieldConfig, TFieldConfigObject } from "@/@types/form/field-config.type";
 
 interface UseInputProps<T> {
@@ -15,7 +15,7 @@ export type FormInputs<T> = {
   [K in keyof T]: T[K] extends object
   ? T[K] extends Array<any>
   ? React.ReactNode
-  : FormInputs<T[K]>
+  : FormInputs<T[K]> | React.ReactNode
   : React.ReactNode;
 };
 
@@ -87,6 +87,8 @@ export function useInput<T>({
       case "time":
       case "checkbox":
         return <TextField {...commonProps} />;
+      case "custom":
+        return <CustomField {...commonProps} />;
       default:
         return null;
     }

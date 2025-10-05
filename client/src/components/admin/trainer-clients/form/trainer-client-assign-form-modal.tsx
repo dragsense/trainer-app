@@ -7,7 +7,7 @@ import { useInput } from "@/hooks/use-input";
 import { useSearchableUsers } from "@/hooks/use-searchable";
 
 // Types
-import { TFieldConfig } from "@/@types/form/field-config.type";
+import { TCustomInputWrapper } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
 import { TTrainerClientData } from "@shared/types/trainer-clients.type";
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
@@ -20,6 +20,8 @@ import { ModalForm } from "@/components/form-ui/modal-form";
 import { SearchableInputWrapper } from "@/components/shared-ui/searchable-input-wrapper";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { useShallow } from "zustand/react/shallow";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { CreateTrainerClientDto } from "@shared/dtos";
 
 export interface ITrainerClientAssignFormExtraProps {
     trainerId?: number;
@@ -59,48 +61,44 @@ export default function TrainerClientAssignFormModal({
             <SearchableInputWrapper<IUser>
                 {...props}
                 modal={true}
-                useSearchable={() => useSearchableUsers({ level })}
-                getLabel={(item) => item.email}
+                useSearchable={() => useSearchableUsers({ level, initialParams: { page: 1, limit: 2 } })}
+                getLabel={(item) => {
+
+                    if (typeof item === 'object' && 'email' in item && item.email) {
+                        return item.email
+                    } 
+                    return 'Select User'
+                }}
                 getKey={(item) => item.id.toString()}
+                getValue={(item) => { return { id: item.id, email: item.email } }}
                 shouldFilter={false}
             />
         )
     );
 
-    const fields = useMemo<TFieldConfig<TTrainerClientData>[]>(() => [
-        {
-            id: "trainerId",
-            name: "trainerId",
-            label: "Trainer",
-            placeholder: "Select Trainer",
-            type: "custom",
-            required: true,
-            disabled: !!trainerId,
-            valueType: "number",
-            Component: (props) => (
-                <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
+    const fields = useMemo(() => {
 
-            ),
-        },
-        {
-            id: "clientId",
-            name: "clientId",
-            label: "Client",
-            placeholder: "Select Client",
-            type: "custom",
-            required: true,
-            disabled: !!clientId,
-            valueType: "number",
-            Component: (props) => (
-                <UserSelect props={props} level={EUserLevels[EUserRole.USER]} />
+        return dtoToFields<TTrainerClientData>(CreateTrainerClientDto, {
+            trainer: {
+                disabled: !!trainerId,
+                Component: (props: TCustomInputWrapper) => (
+                    <UserSelect props={props} level={EUserLevels[EUserRole.TRAINER]} />
+                ),
 
-            ),
-        },
-    ], [trainerId, clientId]);
+
+            },
+            client: {
+                disabled: !!clientId,
+                Component: (props: TCustomInputWrapper) => (
+                    <UserSelect props={props} level={EUserLevels[EUserRole.USER]} />
+                ),
+            },
+        });
+    }, [trainerId, clientId]);
 
 
 
-    const { inputs } = useInput({
+    const inputs = useInput<TTrainerClientData>({
         fields,
         showRequiredAsterisk: true,
     });
@@ -139,7 +137,9 @@ export default function TrainerClientAssignFormModal({
             width="3xl"
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                {inputs}
+                {inputs.trainer as React.ReactNode}
+                {inputs.client as React.ReactNode}
+
             </div>
 
         </ModalForm>

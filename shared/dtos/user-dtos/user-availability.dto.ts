@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType, createPartialType } from '../../lib/type-utils';
 
 
 export class TimeSlotDto {

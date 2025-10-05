@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { PartialType, createPartialType } from '../../lib/type-utils';
 import {
   IsEnum,
   IsNotEmpty,
@@ -22,6 +22,8 @@ import { EPaymentMethodType } from '../../enums/payment-method.enum';
 import { ListQueryDto } from '../common/list-query.dto';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { Billing } from '../../entities/billings/billing.entity';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
+import { UserDto } from '../user-dtos/user.dto';
 
 @ValidatorConstraint({ name: 'amountCalculation', async: false })
 export class AmountCalculationConstraint implements ValidatorConstraintInterface {
@@ -53,25 +55,30 @@ export class FutureDateConstraint implements ValidatorConstraintInterface {
 export class LineItemDto {
   @ApiProperty({ example: 'Consulting Session', description: 'Description of the line item' })
   @IsString()
+  @FieldType("text", true)
   description: string;
 
   @ApiProperty({ example: 1, description: 'Quantity of the item' })
   @IsNumber()
+  @FieldType("number", true)
   quantity: number;
 
   @ApiProperty({ example: 10000, description: 'Unit price in cents' })
   @IsNumber()
+  @FieldType("number", true)
   unitPrice: number;
 
   @ApiProperty({ example: 10000, description: 'Total amount (quantity × unitPrice)' })
   @Min(0)
   @IsNumber()
   @Validate(AmountCalculationConstraint)
+  @FieldType("number", true)
   amount: number;
 
   @ApiProperty({ example: 0, description: 'Tax amount for this item' })
   @IsOptional()
   @IsNumber()
+  @FieldType("number", true)
   tax?: number;
 }
 
@@ -84,11 +91,15 @@ export class CreateBillingDto {
   @ApiProperty({ enum: EBillingType, example: EBillingType.INDIVIDUAL })
   @IsNotEmpty()
   @IsEnum(EBillingType)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EBillingType).map(v => ({ value: v, label: v })))
   type: EBillingType;
 
   @ApiProperty({ enum: EBillingStatus, example: EBillingStatus.PENDING })
   @IsOptional()
   @IsEnum(EBillingStatus)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EBillingStatus).map(v => ({ value: v, label: v })))
   status?: EBillingStatus;
 
   @ApiProperty({ example: 1000, description: 'Invoice amount in cents' })
@@ -99,28 +110,39 @@ export class CreateBillingDto {
   @ApiProperty({ enum: EBillingCurrency, example: EBillingCurrency.USD })
   @IsOptional()
   @IsEnum(EBillingCurrency)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EBillingCurrency).map(v => ({ value: v, label: v })))
   currency?: EBillingCurrency;
 
-  @ApiProperty({ example: 101, description: 'User ID' })
-  @IsNotEmpty()
-  @IsNumber()
-  userId: number;
 
   @ApiProperty({ example: 55, description: 'Session ID if applicable' })
   @IsOptional()
   @IsNumber()
+  @FieldType("number", true)
   sessionId?: number;
 
   @ApiProperty({ example: '2025-07-01', description: 'Invoice issue date' })
   @IsOptional()
   @IsDateString()
-  issueDate?: Date;
+  @FieldType("date", true)
+  issueDate?: string;
 
   @ApiProperty({ example: '2025-07-15', description: 'Invoice due date' })
   @IsOptional()
   @IsDateString()
   @Validate(FutureDateConstraint)
-  dueDate?: Date;
+  @FieldType("date", true)
+  dueDate?: string;
+
+
+  @ApiProperty({ 
+    type: () => UserDto,
+    description: 'User assigned to the billing - only id field required'
+  })
+  @ValidateNested()
+  @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
+  user: UserDto;  
 
   @ApiProperty({
     description: 'Line items for the invoice',
@@ -130,31 +152,37 @@ export class CreateBillingDto {
   @ArrayMinSize(1, { message: 'At least one line item is required' })
   @ValidateNested({ each: true })
   @Type(() => LineItemDto)
+  @FieldType("nestedArray", true, LineItemDto)
   lineItems: LineItemDto[];
 
   @ApiProperty({ example: 2000, description: 'Total tax amount (in cents)' })
   @IsOptional()
   @IsNumber()
+  @FieldType("number", true)
   totalTax?: number;
 
   @ApiProperty({ example: 500, description: 'Total discount (in cents)' })
   @IsOptional()
   @IsNumber()
+  @FieldType("number", true)
   discount?: number;
 
   @ApiProperty({ example: 10500, description: 'Final total amount (in cents)' })
   @IsOptional()
   @IsNumber()
+  @FieldType("number", true)
   totalAmount?: number;
 
   @ApiProperty({ example: 'Thank you for your business!', description: 'Optional invoice note' })
   @IsOptional()
   @IsString()
+  @FieldType("textarea", true)
   notes?: string;
 
   @ApiProperty({ example: 'Net 14', description: 'Payment terms like Net 30, Net 14' })
   @IsOptional()
   @IsString()
+  @FieldType("textarea", true)
   terms?: string;
 
   @ApiProperty({
@@ -163,6 +191,8 @@ export class CreateBillingDto {
     description: 'Payment method type'
   })
   @IsEnum(EPaymentMethodType)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EPaymentMethodType).map(v => ({ value: v, label: v })))
   paymentMethodType: EPaymentMethodType;
 }
 
@@ -171,6 +201,8 @@ export class UpdateBillingDto extends createPartialType(CreateBillingDto) {}
 export class UpdateBillingStatusDto {
   @ApiProperty({ enum: EBillingStatus, example: EBillingStatus.PAID })
   @IsEnum(EBillingStatus)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EBillingStatus).map(v => ({ value: v, label: v })))
   status: EBillingStatus;
 
   @ApiProperty({ required: false, example: ['doc1.pdf', 'doc2.pdf'] })
@@ -286,4 +318,21 @@ export class BillingPaginatedDto extends PaginationMetaDto {
   @ApiProperty({ type: () => [Billing] })
   @Type(() => Billing)
   data: Billing[]
+}
+
+
+export class BillingDto {
+  @ApiProperty({ example: 1, description: 'Billing ID' })
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
+  id: number;
+
+  @ApiProperty({ example: 'INV-001', description: 'Invoice Number' })
+  @IsOptional()
+  @IsString()
+  @FieldType("text", false)
+  invoiceNumber: string;
 }

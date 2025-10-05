@@ -18,6 +18,7 @@ export interface UserInputPropsWrapperProps<T> extends TCustomInputWrapper {
     useSearchable: () => ReturnType<typeof useSearchableResource<T>>;
     getLabel: (item: T) => string;
     getKey: (item: T) => string;
+    getValue: (item: T) => any;
     shouldFilter?: boolean
 }
 
@@ -30,6 +31,7 @@ export const SearchableInputWrapper = <T,>({
     useSearchable,
     getLabel,
     getKey,
+    getValue,
     shouldFilter = true
 }: UserInputPropsWrapperProps<T>) => {
 
@@ -44,9 +46,11 @@ export const SearchableInputWrapper = <T,>({
         return () => clearTimeout(timer);
     }, [search]);
 
+
     return (
         <AppComboBox<T>
-            value={multiple ? (value || []) : value?.toString() || ""}
+            value={multiple ? (value || []) : (value ?? "")}
+            getValue={getValue}
             onChange={onChange}
             items={(response?.data || [])}
             loading={isLoading}

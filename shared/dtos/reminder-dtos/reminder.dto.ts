@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsEnum, IsNumber, IsString, IsOptional, IsArray, ArrayNotEmpty,  Max, Matches, IsPositive, IsBoolean, Min, IsDateString, ValidateIf, ValidateNested, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 
 import { ApiProperty } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
 import { EReminderType, EReminderActions, EReminderStatus, EReminderFrequency } from '../../enums/reminder.enum';
 import { FrequencyConfigDto } from './frequency-config.dto';
 import { Type } from 'class-transformer';
@@ -10,6 +9,11 @@ import { IReminder } from '../../interfaces/reminder.interface';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { Reminder } from '../../entities/reminders/reminder.entity';
 import { ListQueryDto } from '../common/list-query.dto';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
+  import { PartialType } from '../../lib/dto-type-adapter';
+import { UserDto } from '../user-dtos/user.dto';
+import { SessionDto } from '../session-dtos/session.dto';
+import { BillingDto } from '../billing-dtos/billing.dto';
 
 @ValidatorConstraint({ name: 'futureDate', async: false })
 class FutureDateConstraint implements ValidatorConstraintInterface {
@@ -85,35 +89,41 @@ export class CreateReminderDto {
   })
   @IsNotEmpty()
   @IsEnum(EReminderType)
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EReminderType).map(v => ({ value: v, label: v })))
   type: EReminderType;
 
-  @ApiProperty({
-    description: 'Recipient user ID',
-    example: 1,
+  @ApiProperty({ 
+    type: () => UserDto,
+    description: 'User assigned to the reminder - only id field required'
   })
   @ValidateIf(o => o.type === EReminderType.CUSTOM)
-  @IsOptional()
-  @IsNumber()
-  @Min(1)
-  recipientId?: number;
+  @ValidateNested()
+  @Type(() => UserDto)
+  @FieldType("custom", true, UserDto)
+  recipient: UserDto;  
 
-  @ApiProperty({
-    description: 'Session ID (required if type is SESSION)',
-    example: 1,
+
+  @ApiProperty({ 
+    type: () => SessionDto,
+    description: 'User assigned to the reminder - only id field required'
   })
   @ValidateIf(o => o.type === EReminderType.SESSION)
-  @IsOptional()
-  @IsNumber()
-  sessionId?: number;
+  @ValidateNested()
+  @Type(() => SessionDto)
+  @FieldType("custom", true, SessionDto)
+  session: SessionDto;  
 
-  @ApiProperty({
-    description: 'Billing ID (required if type is PAYMENT)',
-    example: 1,
+
+  @ApiProperty({ 
+    type: () => BillingDto,
+    description: 'Billing assigned to the reminder - only id field required'
   })
   @ValidateIf(o => o.type === EReminderType.BILLING)
-  @IsOptional()
-  @IsNumber()
-  billingId?: number;
+  @ValidateNested()
+  @Type(() => BillingDto)
+  @FieldType("custom", true, BillingDto)
+  billing: BillingDto;  
 
   @ApiProperty({
     description: 'Title message for the reminder',
@@ -121,6 +131,7 @@ export class CreateReminderDto {
   })
   @IsOptional()
   @IsString()
+  @FieldType("text", true)
   title?: string;
 
   @ApiProperty({
@@ -129,6 +140,7 @@ export class CreateReminderDto {
   })
   @IsOptional()
   @IsString()
+  @FieldType("textarea", true)
   message?: string;
 
   @ApiProperty({
@@ -138,7 +150,8 @@ export class CreateReminderDto {
   @IsNotEmpty()
   @IsDateString()
   @Validate(FutureDateConstraint)
-  scheduledAt: Date;
+  @FieldType("date", true)
+  scheduledAt: string;
 
   @ApiProperty({
     description: 'Frequency configuration object',
@@ -147,6 +160,7 @@ export class CreateReminderDto {
   @ValidateNested()
   @Validate(FrequencyConfigConstraint)
   @Type(() => FrequencyConfigDto)
+  @FieldType("nested", true, FrequencyConfigDto)
   frequencyConfig: FrequencyConfigDto;
 
   @ApiProperty({
@@ -156,6 +170,7 @@ export class CreateReminderDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @FieldType("number", true)
   maxAttempts?: number;
 
   @ApiProperty({
@@ -165,6 +180,7 @@ export class CreateReminderDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @FieldType("number", true)
   retryInterval?: number;
 
   @ApiProperty({
@@ -184,6 +200,8 @@ export class CreateReminderDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsEnum(EReminderActions, { each: true })
+  @FieldType("select", true)
+  @FieldOptions(Object.values(EReminderActions).map(v => ({ value: v, label: v })))
   actions?: EReminderActions[];
 
   @ApiProperty({
@@ -192,7 +210,8 @@ export class CreateReminderDto {
   })
   @IsOptional()
   @IsNumber()
-  @IsPositive()
+  @IsPositive() 
+  @FieldType("number", true)
   priority?: number;
 
   @ApiProperty({
@@ -201,7 +220,8 @@ export class CreateReminderDto {
   })
   @IsOptional()
   @IsBoolean()
-  isRecurring?: boolean;
+  @FieldType("switch", true)
+    isRecurring?: boolean;
 
   @ApiProperty({
     description: 'Recurring interval if reminder is recurring (in days)',
@@ -210,6 +230,7 @@ export class CreateReminderDto {
   @IsOptional()
   @IsNumber()
   @IsPositive()
+  @FieldType("number", true)
   recurringInterval?: number;
 
   @ApiProperty({
@@ -218,10 +239,11 @@ export class CreateReminderDto {
   })
   @IsOptional()
   @IsDateString()
-  endDate?: Date;
+  @FieldType("date", true)
+  endDate?: string;
 }
 
-export class UpdateReminderDto extends createPartialType(CreateReminderDto) { }
+export class UpdateReminderDto extends PartialType(CreateReminderDto) { }
 
 
 

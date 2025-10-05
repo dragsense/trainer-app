@@ -10,7 +10,7 @@ import { config } from '@/config';
 
 
 
-export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<string, any> = {}>(initalValues: TFormData,  initialExtra: TExtra = {} as TExtra) => {
+export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<string, any> = {}>(initalValues: TFormData,  initialExtra: TExtra = {} as TExtra, isEditing: boolean = false) => {
   return create<IFormHandlerState<TFormData, TResponse, TExtra>>()(
     devtools(
       (set) => ({
@@ -22,8 +22,10 @@ export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<
 
         values: initalValues,
         extra: initialExtra,
-    
 
+        isEditing,
+    
+        setIsEditing: (isEditing) => set({ isEditing }),
         setError: (error) => set({ error }),
         setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
         setValues: (values) => set({ values }),

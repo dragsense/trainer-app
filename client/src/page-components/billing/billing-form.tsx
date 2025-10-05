@@ -1,6 +1,5 @@
 
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -10,7 +9,6 @@ import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { TBillingData } from "@shared/types/billing.type";
@@ -19,7 +17,7 @@ import { EBillingCurrency, EBillingStatus, EBillingType } from "@shared/enums/bi
 import { EPaymentMethodType } from "@shared/enums/payment-method.enum";
 
 // Store
-import { TFormHandlerStore, TSingleHandlerStore } from "@/stores";
+import { TSingleHandlerStore } from "@/stores";
 
 // Components
 import { BillingFormModal } from "@/components/admin";
@@ -27,9 +25,8 @@ import { BillingFormModal } from "@/components/admin";
 // Services
 import { createBilling, updateBilling } from "@/services/billing.api";
 import { IBillingFormExtraProps } from "@/components/admin/billings/form/billing-form-modal";
-import { useMemo } from "react";
-import { extractValues } from "@/utils";
-import { CreateBillingDto } from "@shared/dtos";
+import { strictDeepMerge } from "@/utils";
+import { CreateBillingDto, UpdateBillingDto } from "@shared/dtos";
 
 
 interface IBillingFormProps extends THandlerComponentProps<TSingleHandlerStore<IBilling, IBillingFormExtraProps>> {
@@ -43,58 +40,47 @@ export default function BillingForm({
     store,
 }: IBillingFormProps) {
 
-    const queryBilling = useQueryClient();
-
-    const INITIAL_VALUES: TDefaultValue<TBillingData> = {
-        stripeInvoiceId: { value: "" },
-        type: { value: EBillingType.INDIVIDUAL },
-        status: { value: EBillingStatus.PENDING },
-        invoiceAmount: { value: 0 },
-        currency: { value: EBillingCurrency.USD },
-        paymentMethodType: { value: EPaymentMethodType.CASH },
-        userId: { value: 0 },
-        sessionId: { value: 0 },
-        issueDate: { value: new Date() },
-        dueDate: { value: new Date() },
-        lineItems: {
-            value: [{
-                isNested: true,
-                value: {
-                    description: { value: "" },
-                    quantity: { value: 0 },
-                    unitPrice: { value: 0 },
-                    amount: { value: 0 },
-                    tax: { value: 0 },
-                }
-            }],
-        },
-        totalTax: { value: 0 },
-        discount: { value: 0 },
-        totalAmount: { value: 0 },
-        notes: { value: "" },
-        terms: { value: "" },
-    };
-
+    const queryClient = useQueryClient();
 
     if (!store) {
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-
-
-    const { action, response, isLoading, setAction, extra } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
         setAction: state.setAction,
+        reset: state.reset,
         extra: state.extra
     })));
 
+    const INITIAL_VALUES: TBillingData = {
+        stripeInvoiceId: "",
+        type: EBillingType.INDIVIDUAL,
+        status: EBillingStatus.PENDING,
+        invoiceAmount: 0,
+        currency: EBillingCurrency.USD,
+        paymentMethodType: EPaymentMethodType.CASH,
+        user: { id: 0, email: "" },
+        sessionId: 0,
+        issueDate: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        lineItems: [{
+            description: "",
+            quantity: 0,
+            unitPrice: 0,
+            amount: 0,
+            tax: 0,
+        }],
+        totalTax: 0,
+        discount: 0,
+        totalAmount: 0,
+        notes: "",
+        terms: "",
+    };
 
-
-    const initialValues = useMemo(() => {
-        return extractValues(response, INITIAL_VALUES);
-    }, [response]);
+    const initialValues = strictDeepMerge<TBillingData>(INITIAL_VALUES, response ?? {});
 
     if (isLoading) {
         return (
@@ -105,27 +91,33 @@ export default function BillingForm({
     }
 
     const handleClose = () => {
+        reset();
         setAction('none');
     };
 
+    const isEditing = !!response?.id;
+    const mutationFn = isEditing ? updateBilling(response.id) : createBilling;
+    const dto = isEditing ? UpdateBillingDto : CreateBillingDto;
+
     return <>
         <FormHandler<TBillingData, IMessageResponse, IBillingFormExtraProps>
-            mutationFn={response?.id ? updateBilling(response.id) : createBilling}
+            mutationFn={mutationFn}
             FormComponent={BillingFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            dto={CreateBillingDto}
+            dto={dto}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            onSuccess={(response) => {
-                queryBilling.invalidateQueries({ queryKey: [storeKey + "-list"] });
+            isEditing={isEditing}
+            onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                handleClose();
             }}
             formProps={{
                 open: action === 'createOrUpdate',
                 onClose: handleClose,
-                isEditing: response?.id ? true : false,
+                
             }}
         />
-
     </>
 
 }

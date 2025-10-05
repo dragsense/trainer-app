@@ -1,16 +1,13 @@
 // External Libraries
-import { z } from "zod";
 import { useShallow } from 'zustand/shallow';
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 // Handlers
 import { FormHandler } from "@/handlers";
 
 // Types
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
-import { TDefaultValue } from "@/@types/form/field-config.type";
 import { EVALIDATION_MODES } from "@/enums/form.enums";
 import { THandlerComponentProps } from "@/@types/handler-types";
 import { TSessionData } from "@shared/types/session.type";
@@ -29,11 +26,11 @@ import { SessionFormModal, ISessionFormModalExtraProps } from "@/components/admi
 
 // Services
 import { createSession, updateSession } from "@/services/session.api";
-import { extractValues } from "@/utils";
+import { strictDeepMerge } from "@/utils";
 
 // Hooks
 import { useAuthUser } from "@/hooks/use-auth-user";
-import { CreateSessionDto } from "@shared/dtos";
+import { CreateSessionDto, UpdateSessionDto } from "@shared/dtos";
 
 
 export type TSessionExtraProps = {
@@ -57,40 +54,35 @@ export default function SessionForm({
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, setAction, extra } = store(useShallow(state => ({
+    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
         action: state.action,
         response: state.response,
         isLoading: state.isLoading,
         extra: state.extra,
-        setAction: state.setAction
+        setAction: state.setAction,
+        reset: state.reset
     })));
 
-    const INITIAL_VALUES: TDefaultValue<TSessionData> = {
-        title: { value: "" },
-        type: { value: ESessionType.ONE_ON_ONE },
-        dateTime: { value: new Date() },
-        duration: { value: 60 },
-        pricePerClient: { value: 0 },
-        currency: { value: EBillingCurrency.USD },
-        paymentMethodType: { value: EPaymentMethodType.CASH },
-        description: { value: "" },
-        location: { value: "" },
-        requirePrepayment: { value: true },
-        cancellationDeadline: { value: 24 },
+    const INITIAL_VALUES: TSessionData = {
+        title: "",
+        type: ESessionType.ONE_ON_ONE,
+        dateTime: new Date().toISOString(),
+        duration: 60,
+        pricePerClient: 0,
+        currency: EBillingCurrency.USD,
+        paymentMethodType: EPaymentMethodType.CASH,
+        description: "",
+        location: "",
+        requirePrepayment: true,
+        cancellationDeadline: 24,
         trainer: {
-            isNested: true,
-            value: {
-                id: { value: extra?.trainerId || trainerId }
-            }
+            id: extra?.trainerId || trainerId,
+            email: "" // Required by UserDto
         },
-        clients: {
-            value: []
-        }
+        clients: []
     };
 
-    const initialValues = useMemo(() => {
-        return extractValues(response, INITIAL_VALUES);
-    }, [response]);
+    const initialValues = strictDeepMerge<TSessionData>(INITIAL_VALUES, response ?? {});
 
 
     if (isLoading) {
@@ -102,24 +94,30 @@ export default function SessionForm({
     }
 
     const handleClose = () => {
+        reset();
         setAction('none');
     };
 
+    const isEditing = !!response?.id;
+    const mutationFn = isEditing ? updateSession(response.id) : createSession;
+    const dto = isEditing ? UpdateSessionDto : CreateSessionDto;
+
     return <>
         <FormHandler<TSessionData, IMessageResponse, ISessionFormModalExtraProps>
-            mutationFn={response?.id ? updateSession(response.id) : createSession}
+            mutationFn={mutationFn}
             FormComponent={SessionFormModal}
             storeKey={storeKey}
             initialValues={initialValues}
-            dto={CreateSessionDto}
+            dto={dto}
             validationMode={EVALIDATION_MODES.OnSubmit}
-            onSuccess={(response) => {
+            isEditing={isEditing}
+            onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: [storeKey + "-list"] });
+                handleClose();
             }}
             formProps={{
                 open: action === 'createOrUpdate',
                 onClose: handleClose,
-                isEditing: response?.id ? true : false,
                 trainerId: extra?.trainerId || trainerId
             }}
         />

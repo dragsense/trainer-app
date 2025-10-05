@@ -1,6 +1,4 @@
-
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, createPartialType } from '../../lib/omit-type';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -18,14 +16,6 @@ import { EUserGender } from '../../enums/user.enum';
 import { Type } from 'class-transformer';
 import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 
-
-class AddressDto {
-  @ApiProperty({ example: '123 Main Street, New York' })
-  @IsString()
-  @IsNotEmpty()
-  @FieldType("text", true)
-  address: string;
-}
 
 
 export class CreateProfileDto {
@@ -116,15 +106,7 @@ export class CreateProfileDto {
   @IsOptional()
   @FieldType("file")
   image?: any;
-
-
- @ApiPropertyOptional({ type: AddressDto, required: false })
- @ValidateNested()
- @Type(() => AddressDto)
- @FieldType("nestedArray", false, AddressDto)
- @IsArray()
- addresses: AddressDto[];
 }
 
 
-export class UpdateProfileDto extends createPartialType(CreateProfileDto) { }
+export class UpdateProfileDto extends PartialType(CreateProfileDto) { }

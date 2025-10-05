@@ -35,7 +35,7 @@ export const createUser = (data: TUserData) =>
 export const updateUser = (id: number) => (data: Partial<TUserData>) =>
     apiRequest<IMessageResponse>(
         `${USERS_API_PATH}/${id}`,
-        "PUT",
+        "PATCH",
         data
     );
 

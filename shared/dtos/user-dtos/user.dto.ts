@@ -8,18 +8,19 @@ import {
   MinLength,
   IsBoolean,
   ValidateNested,
-  IsNumber
+  IsNumber,
+  Min
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PartialType, OmitType, createPartialType } from '../../lib/omit-type';
+import { ApiProperty, ApiPropertyOptional, PartialType} from '@nestjs/swagger';
 import { EUserLevels, EUserRole } from '../../enums/user.enum';
-import { CreateProfileDto } from './profile.dto';
+import { CreateProfileDto, UpdateProfileDto } from './profile.dto';
 import { Type } from 'class-transformer';
 import { Profile } from '../../entities/users/profile.entity';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto } from '../common/list-query.dto';
 import { IUser } from '../../interfaces/user.interface';
 import { FieldType } from '../../decorators/field.decorator';
+import { OmitType } from '../../lib/dto-type-adapter';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'email@example.com', description: 'User email' })
@@ -59,7 +60,7 @@ export class CreateUserDto {
   profile: CreateProfileDto;
 }
 
-export class UpdateUserDto extends createPartialType(CreateUserDto) {
+export class UpdateUserDto extends PartialType(OmitType(CreateUserDto, ['profile'])) {
   @ApiPropertyOptional({
     example: 'acct_1234567890',
     description: 'Stripe Connect account ID for trainers'
@@ -67,7 +68,15 @@ export class UpdateUserDto extends createPartialType(CreateUserDto) {
   @IsOptional()
   @IsString()
   stripeConnectAccountId?: string | null;
-}
+
+  @ApiProperty({ type: UpdateProfileDto })
+  @ValidateNested()
+  @Type(() => UpdateProfileDto)
+  @FieldType("nested", true, UpdateProfileDto)
+  @IsOptional()
+  profile?: UpdateProfileDto;
+
+} 
 
 export class UserSafeDto {
   @ApiProperty({ example: 1, description: 'User ID' })
@@ -127,9 +136,18 @@ export class UserListDto extends ListQueryDto<IUser> {
 
 
 export class UserDto {
+  @ApiProperty({ example: 1, description: 'User ID' })
   @IsNotEmpty()
   @IsNumber()
   @Type(() => Number)
+  @FieldType("number", true)
+  @Min(1)
   id: number;
+
+  @ApiProperty({ example: 'email@example.com', description: 'User email' })
+  @IsOptional()
+  @IsString()
+  @FieldType("text", false)
+  email: string;
 }
 

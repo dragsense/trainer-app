@@ -25,3 +25,14 @@ export enum EReminderActions {
   BILLING = 'BILLING',
   NOTIFICATION = 'NOTIFICATION',
 }
+
+export enum EWeekdays {
+  SUNDAY = 'SUNDAY',
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+}
+

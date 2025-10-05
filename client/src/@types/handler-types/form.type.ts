@@ -13,10 +13,13 @@ export interface IFormHandlerBaseState<TResponse> {
 }
 
 
+
 export interface IFormHandlerState<TFormData, TResponse, TExtra extends Record<string, any> = {}> extends IFormHandlerBaseState<TResponse> {
   values: TFormData;
   extra: TExtra;
+  isEditing: boolean;
 
+  setIsEditing: (isEditing: boolean) => void;
   setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
   resetExtra: () => void;
 
@@ -27,6 +30,8 @@ export interface IFormHandlerState<TFormData, TResponse, TExtra extends Record<s
   setValues: (values: TFormData) => void;
   syncWithMutation: (state: IFormHandlerBaseState<TResponse>) => void;
   reset: () => void;
+
+  
 }
 
 export type IFormStoreApi<TFormData, TResponse, TExtra extends Record<string, any>> = StoreApi<IFormHandlerState<TFormData, TResponse, TExtra>>;

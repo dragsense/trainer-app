@@ -281,8 +281,8 @@ export class UsersService {
 
       if (user.level === EUserLevels[EUserRole.USER] && currentUser?.level === EUserLevels[EUserRole.TRAINER]) {
         this.trianerClientService.assignTrainerToClient({
-          trainerId: currentUser.id,
-          clientId: user.id,
+          trainer: currentUser,
+          client: user,
         });
       }
 
