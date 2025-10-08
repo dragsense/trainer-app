@@ -3,10 +3,12 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Types 
-import { IListHandlerBaseState, IListHandlerState, IListPaginationState } from '@/@types/handler-types/list.type';
+import { IListHandlerBaseState, IListHandlerState } from '@/@types/handler-types/list.type';
+import { IListPaginationState } from '@shared/interfaces/api/response.interface';
 
 // Config
 import { config } from '@/config';
+import { TFieldConfigObject } from '@/@types/form/field-config.type';
 
 const initialPaginationState: IListPaginationState = {
   page: 1,
@@ -17,7 +19,7 @@ const initialPaginationState: IListPaginationState = {
   hasPrevPage: false
 };
 
-export const useListHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(initialFilters: Record<string, any> = {}, initialExtra: TExtra = {} as TExtra) => {
+export const useListHandlerStore = <TResponse, TExtra extends Record<string, any> = {}>(initialFilters: Record<string, any> = {}, initialExtra: TExtra = {} as TExtra, filteredFields: TFieldConfigObject<TResponse> = {} as TFieldConfigObject<TResponse>) => {
   return create<IListHandlerState<TResponse, TExtra>>()(
     devtools(
       (set) => ({
@@ -27,9 +29,10 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
         response: null,
         isSuccess: false,
         pagination: initialPaginationState,
-        itemAction: null,
+        action: '',
 
         extra: initialExtra,
+        filteredFields: filteredFields,
 
         // Query state
         filters: initialFilters,
@@ -39,6 +42,7 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
 
         // Setters
         setFilters: (filters) => set({ filters }),
+        setFilteredFields: (fields) => set({ filteredFields: fields }),
         setSort: (sortBy, sortOrder) => set({ sortBy, sortOrder }),
         setSearch: (search) => set({ search }),
         setPagination: (pagination) => set((state) => ({
@@ -49,7 +53,7 @@ export const useListHandlerStore = <TResponse, TExtra extends Record<string, any
         setResponse: (response) => set({ response }),
 
         // Item action setter 
-        setItemAction: (action) => set({ itemAction: action }),
+        setAction: (action) => set({ action }),
 
         setExtra: (key, value) =>
           set((state) => ({

@@ -19,7 +19,7 @@ import { Profile } from '../../entities/users/profile.entity';
 import { PaginationMetaDto } from '../common/pagination.dto';
 import { ListQueryDto } from '../common/list-query.dto';
 import { IUser } from '../../interfaces/user.interface';
-import { FieldType } from '../../decorators/field.decorator';
+import { FieldOptions, FieldType } from '../../decorators/field.decorator';
 import { OmitType } from '../../lib/dto-type-adapter';
 
 export class CreateUserDto {
@@ -114,6 +114,13 @@ export class UserPaginatedDto extends PaginationMetaDto {
 }
 
 export class UserListDto extends ListQueryDto<IUser> {
+
+  @IsOptional()
+  @IsString()
+  @FieldType("text", false)
+  search?: string = "";
+
+
   @ApiPropertyOptional({
       description: 'Filter by user level',
       type: Number,
@@ -149,5 +156,27 @@ export class UserDto {
   @IsString()
   @FieldType("text", false)
   email: string;
+
+  @ApiProperty({ example: EUserLevels[EUserRole.TRAINER], description: 'User role level' })
+  @IsOptional()
+  @IsIn(Object.values(EUserLevels))
+  @FieldType("select")
+  @FieldOptions(Object.values(EUserLevels).map(v => ({ value: v.toString(), label: v.toString() })))
+  level?: number;
+  
+  @ApiProperty({ example: true, description: 'User active status' })
+  @IsOptional()
+  @IsBoolean()
+  @FieldType("switch")
+  isActive?: boolean;
+
+
+
+  @ApiProperty({ type: UpdateProfileDto })
+  @ValidateNested()
+  @Type(() => UpdateProfileDto)
+  @FieldType("nested", true, UpdateProfileDto)
+  @IsOptional()
+  profile?: UpdateProfileDto;
 }
 

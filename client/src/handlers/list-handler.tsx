@@ -1,5 +1,5 @@
 // React & Hooks
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 
 // Types
 import { IPaginatedResponse } from "@shared/interfaces/api/response.interface";
@@ -19,39 +19,73 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 import { registerStore, deregisterStore, TListHandlerStore, useListHandlerStore, useRegisteredStore, TSingleHandlerStore } from "@/stores";
 import { useShallow } from "zustand/shallow";
 import { pickKeys } from "@/utils";
+import { ListActionComponentHandler } from "./list-action-handler";
+import { IListActionComponent } from "@/@types/handler-types";
+import { ClassConstructor } from "class-transformer";
+import { dtoToFields } from "@/lib/fields/dto-to-feilds";
+import { TFieldConfigObject } from "@/@types/form/field-config.type";
+import { Form, useForm } from "react-hook-form";
+
 
 
 interface IListHandlerProps<
   TData,
   TExtraProps extends Record<string, any> = {},
+  TSingleData = never,
+  TSingleExtraProps extends Record<string, any> = {},
 > {
   storeKey: string;
   queryFn: (params: IListQueryParams) => Promise<IPaginatedResponse<TData>>;
-  ListComponent: React.ComponentType<{ storeKey: string, store: TListHandlerStore<TData, TExtraProps> }>;
+  ListComponent: React.ComponentType<{
+    storeKey: string,
+    store: TListHandlerStore<TData, TExtraProps>,
+    singleStore?: TSingleHandlerStore<TSingleData, TSingleExtraProps>
+  }>;
   listProps?: TExtraProps;
   initialParams?: IListQueryParams;
+  actionComponents?: IListActionComponent<TListHandlerStore<TData, TExtraProps>, TSingleHandlerStore<TSingleData, TSingleExtraProps>>[];
+  dto?: ClassConstructor<object>;
 };
 
 export function ListHandler<
   TData,
   TExtraProps extends Record<string, any> = {},
+  TSingleData = never,
+  TSingleExtraProps extends Record<string, any> = {},
 >({
   queryFn,
   ListComponent,
   initialParams = {},
-  listProps,
-  storeKey
+  listProps = {} as TExtraProps,
+  storeKey,
+  actionComponents = [],
+  dto
 }: IListHandlerProps<
   TData,
-  TExtraProps
+  TExtraProps,
+  TSingleData,
+  TSingleExtraProps
 >) {
   const listStoreKey = storeKey + "-list"
+  const singelStoreKey = storeKey + "-single";
+
+  const singleStore = useRegisteredStore<TSingleHandlerStore<TSingleData, TSingleExtraProps>>(singelStoreKey);
+
+
+  const filteredFields = useMemo(() => {
+    if (!dto) return {};
+    return dtoToFields(dto);
+  }, [dto]);
+
+
+
 
   let store = useRegisteredStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey);
   if (!store) {
-    store = useListHandlerStore<TData, TExtraProps>(initialParams, listProps || {} as TExtraProps);
+    store = useListHandlerStore<TData, TExtraProps>(initialParams, listProps, filteredFields as TFieldConfigObject<TData>);
     registerStore<TListHandlerStore<TData, TExtraProps>>(listStoreKey, store);
   }
+
 
   useEffect(() => {
     registerStore(listStoreKey, store);
@@ -136,14 +170,35 @@ export function ListHandler<
       setFilters(state.filters);
     });
     return unsub;
-  }, [store, setPage, setLimit, setFilters, ]);
+  }, [store, setPage, setLimit, setFilters,]);
+
+
+  const form = useForm({
+    defaultValues: initialParams,
+    disabled: true
+  });
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <ListComponent
-        storeKey={storeKey}
-        store={store}
-      />
+      <Form {...form}>
+        {ListComponent && <ListComponent
+          storeKey={storeKey}
+          store={store}
+          singleStore={singleStore}
+        />}
+
+
+        <ListActionComponentHandler<
+          TData,
+          TExtraProps,
+          TSingleData,
+          TSingleExtraProps>
+          actionComponents={actionComponents}
+          storeKey={storeKey}
+          store={store}
+          singleStore={singleStore}
+        />
+      </Form>
     </ErrorBoundary>
   );
 }

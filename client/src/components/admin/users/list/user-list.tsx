@@ -30,11 +30,16 @@ import { buildRoutePath } from "@/lib/utils";
 
 // Config
 import { ADMIN_ROUTES } from "@/config/routes.config";
+import { TListHandlerComponentProps } from "@/@types/handler-types";
 
 
-interface IUserListProps {
-  storeKey: string;
-  store: TListHandlerStore<IUser, any>;
+
+
+interface IUserListProps extends TListHandlerComponentProps<TListHandlerStore<IUser, {
+  level: number
+}>, TSingleHandlerStore<IUser, {
+  level: number
+}>> {
 }
 
 export type ViewType = "table" | "list";
@@ -42,24 +47,20 @@ export type ViewType = "table" | "list";
 
 export default function UserList({
   storeKey,
-  store
+  store,
+  singleStore
 }: IUserListProps) {
-
-
-  const singelStoreKey = storeKey + "-single";
 
   if (!store) {
     return (`List store "${storeKey}" not found. Did you forget to register it?`);
   }
-
-  const singleStore = useRegisteredStore<TSingleHandlerStore<IUser, any>>(singelStoreKey);
 
   if (!singleStore) {
     return `Single store "${singleStore}" not found. Did you forget to register it?`;
   }
 
   const setAction = singleStore(state => state.setAction);
-  const extra = singleStore(state => state.extra);
+  const extra = store(state => state.extra);
   
   const setListFilters = store(state => state.setFilters);
   const navigate = useNavigate();
@@ -159,9 +160,7 @@ export default function UserList({
 
         <div className="flex flex-1 justify-between items-start md:items-center gap-2 flex-wrap">
           <UserFilters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
+            store={store}
           />
           {renderViewToggle()}
           <Button

@@ -4,13 +4,14 @@ import { devtools } from 'zustand/middleware';
 
 // Types 
 import { IFormHandlerState } from '@/@types/handler-types/form.type';
+import { TFieldConfigObject } from '@/@types/form/field-config.type';
 
 // Config
 import { config } from '@/config';
 
 
 
-export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<string, any> = {}>(initalValues: TFormData,  initialExtra: TExtra = {} as TExtra, isEditing: boolean = false) => {
+export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<string, any> = {}>(initalValues: TFormData,  initialExtra: TExtra = {} as TExtra, isEditing: boolean = false, fields: TFieldConfigObject<TFormData> = {} as TFieldConfigObject<TFormData>) => {
   return create<IFormHandlerState<TFormData, TResponse, TExtra>>()(
     devtools(
       (set) => ({
@@ -22,6 +23,7 @@ export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<
 
         values: initalValues,
         extra: initialExtra,
+        fields: fields,
 
         isEditing,
     
@@ -29,6 +31,7 @@ export const useFormHandlerStore = <TFormData, TResponse, TExtra extends Record<
         setError: (error) => set({ error }),
         setIsSubmitting: (isSubmitting) => set({ isSubmitting }),
         setValues: (values) => set({ values }),
+        setFields: (fields: TFieldConfigObject<TFormData>) => set({ fields }),
         setOnSubmit: (submitFn) => set({ onSubmit: submitFn }),
 
         setExtra: (key, value) =>

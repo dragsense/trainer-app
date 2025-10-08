@@ -1,5 +1,6 @@
 import { IsString, IsNotEmpty, MinLength, Validate, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments, Length, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { FieldType } from '../../decorators/field.decorator';
 
 @ValidatorConstraint({ name: 'passwordMatch', async: false })
 class PasswordMatchConstraint implements ValidatorConstraintInterface {
@@ -18,23 +19,27 @@ export class SignupDto {
   @ApiProperty({ example: 'John', description: 'First name of the user' })
   @IsString()
   @IsNotEmpty()
+  @FieldType("text", true)
   firstName: string;
 
   @ApiProperty({ example: 'Doe', description: 'Last name of the user' })
   @IsString()
   @IsNotEmpty()
+  @FieldType("text", true)
   lastName: string;
 
   @ApiProperty({ example: 'email@example.com' })
   @IsString()
   @IsNotEmpty()
   @IsEmail()
+  @FieldType("email", true)
   email: string;
 
   @ApiProperty({ example: 'secrete' })
   @IsString()
   @IsNotEmpty()
   @Length(6, 100)
+  @FieldType("password", true)
   password: string;
 
   @ApiProperty({
@@ -46,5 +51,6 @@ export class SignupDto {
   @IsNotEmpty()
   @MinLength(8)
   @Validate(PasswordMatchConstraint)
+  @FieldType("password", true)
   confirmPassword: string;
 }

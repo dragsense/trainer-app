@@ -21,7 +21,7 @@ import { ErrorFallback } from "@/components/shared-ui/error-fallback";
 
 // UI Components
 import { ConfirmDialog } from "@/components/layout-ui/app-alert-dialog";
-import { ActionComponentHandler } from "./action-handler";
+import { SingleActionComponentHandler } from "./single-action-handler";
 
 // Stores
 import { deregisterStore, registerStore, TSingleHandlerStore, useRegisteredStore, useSingleHandlerStore } from "@/stores";
@@ -196,7 +196,7 @@ export function SingleHandler<
           />
         )}
 
-        <ActionComponentHandler<IData, TExtraProps>
+        <SingleActionComponentHandler<IData, TExtraProps>
           actionComponents={actionComponents}
           storeKey={storeKey}
           store={store}

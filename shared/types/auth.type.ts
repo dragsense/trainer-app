@@ -1,6 +1,6 @@
 import { LoginDto, ForgotPasswordDto, ResetPasswordWithTokenDto, SignupDto } from '../dtos';
 
-export type TLoginData = {} & LoginDto;
+export type TLoginData = LoginDto;
 
 export type TSignupData = SignupDto;
 

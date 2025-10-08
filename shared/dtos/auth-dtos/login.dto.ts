@@ -14,7 +14,7 @@ export class LoginDto {
     @ApiProperty({ example: 'secrete', description: 'User password' })
     @IsString()
     @IsNotEmpty({ message: 'Password cannot be empty' })
-    @FieldType("password", true)
+    @FieldType("text", true)
     password: string;
 }
 

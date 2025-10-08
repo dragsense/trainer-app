@@ -19,11 +19,7 @@ import { Form } from '@/components/form-ui/form';
 import { FormInputs, useInput } from '@/hooks/use-input';
 
 // Stores
-import { useStore } from 'zustand';
 import { AppCard } from '../layout-ui/app-card';
-import { TFieldConfigObject } from '@/@types/form/field-config.type';
-import { ForgotPasswordDto } from '@shared/dtos/auth-dtos/forgot-password.dto';
-import { dtoToFields } from '@/lib/fields/dto-to-feilds';
 
 interface IForgotPasswordFormProps extends THandlerComponentProps<TFormHandlerStore<TForgotPasswordData, IMessageResponse, any>> {
 }
@@ -36,12 +32,11 @@ const ForgotPasswordForm = React.memo(function ForgotPasswordForm({
     return `Form store "${storeKey}" not found. Did you forget to register it?`;
   }
 
-  const isSubmitting = useStore(store, state => state.isSubmitting);
-
-  const fields = dtoToFields(ForgotPasswordDto, {}) as TFieldConfigObject<TForgotPasswordData>;
+  const isSubmitting = store(state => state.isSubmitting);
+  const fields = store(state => state.fields);
 
   const inputs = useInput<TForgotPasswordData>({
-    fields,
+    fields: fields as any,
     showRequiredAsterisk: true,
   }) as FormInputs<TForgotPasswordData>;
 

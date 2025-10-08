@@ -1,8 +1,8 @@
 import { IMessageResponse } from "@shared/interfaces/api/response.interface";
 
 export type TItemActionProps = {
-  itemName: string;
   action: string;
+  name?: string;
   type?: string;
   id: number;
 };
@@ -10,9 +10,22 @@ export type TItemActionProps = {
 
 
 
+export type TListHandlerComponentProps<T, S = unknown> = {
+  storeKey: string;
+  store: T,
+  singleStore?: S,
+};
+
+
+export interface IListActionComponent<T, S = unknown> {
+  action: string;
+  comp: React.ComponentType<TListHandlerComponentProps<T, S>>;
+}
+
+
 export type THandlerComponentProps<T> = {
   storeKey: string;
-  store: T
+  store: T,
 };
 
 

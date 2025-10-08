@@ -54,14 +54,13 @@ export default function UserForm({
     }
 
 
-    const { action, response, isLoading, setAction, reset, extra } = store(useShallow(state => ({
-        action: state.action,
-        response: state.response,
-        isLoading: state.isLoading,
-        extra: state.extra,
-        setAction: state.setAction,
-        reset: state.reset
-    })));
+    const action = store((state) => state.action);
+    const response = store((state) => state.response);
+    const isLoading = store((state) => state.isLoading);
+    const extra = store((state) => state.extra);
+    const setAction =  store.getState().setAction;
+    const reset = store.getState().reset;
+
 
 
     if (isLoading) {
@@ -71,6 +70,8 @@ export default function UserForm({
             </div>
         );
     }
+
+
 
 
     const INITIAL_VALUES: TUserData = {
@@ -101,7 +102,6 @@ export default function UserForm({
         setAction('none');
         setCredentialModalContent({ open: false, email: "", password: "" });
     };
-
 
 
     const isEditing = !!response?.id;

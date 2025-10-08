@@ -16,7 +16,8 @@ import {
     TUpdateUserAvailabilityData,
     TCreateUserAvailabilityData,
     TUpdateProfileData,
-    TUserResetPasswordData
+    TUserResetPasswordData,
+    TUpdateUserData
 } from "@shared/types/user.type";
 import { generateQueryParams } from "@/utils";
 
@@ -32,7 +33,7 @@ export const me = async () =>
 export const createUser = (data: TUserData) =>
     apiRequest<TUserResponse>(`${USERS_API_PATH}`, "POST", data);
 
-export const updateUser = (id: number) => (data: Partial<TUserData>) =>
+export const updateUser = (id: number) => (data: TUpdateUserData) =>
     apiRequest<IMessageResponse>(
         `${USERS_API_PATH}/${id}`,
         "PATCH",

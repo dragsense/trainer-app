@@ -43,19 +43,17 @@ export default function ReminderForm({
         return <div>Single store "{storeKey}" not found. Did you forget to register it?</div>;
     }
 
-    const { action, response, isLoading, setAction, reset } = store(useShallow(state => ({
-        action: state.action,
-        response: state.response,
-        isLoading: state.isLoading,
-        setAction: state.setAction,
-        reset: state.reset
-    })));
+    const action = store((state) => state.action);
+    const response = store((state) => state.response);
+    const isLoading = store((state) => state.isLoading);
+    const setAction =  store.getState().setAction;
+    const reset = store.getState().reset;
 
     const INITIAL_VALUES: TReminderData = {
         type: EReminderType.CUSTOM,
         title: "",
         message: "",
-        scheduledAt: new Date(),
+        scheduledAt: new Date().toISOString(),
         endDate: undefined,
         frequencyConfig: {
             frequency: EReminderFrequency.ONCE,
@@ -70,12 +68,13 @@ export default function ReminderForm({
         retryInterval: 1440,
         isRecurring: false,
         recurringInterval: 7,
-        recipientId: 0,
-        sessionId: 0,
-        billingId: 0
+        recipient: { id: 0, email: "" },
+        session: { id: 0, title: "" },
+        billing: { id: 0, invoiceNumber: "" },
+
     };
 
-    const initialValues = strictDeepMerge<TReminderData>(INITIAL_VALUES, response ?? {});
+    const initialValues = strictDeepMerge<TReminderData>(INITIAL_VALUES, response ?? {}) as TReminderData;
 
     if (isLoading) {
         return (

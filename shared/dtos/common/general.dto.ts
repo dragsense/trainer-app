@@ -4,3 +4,10 @@ export class MessageResponseDto {
   @ApiProperty({ description: 'A message describing the result of the operation.' })
   message: string;
 }
+
+
+export class EmptyDto {
+  constructor(..._args: any[]) {
+    // no-op
+  }
+}

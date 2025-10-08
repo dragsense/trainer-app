@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { IUser } from "@shared/interfaces/user.interface";
 
 // Handlers
-import { ListHandler, SingleHandler } from "@/handlers";
+import {  ListHandler, SingleHandler } from "@/handlers";
 
 // Custom UI Components
 import { UserList, TrainerView } from "@/components/admin";
@@ -13,24 +13,29 @@ import { UserForm, TUserExtraProps, TrainerClientAssignForm } from "@/page-compo
 
 
 // API
-import { deleteUser, fetchUser, fetchUsers } from "@/services/user.api";
+import {  deleteUser, fetchUser, fetchUsers } from "@/services/user.api";
 
 // Types
-import { EUserLevels, EUserRole } from "@shared/enums/user.enum";
+import {  EUserLevels, EUserRole } from "@shared/enums/user.enum";
 
 
 // Layouts
 import { PageInnerLayout } from "@/layouts";
+import { UserDto, UserListDto } from "@shared/dtos";
+
 
 
 export default function TrainersPage() {
+
 
   const queryClient = useQueryClient();
 
   const STORE_KEY = 'trainer';
 
+
   return (
     <PageInnerLayout Header={<Header />}>
+
       <SingleHandler<IUser, TUserExtraProps>
         queryFn={fetchUser}
         deleteFn={deleteUser}
@@ -52,14 +57,19 @@ export default function TrainersPage() {
         }}
       />
 
-      <ListHandler<IUser>
+
+      <ListHandler<IUser, { level: number }, IUser, TUserExtraProps>
         queryFn={(params) => fetchUsers(params, EUserLevels[EUserRole.TRAINER])}
         ListComponent={UserList}
+        dto={UserListDto}
         storeKey={STORE_KEY}
         listProps={{
           level: EUserLevels[EUserRole.TRAINER],
         }}
       />
+
+
+
     </PageInnerLayout>
   );
 }

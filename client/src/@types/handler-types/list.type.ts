@@ -1,7 +1,7 @@
 // Types
 import type { StoreApi } from "zustand";
-import type { TItemActionProps } from ".";
 import { IListPaginationState } from "@shared/interfaces/api/response.interface";
+import { TFieldConfigObject } from "../form/field-config.type";
 
 export interface IListQueryState {
   filters: Record<string, any>;
@@ -16,16 +16,17 @@ export interface IListHandlerBaseState<TResponse> {
   error: Error | null;
   isSuccess: boolean;
   pagination: IListPaginationState;
-  itemAction: TItemActionProps | null;
 }
 
 export interface IListHandlerState<TResponse, TExtra extends Record<string, any> = {}> extends IListHandlerBaseState<TResponse>, IListQueryState {
   
   extra: TExtra;
-
+  action: string;
+  filteredFields: TFieldConfigObject<TResponse>;
+  
   setExtra: <K extends keyof TExtra>(key: K, value: TExtra[K]) => void;
   resetExtra: () => void;
-
+  setFilteredFields: (fields: TFieldConfigObject<TResponse>) => void;
   setFilters: (filters: Record<string, any>) => void;
   setSort: (sortBy: string, sortOrder: 'ASC' | 'DESC') => void;
   setSearch: (search: string) => void;
@@ -34,7 +35,7 @@ export interface IListHandlerState<TResponse, TExtra extends Record<string, any>
   setError: (error: Error | null) => void;
   setResponse: (response: TResponse[]) => void;
   syncWithQuery: (queryState: IListHandlerBaseState<TResponse>) => void;
-  setItemAction: (action: TItemActionProps | null) => void;
+  setAction: (action: string, id?: number) => void;
   reset: () => void;
 }
 

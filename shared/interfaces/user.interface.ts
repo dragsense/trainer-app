@@ -1,9 +1,10 @@
 import { User, Profile, UserAvailability } from '../entities';
 import { GeneralBaseEntity } from '../entities/common/base.entity';
 import { IMessageResponse } from './api/response.interface';
+import { UserDto } from '../dtos';
 
 
-export interface IUser extends User, GeneralBaseEntity {};
+export interface IUser extends UserDto {};
 export interface IProfile extends Profile, GeneralBaseEntity {}
 
 

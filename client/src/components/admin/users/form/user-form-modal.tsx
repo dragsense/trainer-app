@@ -8,15 +8,14 @@ import { FormInputs, useInput } from "@/hooks/use-input";
 // Types
 import { TFieldConfigObject } from "@/@types/form/field-config.type";
 import { TFormHandlerStore } from "@/stores";
-import { TUserData, TUpdateUserData } from "@shared/types/user.type";
+import { TUserData, TUpdateUserData, TProfileData } from "@shared/types/user.type";
 import { TUserResponse } from "@shared/interfaces/user.interface";
 
 // Components
 import { Button } from "@/components/ui/button";
 import { ModalForm } from "@/components/form-ui/modal-form";
 import { THandlerComponentProps } from "@/@types/handler-types";
-import { dtoToFields } from "@/lib/fields/dto-to-feilds";
-import { CreateUserDto, UpdateUserDto } from "@shared/dtos";
+
 
 
 export interface IUserFormModalExtraProps {
@@ -29,7 +28,7 @@ export interface IUserFormModalExtraProps {
 interface IUserFormModalProps extends THandlerComponentProps<TFormHandlerStore<TUserData, TUserResponse, IUserFormModalExtraProps>> {
 }
 
-const UserFormModal = React.memo(function UserFormModal({
+function UserFormModal({
   storeKey,
   store,
 }: IUserFormModalProps) {
@@ -40,19 +39,8 @@ const UserFormModal = React.memo(function UserFormModal({
   }
 
   const isEditing = store((state) => state.isEditing)
-
-  const open = store((state) => state.extra.open)
-  const onClose = store((state) => state.extra.onClose)
-
-
-
-
-  const fields = useMemo(() => {
-    const dto = isEditing ? UpdateUserDto : CreateUserDto;
-    return dtoToFields(dto, {}) as TFieldConfigObject<
-      TUpdateUserData | TUserData
-    >;
-  }, [isEditing]);
+  const extra = store((state) => state.extra)
+  const fields = store((state) => state.fields)
 
   const inputs = useInput<TUserData | TUpdateUserData>({
     fields,
@@ -61,7 +49,7 @@ const UserFormModal = React.memo(function UserFormModal({
 
   const onOpenChange = (state: boolean) => {
     if (state === false)
-      onClose();
+      extra.onClose();
   };
 
   const formButtons = (
@@ -71,7 +59,7 @@ const UserFormModal = React.memo(function UserFormModal({
         variant="outline"
         onClick={(e) => {
           e.preventDefault();
-          onClose();
+          extra.onClose();
         }}
       >
         Cancel
@@ -82,13 +70,13 @@ const UserFormModal = React.memo(function UserFormModal({
       </Button>
     </div>
   );
-
+;
 
   return <>
     <ModalForm<TUserData, TUserResponse, IUserFormModalExtraProps>
       title={`${isEditing ? "Edit" : "Add"} User`}
       description={`${isEditing ? "Edit" : "Add a new"} User`}
-      open={open}
+      open={extra.open}
       onOpenChange={onOpenChange}
       formStore={store}
       footerContent={formButtons}
@@ -101,8 +89,8 @@ const UserFormModal = React.memo(function UserFormModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {inputs.email}
             {inputs.isActive}
-            {inputs.profile?.firstName}
-            {inputs.profile?.lastName}
+            {(inputs.profile as FormInputs<TProfileData>)?.firstName}
+            {(inputs.profile as FormInputs<TProfileData>)?.lastName}
           </div>
         </div>
 
@@ -110,11 +98,11 @@ const UserFormModal = React.memo(function UserFormModal({
         <div>
           <h3 className="text-sm font-semibold  mb-3">Personal Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.profile?.phoneNumber}
+            {(inputs.profile as FormInputs<TProfileData>)?.phoneNumber}
 
-            {inputs.profile?.gender}
-            {inputs.profile?.dateOfBirth}
-            {inputs.profile?.address}
+            {(inputs.profile as FormInputs<TProfileData>)?.gender}
+            {(inputs.profile as FormInputs<TProfileData>)?.dateOfBirth}
+            {(inputs.profile as FormInputs<TProfileData>)?.address}
           </div>
         </div>
 
@@ -122,11 +110,11 @@ const UserFormModal = React.memo(function UserFormModal({
         <div>
           <h3 className="text-sm font-semibold mb-3">User Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {inputs.profile?.bio}
-            {inputs.profile?.experience}
+            {(inputs.profile as FormInputs<TProfileData>)?.bio}
+            {(inputs.profile as FormInputs<TProfileData>)?.experience}
 
-            {inputs.profile?.specialties}
-            {inputs.profile?.fitnessGoals}
+            {(inputs.profile as FormInputs<TProfileData>)?.specialties}
+            {(inputs.profile as FormInputs<TProfileData>)?.fitnessGoals}
           </div>
         </div>
 
@@ -134,6 +122,6 @@ const UserFormModal = React.memo(function UserFormModal({
     </ModalForm>
 
   </>
-});
+}
 
 export default UserFormModal;

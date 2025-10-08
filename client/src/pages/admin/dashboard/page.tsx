@@ -24,35 +24,49 @@ export default function DashboardPage() {
 
   return (
 
-    <SingleHandler<ICombinedDashboardData, IExtraProps>
-      queryFn={(_, params) => fetchCombinedDashboardData(params)}
+    <SingleHandler<ICombinedDashboardData, any, any, any, any, IExtraProps>
+      get={(_i, queryParams) => fetchCombinedDashboardData(queryParams || {})}
+      initialValues={{
+        create: {},
+        update: {}
+      }}
+ 
       storeKey="dashboardOverview"
-      SingleComponent={({ storeKey, store }) => {
+      Components={{ 
+        Single: ({ storeKey, store }) => {
 
 
-        if (!store) {
-          return <div>Dashboard store "{storeKey}" not found. Did you forget to register it?</div>;
-        }
-
-        return <PageInnerLayout
-          Header={
-            <Header
-              store={store}
-            />
+          if (!store) {
+            return <div>Dashboard store "{storeKey}" not found. Did you forget to register it?</div>;
           }
-        >
-          <DashboardView storeKey={storeKey} store={store} />
-        </PageInnerLayout>
 
+          return <PageInnerLayout
+            Header={
+              <Header
+                store={store}
+              />
+            }
+          >
+            <DashboardView storeKey={storeKey} store={store} />
+          </PageInnerLayout>
+
+
+        }
       }}
       enabled={true}
-      singleProps={{
-        period: EAnalyticsPeriod.MONTH,
+      extraProps={{
+        single: {
+          period: EAnalyticsPeriod.MONTH,
+          customRange: undefined
+        }
       }}
       initialParams={{
-        period: EAnalyticsPeriod.MONTH,
-        customRange: undefined
+        single: {
+          period: EAnalyticsPeriod.MONTH,
+          customRange: undefined
+        }
       }}
+    
     />
 
 

@@ -223,11 +223,6 @@ export class SessionListDto extends ListQueryDto {
 }
 
 
-export class MessageResponseDto {
-  @ApiProperty()
-  message: string;
-}
-
 
 export class SessionPaginatedDto extends PaginationMetaDto {
   @ApiProperty({ type: () => [Session] })
