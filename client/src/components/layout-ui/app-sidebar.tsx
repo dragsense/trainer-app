@@ -23,13 +23,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 // Config
 import { navItems } from "@/config/nav.config";
-import { ROOT_ROUTE } from "@/config/routes.config";
+import { ADMIN_ROUTES, ROOT_ROUTE } from "@/config/routes.config";
 
 // Utils
 import { matchRoutePath } from "@/lib/utils";
 
 // Hooks
 import { useLogout } from "@/hooks/use-logout";
+import { useAuth } from "@/contexts/auth-context";
 
 // Assets
 import logo from "@/assets/logos/logo.png";
@@ -46,6 +47,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const location = useLocation();
   const { logout, isLoading } = useLogout();
+  const { user } = useAuth();
   const { setOpenMobile, isMobile } = useSidebar();
 
   const [expandedItems, setExpandedItems] = React.useState<Record<string, boolean>>({});
@@ -81,13 +83,41 @@ export function AppSidebar({
     }));
   };
 
+  const isAdmin = user?.role === 'admin';
+  const isTrainer = user?.role === 'trainer';
+  const isClient = user?.role === 'client';
+
+  const filteredNavItems = navItems.filter((item) => {
+    // Admin sees all navigation items
+    if (isAdmin) {
+      return true;
+    }
+
+    // For trainers and clients, exclude trainer-clients and reminders
+    if (isTrainer) {
+      return !item.urls.includes(ADMIN_ROUTES.TRAINER_CLIENTS) &&
+        !item.urls.includes(ADMIN_ROUTES.TRAINERS) &&
+        !item.urls.includes(ADMIN_ROUTES.REMINDERS);
+    }
+
+    if (isClient) {
+      return !item.urls.includes(ADMIN_ROUTES.TRAINER_CLIENTS) &&
+        !item.urls.includes(ADMIN_ROUTES.TRAINERS) &&
+        !item.urls.includes(ADMIN_ROUTES.CLIENTS) &&
+        !item.urls.includes(ADMIN_ROUTES.REMINDERS);
+    }
+
+    // Default: show all items (fallback)
+    return true;
+  });
+
   return (
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <Sidebar 
-          collapsible="offcanvas" 
-          themeClass={themeClass} 
+        <Sidebar
+          collapsible="offcanvas"
+          themeClass={themeClass}
           {...props}
         >
           <SidebarHeader>
@@ -106,7 +136,7 @@ export function AppSidebar({
             <SidebarGroup>
               <SidebarGroupContent className="flex flex-col gap-2">
                 <SidebarMenu className="gap-3">
-                  {navItems.map((item) => {
+                  {filteredNavItems.map((item) => {
                     const hasChildren = item.children && item.children.length > 0;
                     const isExpanded = expandedItems[item.title];
 
@@ -188,7 +218,7 @@ export function AppSidebar({
               ) : (
                 <LogOutIcon className="h-4 w-4" />
               )}
-              {isLoading ? "Logging out..." : "Log out"} 
+              {isLoading ? "Logging out..." : "Log out"}
             </Button>
           </SidebarFooter>
         </Sidebar>
@@ -196,9 +226,9 @@ export function AppSidebar({
 
       {/* Mobile Sidebar with Close Button */}
       <div className="md:hidden">
-        <Sidebar 
-          collapsible="offcanvas" 
-          themeClass={themeClass} 
+        <Sidebar
+          collapsible="offcanvas"
+          themeClass={themeClass}
           {...props}
         >
           <SidebarHeader>
@@ -227,7 +257,7 @@ export function AppSidebar({
             <SidebarGroup>
               <SidebarGroupContent className="flex flex-col gap-2">
                 <SidebarMenu className="gap-3">
-                  {navItems.map((item) => {
+                  {filteredNavItems.map((item) => {
                     const hasChildren = item.children && item.children.length > 0;
                     const isExpanded = expandedItems[item.title];
 
@@ -309,7 +339,7 @@ export function AppSidebar({
               ) : (
                 <LogOutIcon className="h-4 w-4" />
               )}
-              {isLoading ? "Logging out..." : "Log out"} 
+              {isLoading ? "Logging out..." : "Log out"}
             </Button>
           </SidebarFooter>
         </Sidebar>
